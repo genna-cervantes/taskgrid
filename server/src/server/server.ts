@@ -1,3 +1,4 @@
+// server/src/server.ts
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -12,8 +13,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Define tRPC route
-app.use("/trpc", createExpressMiddleware({ router: appRouter, createContext }));
+app.use("/trpc", 
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+  })
+);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -7,7 +7,7 @@ function App() {
     return <p>Loading...</p>;
   }
 
-  return <p>Hello {data?.message}</p>; // Ensure you're accessing `data.message`
+  return <p>{data}</p>; // Ensure you're accessing `data.message`
 }
 
 export default App;
