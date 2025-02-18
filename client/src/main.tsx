@@ -4,6 +4,7 @@ import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import './index.css'
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
