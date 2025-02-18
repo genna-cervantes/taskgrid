@@ -1,23 +1,12 @@
 import { Link, Outlet } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 const Layout = () => {
   return (
-    <>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/projects">Blogs</Link>
-          </li>
-          <li>
-            <Link to="/contact">Contact</Link>
-          </li>
-        </ul>
-      </nav>
+    <main className="w-full h-screen py-10 bg-radial-[at_50%_75%] from-rose-300 via-rose-200 to-rose-100">
+      <Navbar />
       <Outlet />
-    </>
+    </main>
   );
 };
 
