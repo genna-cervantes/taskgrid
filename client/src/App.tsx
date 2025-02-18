@@ -1,13 +1,23 @@
-import { trpc } from "./utils/trpc";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./pages/Layout";
+import Home from "./pages/Home";
+import Projects from "./pages/Projects";
+import Contact from "./pages/Contact";
+import NoPage from "./pages/NoPage";
 
-function App() {
-  const { data, isLoading } = trpc.hello.useQuery({ name: "Genna" });
-
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
-
-  return <p>{data}</p>; // Ensure you're accessing `data.message`
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="blogs" element={<Projects />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="*" element={<NoPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
-export default App;
+export default App
