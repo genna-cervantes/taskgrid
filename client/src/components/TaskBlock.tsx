@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ColumnKey, Task } from "../pages/Project";
 import TaskPriority from "./TaskPriority";
 import TaskModal from "./TaskModal";
@@ -8,17 +8,19 @@ const TaskBlock = ({
   task,
   projectId,
   handleDragStart,
+  setUsernameModal
 }: {
   col: ColumnKey;
   task: Task;
   projectId: string,
   handleDragStart: (fromColumn: ColumnKey, task: Task) => void;
+  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
 
   return (
     <>
-      {taskDetailsModal && <TaskModal task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
+      {taskDetailsModal && <TaskModal setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
       <div
         key={task.id}
         draggable
@@ -26,7 +28,7 @@ const TaskBlock = ({
         onClick={() => setTaskDetailsModal(true)}
         className="px-4 py-3 mb-2 bg-[#464646] rounded-md cursor-move"
       >
-        <h1 className="text-sm">{task.title}</h1>
+        <h1 className="text-sm truncate">{task.title}</h1>
         <div className="mt-4">
           <TaskPriority priority={task.priority} />
           <div className="flex justify-between text-xs pt-1">

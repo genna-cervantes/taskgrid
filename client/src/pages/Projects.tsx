@@ -51,7 +51,7 @@ const Projects = () => {
             <h1>{userName}</h1>
             <button onClick={handleShare} className='px-3 py-1 rounded-md bg-green-400 text-sm font-bold cursor-pointer'>Share</button>
           </div>
-          <Outlet />
+          <Outlet context={setUsernameModal} />
       </div>
     </>
   )

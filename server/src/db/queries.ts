@@ -52,3 +52,10 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
     let usernames = res.rows.map((r) => r.username)
     return usernames;
 }
+
+export const updateAssignedToTask = async (pool: Pool, taskId: string, username: string) => {
+    const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2';
+    const res = await pool.query(query, [username, taskId])
+
+    return res.rowCount;
+}

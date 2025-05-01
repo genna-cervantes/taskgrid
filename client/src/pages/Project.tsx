@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useOutletContext, useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
@@ -48,6 +48,8 @@ const groupTasksByColumn = (taskList: Task[]) => {
 const Project = () => {
   const { projectId } = useParams();
 
+  const {setUsernameModal} = useOutletContext<{setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>}>();
+
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
 
@@ -91,7 +93,7 @@ const Project = () => {
   }
 
   return (
-    <div className="flex gap-4 p-4 flex-1 overflow-auto">
+    <div className="grid grid-cols-4 gap-4 p-4 flex-1 overflow-auto">
       {(Object.keys(columns) as ColumnKey[]).map((col) => (
         <div
           key={col}
@@ -102,7 +104,7 @@ const Project = () => {
           <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
             {col}
           </h2>
-          <div className="flex-1 overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-190px)] scrollbar-none">
+          <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-190px)] scrollbar-none">
             {columns[col].map((task) => (
               <React.Fragment key={task.id}>
                 <TaskBLock
@@ -110,6 +112,7 @@ const Project = () => {
                   col={col}
                   task={task}
                   handleDragStart={handleDragStart}
+                  setUsernameModal={setUsernameModal}
                 />
               </React.Fragment>
             ))}

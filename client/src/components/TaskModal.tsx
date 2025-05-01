@@ -2,21 +2,34 @@ import React from "react";
 import { Task } from "../pages/Project";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
+import { getUsernameForProject } from "../utils/indexedb";
 
 const TaskModal = ({
   task,
   projectId,
   setTaskDetailsModal,
+  setUsernameModal
 }: {
   task: Task;
   projectId: string;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
   const utils = trpc.useUtils();
 
   const deleteTask = trpc.deleteTask.useMutation({
     onSuccess: (data) => {
-      console.log("Task created:", data);
+      console.log("Task deleted:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateAssignedTo = trpc.updateAssignedToTask.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
       utils.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
@@ -26,7 +39,20 @@ const TaskModal = ({
 
   const handleDeleteTask = () => {
     deleteTask.mutate({ taskId: task.id });
-    setTaskDetailsModal(false)
+    setTaskDetailsModal(false);
+  };
+
+  const handleAssignToMe = async () => {
+    // check if name is set in storage
+    let username = await getUsernameForProject(projectId);
+
+    if (username){
+        // update assigned to
+        updateAssignedTo.mutate({taskId: task.id, username})
+    }else{
+        setTaskDetailsModal(false);
+        setUsernameModal(true);
+    }
   };
 
   return (
@@ -62,7 +88,12 @@ const TaskModal = ({
           </span>
         </div>
         <div>
-          <h3 className="font-semibold">Assigned To:</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold">Assigned To:</h3>
+            <button onClick={handleAssignToMe} className="font-semibold underline text-sm cursor-pointer">
+              Assign To Me
+            </button>
+          </div>
           <h3 className="pl-4">{task.assignedTo}</h3>
         </div>
         <button
