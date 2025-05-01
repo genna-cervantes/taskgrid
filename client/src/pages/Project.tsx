@@ -8,7 +8,7 @@ import { trpc } from "../utils/trpc";
 export type Task = {
   id: string,
   title: string,
-  description: string,
+  description?: string,
   priority: 'high' | 'low' | 'medium',
   assignedTo: string,
   progress: string,
@@ -75,6 +75,12 @@ const Project = () => {
     });
   };
 
+  if (!projectId){
+    return <div>
+      missing project id
+    </div>
+  }
+
   return (
     <div className="flex gap-4 p-4 flex-1 overflow-auto">
       {(Object.keys(columns) as ColumnKey[]).map((col) => (
@@ -90,7 +96,7 @@ const Project = () => {
               <TaskBLock col={col} task={task} handleDragStart={handleDragStart} />
             </React.Fragment>
           ))}
-          <AddTask col={col} className="hidden group-hover:block" />
+          <AddTask projectId={projectId} col={col} className="hidden group-hover:block" />
         </div>
       ))}
     </div>

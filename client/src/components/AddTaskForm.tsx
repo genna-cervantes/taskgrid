@@ -4,6 +4,7 @@ import { cn } from "../utils/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { trpc } from "../utils/trpc";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -11,7 +12,7 @@ const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high"], {
     required_error: "Priority is required",
   }),
-  assignTo: z.string({
+  assignedTo: z.string({
     required_error: "Assignee is required",
   }),
 });
@@ -24,10 +25,12 @@ export type PriorityLevel = (typeof priorityLevels)[number];
 const usersInProject = ["Genna Cervantes", "Sara Limeta"];
 
 const AddTaskForm = ({
+  projectId,
   col,
   setAddModal,
 }: {
-  col: ColumnKey;
+  projectId: string;
+  col: string
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const {
@@ -40,8 +43,21 @@ const AddTaskForm = ({
     resolver: zodResolver(taskSchema),
   });
 
+  const utils = trpc.useUtils();
+
+  const insertTask = trpc.insertTask.useMutation({
+    onSuccess: (data) => {
+      console.log("Task created:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
   const onSubmit = (data: TaskFormData) => {
-    console.log("Submitted", data);
+    insertTask.mutate({id: projectId, task: {...data, progress: col}});
+    setAddModal(false)
   };
 
   const selectedPriority = watch("priority");
@@ -110,9 +126,9 @@ const AddTaskForm = ({
             <label htmlFor="assignTo" className="text-xs font-semibold mb-2">
               Assign To:
             </label>
-            <select {...register("assignTo")} id="assignTo">
+            <select {...register("assignedTo")} id="assignTo">
               {usersInProject.map((u) => (
-                <option key={u} value="u" className="bg-[#464646]">
+                <option key={u} value={u} className="bg-[#464646]">
                   {u}
                 </option>
               ))}

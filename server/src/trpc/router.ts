@@ -2,8 +2,9 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { getTasksFromProjectId } from '../db/queries.js';
+import { getTasksFromProjectId, insertTask } from '../db/queries.js';
 import { config } from "dotenv";
+import { TaskSchema } from '../schemas/schemas.js';
 
 config()
 
@@ -19,10 +20,17 @@ const pool = new Pool({
 export const appRouter = router({
   getTasks: publicProcedure
     .input((z.object({id: z.string()})))
-    .query(({input}) => {
-      let tasks = getTasksFromProjectId(pool, input.id)
+    .query(async ({input}) => {
+      let tasks = await getTasksFromProjectId(pool, input.id)
       return tasks;
     }), 
+  insertTask: publicProcedure
+    .input((z.object({id: z.string(), task: TaskSchema.omit({ id: true, projectTaskId: true })})))
+    .mutation(async ({input}) => {
+      let taskCount = await insertTask(pool, input.task, input.id)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
   hello: publicProcedure
     .input((z.object({name: z.string()})))
     .query(({input}) => {

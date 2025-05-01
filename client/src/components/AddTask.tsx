@@ -3,11 +3,11 @@ import { cn } from "../utils/utils";
 import { ColumnKey } from "../pages/Project";
 import AddTaskForm from "./AddTaskForm";
 
-const AddTask = ({col, className = ""}: {col: ColumnKey, className?: string}) => {
+const AddTask = ({projectId, col, className = ""}: {projectId: string, col: ColumnKey, className?: string}) => {
   const [addModal, setAddModal] = useState(false);
 
   if (addModal){
-    return <AddTaskForm col={col} setAddModal={setAddModal} />
+    return <AddTaskForm projectId={projectId} col={col} setAddModal={setAddModal} />
   }
 
   return (
