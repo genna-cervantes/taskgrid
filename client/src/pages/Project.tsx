@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
+import AddTask from "../components/AddTask";
 
 // TASKS
 export type Task = {
@@ -73,12 +74,15 @@ const Project = () => {
           key={col}
           onDragOver={(e) => e.preventDefault()}
           onDrop={() => handleDrop(col)}
-          className="flex-1 p-4 bg-[#282828] rounded-md"
+          className="flex-1 p-4 bg-[#282828] rounded-md group"
         >
           <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">{col}</h2>
           {columns[col].map((task) => (
+            <React.Fragment key={task.id}>
               <TaskBLock col={col} task={task} handleDragStart={handleDragStart} />
+            </React.Fragment>
           ))}
+          <AddTask col={col} className="hidden group-hover:block" />
         </div>
       ))}
     </div>
