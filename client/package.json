@@ -34,6 +34,7 @@
     "@trpc/server": "^10.45.1",
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
+    "idb": "^8.0.2",
     "postcss": "^8.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
