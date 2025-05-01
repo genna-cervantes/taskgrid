@@ -1,21 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { Task } from "../pages/Project";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
 import { getUsernameForProject } from "../utils/indexedb";
+import { priorityLevels } from "./AddTaskForm";
 
 const TaskModal = ({
   task,
   projectId,
   setTaskDetailsModal,
-  setUsernameModal
+  setUsernameModal,
 }: {
   task: Task;
   projectId: string;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>
+  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const utils = trpc.useUtils();
+
+  const [editMode, setEditMode] = useState(false);
+
+  const [taskTitle, setTaskTitle] = useState(task.title);
+  const [taskDescription, setTaskDescription] = useState(task.description);
+  const [taskPriority, setTaskPriority] = useState(task.description);
+  const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
+
+  const { data: usersInProject, isLoading: usersLoading } =
+    trpc.getUsersInProject.useQuery({
+      id: projectId,
+    });
 
   const deleteTask = trpc.deleteTask.useMutation({
     onSuccess: (data) => {
@@ -42,16 +55,20 @@ const TaskModal = ({
     setTaskDetailsModal(false);
   };
 
+  const handleSaveTask = () => {
+    setEditMode(false);
+  };
+
   const handleAssignToMe = async () => {
     // check if name is set in storage
     let username = await getUsernameForProject(projectId);
 
-    if (username){
-        // update assigned to
-        updateAssignedTo.mutate({taskId: task.id, username})
-    }else{
-        setTaskDetailsModal(false);
-        setUsernameModal(true);
+    if (username) {
+      // update assigned to
+      updateAssignedTo.mutate({ taskId: task.id, username });
+    } else {
+      setTaskDetailsModal(false);
+      setUsernameModal(true);
     }
   };
 
@@ -67,7 +84,15 @@ const TaskModal = ({
         <div className="flex justify-between">
           <div className="flex gap-x-2 text-2xl font-bold">
             <h1>[{task.projectTaskId}]</h1>
-            <h1>{task.title}</h1>
+            {editMode ? (
+              <input
+                type="text"
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+              />
+            ) : (
+              <h1>{task.title}</h1>
+            )}
           </div>
           <button
             onClick={() => setTaskDetailsModal(false)}
@@ -78,30 +103,90 @@ const TaskModal = ({
         </div>
         <div>
           <h3 className="font-semibold">Description:</h3>
-          <h3 className="pl-4">{task?.description ?? ""}</h3>
+          {editMode ? (
+            <textarea
+              className="w-full"
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)}
+            />
+          ) : (
+            <h3 className="pl-4">{task?.description ?? ""}</h3>
+          )}
         </div>
         <div>
           <h3 className="font-semibold">Priority:</h3>
-          <span className="flex items-center pl-4 gap-x-2">
-            <TaskPriority priority={task.priority} />
-            <h3 className="">{task.priority}</h3>
-          </span>
+          {editMode ? (
+            <div className="flex w-full gap-x-2">
+              {priorityLevels.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTaskPriority(p)}
+                  type="button"
+                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <span className="flex items-center pl-4 gap-x-2">
+              <TaskPriority priority={task.priority} />
+              <h3 className="">{task.priority}</h3>
+            </span>
+          )}
         </div>
         <div>
           <div className="flex justify-between items-center">
             <h3 className="font-semibold">Assigned To:</h3>
-            <button onClick={handleAssignToMe} className="font-semibold underline text-sm cursor-pointer">
+            {!editMode && <button
+              onClick={handleAssignToMe}
+              className="font-semibold underline text-sm cursor-pointer"
+            >
               Assign To Me
-            </button>
+            </button>}
           </div>
-          <h3 className="pl-4">{task.assignedTo}</h3>
+          {editMode ? (
+            <select
+
+              id="assignTo"
+              className="w-full"
+              value={taskAssignedTo}
+              onChange={(e) => setTaskAssignedTo(e.target.value)}
+            >
+              {!usersLoading &&
+                usersInProject?.map((u) => (
+                  <option key={u} value={u} className="bg-[#464646]">
+                    {u}
+                  </option>
+                ))}
+            </select>
+          ) : (
+            <h3 className="pl-4">{task.assignedTo}</h3>
+          )}
         </div>
-        <button
-          onClick={handleDeleteTask}
-          className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
-        >
-          Delete
-        </button>
+        <div className="flex flex-col gap-y-2">
+          {editMode ? (
+            <button
+              onClick={handleSaveTask}
+              className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+            >
+              Save
+            </button>
+          ) : (
+            <button
+              onClick={() => setEditMode(true)}
+              className="bg-white/20 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+            >
+              Edit
+            </button>
+          )}
+          <button
+            onClick={handleDeleteTask}
+            className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );

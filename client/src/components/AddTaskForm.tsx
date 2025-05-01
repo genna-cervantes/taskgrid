@@ -19,7 +19,7 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
-const priorityLevels = ["low", "medium", "high"] as const;
+export const priorityLevels = ["low", "medium", "high"] as const;
 export type PriorityLevel = (typeof priorityLevels)[number];
 
 const AddTaskForm = ({
