@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { getTasksFromProjectId, insertTask } from '../db/queries.js';
+import { getTasksFromProjectId, insertTask, updateTaskProgress } from '../db/queries.js';
 import { config } from "dotenv";
 import { TaskSchema } from '../schemas/schemas.js';
 
@@ -31,15 +31,14 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true
       return false;
     }),
-  hello: publicProcedure
-    .input((z.object({name: z.string()})))
-    .query(({input}) => {
-      return `Hello ${input.name}!`;
+  updateTaskProgress: publicProcedure
+    .input((z.object({taskId: z.string(), progress: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await updateTaskProgress(pool, input.taskId, input.progress)
+      if (taskCount && taskCount > 0) return true
+      return false;
     }),
-  getTime: publicProcedure
-    .query(() => {
-      return new Date();
-    }),
+  
 });
 
 // Export type router type

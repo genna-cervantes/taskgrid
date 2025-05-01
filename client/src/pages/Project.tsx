@@ -49,6 +49,7 @@ const groupTasksByColumn = (taskList: Task[]) => {
 const Project = () => {
   const { projectId } = useParams();
 
+  const utils = trpc.useUtils();
   const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? '' });
   
   const [columns, setColumns] = useState(initialColumns);
@@ -59,6 +60,16 @@ const Project = () => {
       setColumns(groupTasksByColumn(data));
     }
   }, [data]);
+
+  const updateTaskProgress = trpc.updateTaskProgress.useMutation({
+      onSuccess: (data) => {
+        console.log("Task updated:", data);
+        utils.getTasks.invalidate({ id: projectId });
+      },
+      onError: (error) => {
+        console.error("Failed to create task:", error.message);
+      },
+    });
   
   const handleDragStart = (fromColumn: ColumnKey, task: Task) => {
     setDragData({ from: fromColumn, task });
@@ -66,19 +77,17 @@ const Project = () => {
 
   const handleDrop = (toColumn: ColumnKey) => {
     if (!dragData) return;
-    const { from, task } = dragData;
+    const { task } = dragData;
 
-    setColumns((prev: Columns) => {
-      const newFrom = prev[from].filter((i: Task) => i.id !== task.id);
-      const newTo = [...prev[toColumn], task];
-      return { ...prev, [from]: newFrom, [toColumn]: newTo };
-    });
+    // update in database
+    updateTaskProgress.mutate({progress: toColumn, taskId: task.id})
   };
 
+  // should redirect to not found
   if (!projectId){
-    return <div>
+    return (<div>
       missing project id
-    </div>
+    </div>)
   }
 
   return (
