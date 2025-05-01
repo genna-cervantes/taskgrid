@@ -3,5 +3,7 @@ export type Task = {
     title: string,
     description: string,
     priority: 'high' | 'low' | 'medium',
-    assignedTo: string
+    assignedTo: string,
+    progress: string,
+    projectTaskId: number
   }

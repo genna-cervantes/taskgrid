@@ -14,7 +14,7 @@ const TaskBlock = ({ col, task, handleDragStart }: { col: ColumnKey, task: Task,
       <div className="mt-4">
         <TaskPriority priority={task.priority} />
         <div className="flex justify-between text-xs pt-1">
-          <p className="font-semibold">[{task.id}]</p>
+          <p className="font-semibold">[{task.projectTaskId}]</p>
           <p>{task.assignedTo}</p>
         </div>
       </div>

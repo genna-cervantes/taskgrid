@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
+import { trpc } from "../utils/trpc";
 
 // TASKS
 export type Task = {
@@ -9,28 +10,10 @@ export type Task = {
   title: string,
   description: string,
   priority: 'high' | 'low' | 'medium',
-  assignedTo: string
+  assignedTo: string,
+  progress: string,
+  projectTaskId: number
 }
-
-const initialTask: Task[] = [{
-  id: 'T1',
-  title: 'New Task',
-  description: 'Description of task...',
-  priority: 'high',
-  assignedTo: ''
-}, {
-  id: 'T2',
-  title: 'New Task 2',
-  description: 'Description of task...',
-  priority: 'medium',
-  assignedTo: 'Genna Cervantes'
-}, {
-  id: 'T3',
-  title: 'New Task 3',
-  description: 'Description of task...',
-  priority: 'low',
-  assignedTo: ''
-}]
 
 // COLUMNS
 export type ColumnKey = "backlog" | "in progress" | "for checking" | "done";
@@ -40,18 +23,43 @@ type Columns = {
 };
 
 const initialColumns: Columns = {
-  backlog: [initialTask[0], initialTask[2]],
-  "in progress": [initialTask[1]],
+  backlog: [],
+  "in progress": [],
   "for checking": [],
   "done": []
 };
 
+const groupTasksByColumn = (taskList: Task[]) => {
+  const grouped: Columns = {
+    backlog: [],
+    'in progress': [],
+    'for checking': [],
+    done: [],
+  };
+
+  taskList.forEach((t) => {
+    const key = t.progress as ColumnKey;
+    grouped[key].push(t);
+  });
+
+  return grouped;
+};
+
+
 const Project = () => {
   const { projectId } = useParams();
 
+  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? '' });
+  
   const [columns, setColumns] = useState(initialColumns);
   const [dragData, setDragData] = useState<{ from: ColumnKey; task: Task } | null>(null);
-
+  
+  useEffect(() => {
+    if (data) {
+      setColumns(groupTasksByColumn(data));
+    }
+  }, [data]);
+  
   const handleDragStart = (fromColumn: ColumnKey, task: Task) => {
     setDragData({ from: fromColumn, task });
   };
