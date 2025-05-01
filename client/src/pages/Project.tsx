@@ -102,7 +102,7 @@ const Project = () => {
           <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">{col}</h2>
           {columns[col].map((task) => (
             <React.Fragment key={task.id}>
-              <TaskBLock col={col} task={task} handleDragStart={handleDragStart} />
+              <TaskBLock projectId={projectId} col={col} task={task} handleDragStart={handleDragStart} />
             </React.Fragment>
           ))}
           <AddTask projectId={projectId} col={col} className="hidden group-hover:block" />

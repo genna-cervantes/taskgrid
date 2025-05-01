@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { InsertableTask, Task } from "../schemas/schemas.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
-    const query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1';
+    const query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [id]);
 
     const tasks: Task[] = res.rows.map((task) => ({
@@ -21,8 +21,15 @@ export const insertTask = async (pool: Pool, task: InsertableTask, id: string) =
 }
 
 export const updateTaskProgress = async (pool: Pool, taskId: string, progress: string) => {
-    const query = 'UPDATE tasks SET progress = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET progress = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [progress, parseInt(taskId)]);
 
     return res.rowCount;
+}
+
+export const deleteTask = async (pool: Pool, taskId: string) => {
+    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1';
+    const res = await pool.query(query, [taskId]);
+
+    return res.rowCount
 }
