@@ -3,8 +3,8 @@ import Navbar from "../components/Navbar";
 
 const Layout = () => {
   return (
-    <main className="w-full h-screen py-10 bg-radial-[at_50%_75%] from-rose-300 via-rose-200 to-rose-100">
-      <Navbar />
+    <main className="w-full h-screen flex flex-col bg-[#1A1A1A] text-[#F5F5F5]">
+      {/* <Navbar /> */}
       <Outlet />
     </main>
   );

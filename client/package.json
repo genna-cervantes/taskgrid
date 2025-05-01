@@ -19,6 +19,7 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
     "react-router-dom": "^6.29.0",
+    "tailwindcss": "^4.1.5",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.1.0"
@@ -29,9 +30,10 @@
     "@trpc/client": "^10.45.1",
     "@trpc/react-query": "^10.45.1",
     "@trpc/server": "^10.45.1",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "superjson": "^2.2.1",
-    "tailwindcss": "^4.0.6"
+    "superjson": "^2.2.1"
   }
 }

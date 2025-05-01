@@ -5,7 +5,6 @@ import Projects from "./pages/Projects";
 import Contact from "./pages/Contact";
 import NoPage from "./pages/NoPage";
 import Project from "./pages/Project";
-import ProjectList from "./pages/ProjectList";
 
 const App = () => {
   return (
@@ -14,7 +13,6 @@ const App = () => {
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="projects" element={<Projects />}>
-            <Route index element={<ProjectList />} />
             <Route path=":projectId" element={<Project />} />
           </Route>
           <Route path="contact" element={<Contact />} />
