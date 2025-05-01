@@ -8,6 +8,7 @@ module.exports = {
       extend: {
         fontFamily: {
           noto: ['"Noto Sans"', 'sans-serif'],
+          rubik: ['"Rubik"', 'sans-serif'],
         },
       },
     },
