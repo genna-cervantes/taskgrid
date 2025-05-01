@@ -28,6 +28,7 @@ const LinkCopiedModal = ({
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
+        Share this board with colleagues to track task progress.
         <button
           onClick={handleCopyLink}
           className="bg-green-400 text-sm font-semibold py-2 rounded-md cursor-pointer"

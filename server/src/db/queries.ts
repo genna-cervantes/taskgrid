@@ -33,3 +33,22 @@ export const deleteTask = async (pool: Pool, taskId: string) => {
 
     return res.rowCount
 }
+
+export const setUsername = async (pool: Pool, id: string, username: string) => {
+    const query = 'INSERT INTO users (username, project_id) VALUES ($1, $2)';
+    const res = await pool.query(query, [username, id]);
+
+    return res.rowCount;
+}
+
+export const getUsersInProject = async (pool: Pool, id: string) => {
+    const query = 'SELECT username FROM users WHERE project_id = $1 AND is_active = TRUE'
+    const res = await pool.query(query, [id]);
+
+    if (res.rowCount === 0){
+        return []
+    }
+
+    let usernames = res.rows.map((r) => r.username)
+    return usernames;
+}

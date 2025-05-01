@@ -22,8 +22,6 @@ type TaskFormData = z.infer<typeof taskSchema>;
 const priorityLevels = ["low", "medium", "high"] as const;
 export type PriorityLevel = (typeof priorityLevels)[number];
 
-const usersInProject = ["Genna Cervantes", "Sara Limeta"];
-
 const AddTaskForm = ({
   projectId,
   col,
@@ -44,6 +42,10 @@ const AddTaskForm = ({
   });
 
   const utils = trpc.useUtils();
+
+  const { data: usersInProject, isLoading: usersLoading } = trpc.getUsersInProject.useQuery({
+      id: projectId,
+    });
 
   const insertTask = trpc.insertTask.useMutation({
     onSuccess: (data) => {
@@ -127,7 +129,7 @@ const AddTaskForm = ({
               Assign To:
             </label>
             <select {...register("assignedTo")} id="assignTo">
-              {usersInProject.map((u) => (
+              {!usersLoading && usersInProject?.map((u) => (
                 <option key={u} value={u} className="bg-[#464646]">
                   {u}
                 </option>

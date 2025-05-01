@@ -1,14 +1,41 @@
-import React, { useState } from 'react'
-import { setUsernameForProject } from '../utils/indexedb'
+import React, { useState } from "react";
+import { setUsernameForProject } from "../utils/indexedb";
+import { trpc } from "../utils/trpc";
 
-const UserNameModal = ({projectId, setUsernameModal}: {projectId: string, setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>}) => {
+const UserNameModal = ({
+  projectId,
+  setUsernameModal,
+}: {
+  projectId: string;
+  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
+}) => {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
 
-    const [name, setName] = useState("")
-    
-    const handleSaveName = async () => {
-        await setUsernameForProject(projectId, name)
-        setUsernameModal(false);
+  const setUsernameInDb = trpc.setUsername.useMutation({
+    onSuccess: (data) => {
+      console.log("Name set:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const { data: usernames, isLoading } = trpc.getUsersInProject.useQuery({
+    id: projectId,
+  });
+
+  const handleSaveName = async () => {
+    if (usernames?.includes(name)) {
+      setError("This name has already been registed to this board!");
+      return;
     }
+
+    await setUsernameForProject(projectId, name);
+    setUsernameInDb.mutate({ id: projectId, username: name });
+    setUsernameModal(false);
+    window.location.reload();
+  };
 
   return (
     <div
@@ -19,15 +46,35 @@ const UserNameModal = ({projectId, setUsernameModal}: {projectId: string, setUse
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
-        <div className='flex justify-between items-center'> 
-            <h1 className='text-sm font-bold'>What name should others in this project call you?</h1>
-            <button onClick={() => setUsernameModal(false)} className='px-4 py-1 text-white text-sm font-semibold rounded-md bg-white/20 cursor-pointer'>Close</button>
+        <div className="flex justify-between items-center">
+          <h1 className="text-sm font-bold">
+            What name should others in this project call you?
+          </h1>
+          <button
+            onClick={() => setUsernameModal(false)}
+            className="px-4 py-1 text-white text-sm font-semibold rounded-md bg-white/20 cursor-pointer"
+          >
+            Close
+          </button>
         </div>
-        <input type="text" placeholder='Karina Yoo' value={name} onChange={(e) => setName(e.target.value)} />
-        <button onClick={handleSaveName} className='w-full bg-green-400 text-white font-semibold text-sm py-2 rounded-md cursor-pointer'>Save</button>
+        <input
+          type="text"
+          placeholder="Karina Yoo"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        {error && (
+          <p className="text-red-400 text-xs font-semibold mt-1">{error}</p>
+        )}
+        <button
+          onClick={handleSaveName}
+          className="w-full bg-green-400 text-white font-semibold text-sm py-2 rounded-md cursor-pointer"
+        >
+          Save
+        </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserNameModal
+export default UserNameModal;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { getUsernameForProject } from '../utils/indexedb'
 import UserNameModal from '../components/UserNameModal';
@@ -16,20 +16,28 @@ const Projects = () => {
 
   const [usernameModal, setUsernameModal] = useState(false)
   const [linkCopiedModal, setLinkCopiedModal] = useState(false)
-  const [userName, setUsername] = useState("")
+  const [userName, setUsername] = useState()
+
+  useEffect(() => {
+    // check if name is set in storage
+    const fetchUsername = async () => {
+      const userNameFromIdb = await getUsernameForProject(projectId);
+      setUsername(userNameFromIdb);
+    };
+  
+    fetchUsername();
+  }, []);
+  
 
   const handleShare = async () => {
-    // check if name is set in storage
-    let userNameFromIdb = await getUsernameForProject(projectId)
-    
     // if not prompt for name
-    if (!userNameFromIdb){
+    if (!userName){
       // set name in indexedb
       setUsernameModal(true)
+      return;
       // add name to users in projects db
     }
     
-    setUsername(userNameFromIdb)
     // copy link to clipboard
     setLinkCopiedModal(true)
   }

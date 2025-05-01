@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { deleteTask, getTasksFromProjectId, insertTask, updateTaskProgress } from '../db/queries.js';
+import { deleteTask, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, updateTaskProgress } from '../db/queries.js';
 import { config } from "dotenv";
 import { TaskSchema } from '../schemas/schemas.js';
 
@@ -44,6 +44,19 @@ export const appRouter = router({
       let taskCount = await deleteTask(pool, input.taskId)
       if (taskCount && taskCount > 0) return true
       return false;
+    }),
+    setUsername: publicProcedure
+    .input((z.object({username: z.string(), id: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await setUsername(pool, input.id, input.username)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
+  getUsersInProject: publicProcedure
+    .input((z.object({id: z.string()})))
+    .query(async ({input}) => {
+      let users = await getUsersInProject(pool, input.id)
+      return users as string[];
     })
   
 });
