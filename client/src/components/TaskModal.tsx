@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Task } from "../pages/Project";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
@@ -24,6 +24,17 @@ const TaskModal = ({
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
+  const [userName, setUsername] = useState()
+  
+    useEffect(() => {
+      // check if name is set in storage
+      const fetchUsername = async () => {
+        const userNameFromIdb = await getUsernameForProject(projectId);
+        setUsername(userNameFromIdb);
+      };
+    
+      fetchUsername();
+    }, []);
 
   const { data: usersInProject, isLoading: usersLoading } =
     trpc.getUsersInProject.useQuery({
@@ -104,18 +115,16 @@ const TaskModal = ({
 
     if (task.assignedTo !== taskAssignedTo){
         updateAssignedTo.mutate({username: taskAssignedTo, taskId: task.id})
-    }
+    }   
 
     setEditMode(false);
   };
 
   const handleAssignToMe = async () => {
     // check if name is set in storage
-    let username = await getUsernameForProject(projectId);
-
-    if (username) {
+    if (userName) {
       // update assigned to
-      updateAssignedTo.mutate({ taskId: task.id, username });
+      updateAssignedTo.mutate({ taskId: task.id, username: userName });
     } else {
       setTaskDetailsModal(false);
       setUsernameModal(true);
@@ -194,7 +203,7 @@ const TaskModal = ({
             <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
               Assigned To:
             </h3>
-            {!editMode && (
+            {!editMode && (task.assignedTo !== userName) && (
               <button
                 onClick={handleAssignToMe}
                 className="font-semibold underline text-sm cursor-pointer"
