@@ -22,7 +22,7 @@ const TaskModal = ({
 
   const [taskTitle, setTaskTitle] = useState(task.title);
   const [taskDescription, setTaskDescription] = useState(task.description);
-  const [taskPriority, setTaskPriority] = useState(task.description);
+  const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
 
   const { data: usersInProject, isLoading: usersLoading } =
@@ -102,7 +102,7 @@ const TaskModal = ({
           </button>
         </div>
         <div>
-          <h3 className="font-semibold">Description:</h3>
+          <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Description:</h3>
           {editMode ? (
             <textarea
               className="w-full"
@@ -114,7 +114,7 @@ const TaskModal = ({
           )}
         </div>
         <div>
-          <h3 className="font-semibold">Priority:</h3>
+          <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Priority:</h3>
           {editMode ? (
             <div className="flex w-full gap-x-2">
               {priorityLevels.map((p) => (
@@ -137,7 +137,7 @@ const TaskModal = ({
         </div>
         <div>
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Assigned To:</h3>
+            <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Assigned To:</h3>
             {!editMode && <button
               onClick={handleAssignToMe}
               className="font-semibold underline text-sm cursor-pointer"
@@ -147,7 +147,6 @@ const TaskModal = ({
           </div>
           {editMode ? (
             <select
-
               id="assignTo"
               className="w-full"
               value={taskAssignedTo}

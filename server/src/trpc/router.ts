@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { deleteTask, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, updateAssignedToTask, updateTaskProgress } from '../db/queries.js';
+import { deleteTask, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { TaskSchema } from '../schemas/schemas.js';
 
@@ -58,10 +58,31 @@ export const appRouter = router({
       let users = await getUsersInProject(pool, input.id)
       return users as string[];
     }),
-  updateAssignedToTask: publicProcedure
+  updateAssignedTo: publicProcedure
     .input((z.object({username: z.string(), taskId: z.string()})))
     .mutation(async ({input}) => {
-      let taskCount = await updateAssignedToTask(pool, input.taskId, input.username)
+      let taskCount = await updateAssignedTo(pool, input.taskId, input.username)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
+  updateTaskTitle: publicProcedure
+    .input((z.object({title: z.string(), taskId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await updateTaskTitle(pool, input.taskId, input.title)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
+  updateTaskDescription: publicProcedure
+    .input((z.object({description: z.string(), taskId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await updateTaskDescription(pool, input.taskId, input.description)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
+  updateTaskPriority: publicProcedure
+    .input((z.object({priority: z.string(), taskId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await updateTaskPriority(pool, input.taskId, input.priority)
       if (taskCount && taskCount > 0) return true
       return false;
     }),

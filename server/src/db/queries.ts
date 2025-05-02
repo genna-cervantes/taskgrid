@@ -53,9 +53,30 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
     return usernames;
 }
 
-export const updateAssignedToTask = async (pool: Pool, taskId: string, username: string) => {
+export const updateAssignedTo = async (pool: Pool, taskId: string, username: string) => {
     const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2';
     const res = await pool.query(query, [username, taskId])
+
+    return res.rowCount;
+}
+
+export const updateTaskTitle = async (pool: Pool, taskId: string, title: string) => {
+    const query = 'UPDATE tasks SET title = $1 WHERE id = $2';
+    const res = await pool.query(query, [title, taskId]);
+
+    return res.rowCount;
+}
+
+export const updateTaskDescription = async (pool: Pool, taskId: string, description: string) => {
+    const query = 'UPDATE tasks SET description = $1 WHERE id = $2';
+    const res = await pool.query(query, [description, taskId])
+
+    return res.rowCount;
+}
+
+export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
+    const query = 'UPDATE tasks SET priority = $1 WHERE id = $2';
+    const res = await pool.query(query, [priority, taskId]);
 
     return res.rowCount;
 }
