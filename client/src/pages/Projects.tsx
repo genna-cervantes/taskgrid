@@ -1,25 +1,27 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { Outlet, useNavigate, useParams } from 'react-router-dom'
-import { getUsernameForProject } from '../utils/indexedb'
-import UserNameModal from '../components/UserNameModal';
-import LinkCopiedModal from '../components/LinkCopiedModal';
-import ActionModal from '../components/ActionModal';
-import { ActionContext } from '../contexts/ActionContext';
+import React, { useContext, useEffect, useState } from "react";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { getUsernameForProject } from "../utils/indexedb";
+import UserNameModal from "../components/UserNameModal";
+import LinkCopiedModal from "../components/LinkCopiedModal";
+import ActionModal from "../components/ActionModal";
+import { ActionContext } from "../contexts/ActionContext";
+import SidebarButton from "../components/SidebarButton";
+import Sidebar from "../components/Sidebar";
 
 const Projects = () => {
-
   const navigate = useNavigate();
   const { projectId } = useParams();
 
-  if (!projectId){
-    navigate('/');
+  if (!projectId) {
+    navigate("/");
     return;
   }
 
-  const [usernameModal, setUsernameModal] = useState(false)
-  const [linkCopiedModal, setLinkCopiedModal] = useState(false)
-  const [userName, setUsername] = useState()
-  const actionContext = useContext(ActionContext)
+  const [usernameModal, setUsernameModal] = useState(false);
+  const [linkCopiedModal, setLinkCopiedModal] = useState(false);
+  const [userName, setUsername] = useState();
+  const [openSidebar, setOpenSidebar] = useState(false);
+  const actionContext = useContext(ActionContext);
 
   useEffect(() => {
     // check if name is set in storage
@@ -27,40 +29,57 @@ const Projects = () => {
       const userNameFromIdb = await getUsernameForProject(projectId);
       setUsername(userNameFromIdb);
     };
-  
+
     fetchUsername();
   }, []);
-  
 
   const handleShare = async () => {
     // if not prompt for name
-    if (!userName){
+    if (!userName) {
       // set name in indexedb
-      setUsernameModal(true)
+      setUsernameModal(true);
       return;
       // add name to users in projects db
     }
-    
+
     // copy link to clipboard
-    setLinkCopiedModal(true)
-  }
+    setLinkCopiedModal(true);
+  };
 
   return (
     <>
-      {linkCopiedModal && <LinkCopiedModal setLinkCopiedModal={setLinkCopiedModal} />}
-      {usernameModal && <UserNameModal projectId={projectId} setUsernameModal={setUsernameModal} />}
-      <div className='h-full flex flex-col'>
-          <div className='flex justify-end px-4 mt-4 gap-x-4 items-center'>
+      {linkCopiedModal && (
+        <LinkCopiedModal setLinkCopiedModal={setLinkCopiedModal} />
+      )}
+      {usernameModal && (
+        <UserNameModal
+          projectId={projectId}
+          setUsernameModal={setUsernameModal}
+        />
+      )}
+      {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />}
+      <div className="h-full flex flex-col">
+        <div className="flex justify-between px-6 items-end">
+          <SidebarButton openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
+          <div className="flex justify-end gap-x-4 items-center">
             <h1>{userName}</h1>
-            <button onClick={handleShare} className='px-3 py-1 rounded-md bg-green-400 text-sm font-bold cursor-pointer'>Share</button>
+            <button
+              onClick={handleShare}
+              className="px-3 py-1 rounded-md bg-green-400 text-sm font-bold cursor-pointer"
+            >
+              Share
+            </button>
           </div>
-          <Outlet context={{setUsernameModal, userName}} />
+        </div>
+        <Outlet context={{ setUsernameModal, userName }} />
       </div>
-      <div className='w-full flex justify-center'>
-        {actionContext?.action && <ActionModal projectId={projectId} action={actionContext.action} />}
+      <div className="w-full flex justify-center">
+        {actionContext?.action && (
+          <ActionModal projectId={projectId} action={actionContext.action} />
+        )}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Projects
+export default Projects;

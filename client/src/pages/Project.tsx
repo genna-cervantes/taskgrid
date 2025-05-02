@@ -3,6 +3,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
+import { addProjectId } from "../utils/indexedb";
 
 // TASKS
 export type Task = {
@@ -46,6 +47,7 @@ const groupTasksByColumn = (taskList: Task[]) => {
 };
 
 const Project = () => {
+  
   const { projectId } = useParams();
 
   const {setUsernameModal, userName} = useOutletContext<{setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>, userName: string|undefined}>();
