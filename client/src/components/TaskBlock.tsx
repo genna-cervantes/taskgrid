@@ -8,19 +8,21 @@ const TaskBlock = ({
   task,
   projectId,
   handleDragStart,
-  setUsernameModal
+  setUsernameModal,
+  username
 }: {
   col: ColumnKey;
   task: Task;
   projectId: string,
   handleDragStart: (fromColumn: ColumnKey, task: Task) => void;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>
+  username: string|undefined
 }) => {
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
 
   return (
     <>
-      {taskDetailsModal && <TaskModal setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
+      {taskDetailsModal && <TaskModal username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
       <div
         key={task.id}
         draggable
@@ -33,7 +35,7 @@ const TaskBlock = ({
           <TaskPriority priority={task.priority} />
           <div className="flex justify-between text-xs pt-1">
             <p className="font-semibold">[{task.projectTaskId}]</p>
-            <p>{task.assignedTo}</p>
+            <p>{task.assignedTo} {task.assignedTo === username ? '(You)' : ''}</p>
           </div>
         </div>
       </div>

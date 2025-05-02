@@ -12,11 +12,13 @@ const TaskModal = ({
   projectId,
   setTaskDetailsModal,
   setUsernameModal,
+  username
 }: {
   task: Task;
   projectId: string;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
+  username: string|undefined
 }) => {
   const utils = trpc.useUtils();
 
@@ -26,21 +28,10 @@ const TaskModal = ({
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
-  const [userName, setUsername] = useState()
   
   const actionContext = useContext(ActionContext)
   const recentTaskContext = useContext(RecentTaskContext)
   
-    useEffect(() => {
-      // check if name is set in storage
-      const fetchUsername = async () => {
-        const userNameFromIdb = await getUsernameForProject(projectId);
-        setUsername(userNameFromIdb);
-      };
-    
-      fetchUsername();
-    }, []);
-
   const { data: usersInProject, isLoading: usersLoading } =
     trpc.getUsersInProject.useQuery({
       id: projectId,
@@ -136,9 +127,9 @@ const handleSaveTask = () => {
 
   const handleAssignToMe = async () => {
     // check if name is set in storage
-    if (userName) {
+    if (username) {
       // update assigned to
-      updateAssignedTo.mutate({ taskId: task.id, username: userName });
+      updateAssignedTo.mutate({ taskId: task.id, username });
     } else {
       setTaskDetailsModal(false);
       setUsernameModal(true);
@@ -217,7 +208,7 @@ const handleSaveTask = () => {
             <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
               Assigned To:
             </h3>
-            {!editMode && (task.assignedTo !== userName) && (
+            {!editMode && (task.assignedTo !== username) && (
               <button
                 onClick={handleAssignToMe}
                 className="font-semibold underline text-sm cursor-pointer"
@@ -241,7 +232,7 @@ const handleSaveTask = () => {
                 ))}
             </select>
           ) : (
-            <h3 className="pl-4">{task.assignedTo}</h3>
+            <h3 className="pl-4">{task.assignedTo} {task.assignedTo === username ? '(You)' : ''}</h3>
           )}
         </div>
         <div className="flex flex-col gap-y-2">

@@ -28,10 +28,12 @@ const AddTaskForm = ({
   projectId,
   col,
   setAddModal,
+  username
 }: {
   projectId: string;
   col: string
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
+  username: string|undefined
 }) => {
   const {
     register,
@@ -139,7 +141,7 @@ const AddTaskForm = ({
             <select {...register("assignedTo")} id="assignTo">
               {!usersLoading && usersInProject?.map((u) => (
                 <option key={u} value={u} className="bg-[#464646]">
-                  {u}
+                  {u} {u === username ? '(You)' : ''}
                 </option>
               ))}
             </select>

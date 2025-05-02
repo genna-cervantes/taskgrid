@@ -48,7 +48,7 @@ const groupTasksByColumn = (taskList: Task[]) => {
 const Project = () => {
   const { projectId } = useParams();
 
-  const {setUsernameModal} = useOutletContext<{setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>}>();
+  const {setUsernameModal, userName} = useOutletContext<{setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>, userName: string|undefined}>();
 
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
@@ -113,6 +113,7 @@ const Project = () => {
                   task={task}
                   handleDragStart={handleDragStart}
                   setUsernameModal={setUsernameModal}
+                  username={userName}
                 />
               </React.Fragment>
             ))}
@@ -121,6 +122,7 @@ const Project = () => {
             projectId={projectId}
             col={col}
             className="hidden group-hover:block"
+            username={userName}
           />
         </div>
       ))}

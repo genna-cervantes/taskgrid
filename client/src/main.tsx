@@ -4,9 +4,12 @@ import { httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import './index.css'
+import "./index.css";
 import { ActionProvider } from "./contexts/ActionContext";
-import { RecentTaskContext, RecentTaskProvider } from "./contexts/RecentTaskContext";
+import {
+  RecentTaskContext,
+  RecentTaskProvider,
+} from "./contexts/RecentTaskContext";
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -21,11 +24,11 @@ const trpcClient = trpc.createClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
-      <RecentTaskProvider>
-        <ActionProvider>
-          <App />
-        </ActionProvider>
-      </RecentTaskProvider>
+        <RecentTaskProvider>
+          <ActionProvider>
+            <App />
+          </ActionProvider>
+        </RecentTaskProvider>
     </QueryClientProvider>
   </trpc.Provider>
 );
