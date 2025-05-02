@@ -102,15 +102,17 @@ const TaskModal = ({
 
   const handleDeleteTask = () => {
     recentTaskContext?.setTask(task) // keep track of this task for insertion later if undone
-
+    
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
-
+    
     actionContext?.setAction("deleted")
     
 };
 
 const handleSaveTask = () => {
+    recentTaskContext?.setTask(task) // keep track of this task for rollback later if undone
+
     if (task.title !== taskTitle) {
         updateTaskTitle.mutate({title: taskTitle, taskId: task.id})
     }
@@ -258,12 +260,12 @@ const handleSaveTask = () => {
               Edit
             </button>
           )}
-          <button
+          {!editMode && <button
             onClick={handleDeleteTask}
             className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
           >
             Delete
-          </button>
+          </button>}
         </div>
       </div>
     </div>
