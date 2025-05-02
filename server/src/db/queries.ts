@@ -67,7 +67,7 @@ export const updateTaskTitle = async (pool: Pool, taskId: string, title: string)
     return res.rowCount;
 }
 
-export const updateTaskDescription = async (pool: Pool, taskId: string, description: string) => {
+export const updateTaskDescription = async (pool: Pool, taskId: string, description?: string) => {
     const query = 'UPDATE tasks SET description = $1 WHERE id = $2';
     const res = await pool.query(query, [description, taskId])
 

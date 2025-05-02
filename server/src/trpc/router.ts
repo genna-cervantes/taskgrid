@@ -73,7 +73,7 @@ export const appRouter = router({
       return false;
     }),
   updateTaskDescription: publicProcedure
-    .input((z.object({description: z.string(), taskId: z.string()})))
+    .input((z.object({description: z.string().optional(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskDescription(pool, input.taskId, input.description)
       if (taskCount && taskCount > 0) return true

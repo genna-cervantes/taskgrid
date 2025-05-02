@@ -40,7 +40,9 @@ const TaskModal = ({
     },
   });
 
-  const updateAssignedTo = trpc.updateAssignedToTask.useMutation({
+  // TRPC METHODS
+
+  const updateAssignedTo = trpc.updateAssignedTo.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
       utils.getTasks.invalidate({ id: projectId });
@@ -50,12 +52,60 @@ const TaskModal = ({
     },
   });
 
+  const updateTaskTitle = trpc.updateTaskTitle.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskDescription = trpc.updateTaskDescription.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskPriority = trpc.updateTaskPriority.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  // HANDLE METHODS
+
   const handleDeleteTask = () => {
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
   };
 
   const handleSaveTask = () => {
+    if (task.title !== taskTitle) {
+        updateTaskTitle.mutate({title: taskTitle, taskId: task.id})
+    }
+
+    if (task.description !== taskDescription){
+        updateTaskDescription.mutate({description: taskDescription, taskId: task.id})
+    }
+
+    if (task.priority !== taskPriority){
+        updateTaskPriority.mutate({priority: taskPriority, taskId: task.id})
+    }   
+
+    if (task.assignedTo !== taskAssignedTo){
+        updateAssignedTo.mutate({username: taskAssignedTo, taskId: task.id})
+    }
+
     setEditMode(false);
   };
 
@@ -102,7 +152,9 @@ const TaskModal = ({
           </button>
         </div>
         <div>
-          <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Description:</h3>
+          <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+            Description:
+          </h3>
           {editMode ? (
             <textarea
               className="w-full"
@@ -114,7 +166,9 @@ const TaskModal = ({
           )}
         </div>
         <div>
-          <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Priority:</h3>
+          <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+            Priority:
+          </h3>
           {editMode ? (
             <div className="flex w-full gap-x-2">
               {priorityLevels.map((p) => (
@@ -137,13 +191,17 @@ const TaskModal = ({
         </div>
         <div>
           <div className="flex justify-between items-center">
-            <h3 className={`font-semibold ${editMode ? 'text-xs pb-1' : ''}`}>Assigned To:</h3>
-            {!editMode && <button
-              onClick={handleAssignToMe}
-              className="font-semibold underline text-sm cursor-pointer"
-            >
-              Assign To Me
-            </button>}
+            <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+              Assigned To:
+            </h3>
+            {!editMode && (
+              <button
+                onClick={handleAssignToMe}
+                className="font-semibold underline text-sm cursor-pointer"
+              >
+                Assign To Me
+              </button>
+            )}
           </div>
           {editMode ? (
             <select
