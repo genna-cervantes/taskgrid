@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Task } from "../pages/Project";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
 import { getUsernameForProject } from "../utils/indexedb";
 import { priorityLevels } from "./AddTaskForm";
+import { ActionContext } from "../contexts/ActionContext";
 
 const TaskModal = ({
   task,
@@ -25,6 +26,8 @@ const TaskModal = ({
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
   const [userName, setUsername] = useState()
+  
+  const actionContext = useContext(ActionContext)
   
     useEffect(() => {
       // check if name is set in storage
@@ -98,26 +101,31 @@ const TaskModal = ({
   const handleDeleteTask = () => {
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
-  };
 
-  const handleSaveTask = () => {
+    actionContext?.setAction("deleted")
+    
+};
+
+const handleSaveTask = () => {
     if (task.title !== taskTitle) {
         updateTaskTitle.mutate({title: taskTitle, taskId: task.id})
     }
-
+    
     if (task.description !== taskDescription){
         updateTaskDescription.mutate({description: taskDescription, taskId: task.id})
     }
-
+    
     if (task.priority !== taskPriority){
         updateTaskPriority.mutate({priority: taskPriority, taskId: task.id})
     }   
-
+    
     if (task.assignedTo !== taskAssignedTo){
         updateAssignedTo.mutate({username: taskAssignedTo, taskId: task.id})
     }   
-
+    
     setEditMode(false);
+    
+    actionContext?.setAction("edited")
   };
 
   const handleAssignToMe = async () => {

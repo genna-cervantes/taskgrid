@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Outlet, useNavigate, useParams } from 'react-router-dom'
 import { getUsernameForProject } from '../utils/indexedb'
 import UserNameModal from '../components/UserNameModal';
 import LinkCopiedModal from '../components/LinkCopiedModal';
+import ActionModal from '../components/ActionModal';
+import { ActionContext } from '../contexts/ActionContext';
 
 const Projects = () => {
 
@@ -17,6 +19,7 @@ const Projects = () => {
   const [usernameModal, setUsernameModal] = useState(false)
   const [linkCopiedModal, setLinkCopiedModal] = useState(false)
   const [userName, setUsername] = useState()
+  const actionContext = useContext(ActionContext)
 
   useEffect(() => {
     // check if name is set in storage
@@ -52,6 +55,9 @@ const Projects = () => {
             <button onClick={handleShare} className='px-3 py-1 rounded-md bg-green-400 text-sm font-bold cursor-pointer'>Share</button>
           </div>
           <Outlet context={setUsernameModal} />
+      </div>
+      <div className='w-full flex justify-center'>
+        {actionContext?.action && <ActionModal projectId={projectId} action={actionContext.action} />}
       </div>
     </>
   )

@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { deleteTask, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { deleteTask, deleteTaskById, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { TaskSchema } from '../schemas/schemas.js';
 
@@ -27,9 +27,9 @@ export const appRouter = router({
   insertTask: publicProcedure
     .input((z.object({id: z.string(), task: TaskSchema.omit({ id: true, projectTaskId: true })})))
     .mutation(async ({input}) => {
-      let taskCount = await insertTask(pool, input.task, input.id)
-      if (taskCount && taskCount > 0) return true
-      return false;
+      let task = await insertTask(pool, input.task, input.id)
+      // if (taskCount && taskCount > 0) return true
+      return task;
     }),
   updateTaskProgress: publicProcedure
     .input((z.object({taskId: z.string(), progress: z.string()})))
@@ -86,6 +86,13 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true
       return false;
     }),
+  deleteTaskById: publicProcedure
+    .input((z.object({taskId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await deleteTaskById(pool, input.taskId)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    })
   
 });
 

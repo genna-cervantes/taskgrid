@@ -14,10 +14,12 @@ export const getTasksFromProjectId = async (pool: Pool, id: string) => {
 }
 
 export const insertTask = async (pool: Pool, task: InsertableTask, id: string) => {
-    const query = 'INSERT INTO tasks (project_id, title, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6);'
+    const query = 'INSERT INTO tasks (project_id, title, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
     const res = await pool.query(query, [id, task.title, task.description, task.priority, task.progress, task.assignedTo]);
 
-    return res.rowCount;
+    res.rows[0].id = res.rows[0].id.toString()
+
+    return res.rows[0] as Task;
 }
 
 export const updateTaskProgress = async (pool: Pool, taskId: string, progress: string) => {
@@ -77,6 +79,13 @@ export const updateTaskDescription = async (pool: Pool, taskId: string, descript
 export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
     const query = 'UPDATE tasks SET priority = $1 WHERE id = $2';
     const res = await pool.query(query, [priority, taskId]);
+
+    return res.rowCount;
+}
+
+export const deleteTaskById = async (pool: Pool, taskId: string) => {
+    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1';
+    const res = await pool.query(query, [taskId])
 
     return res.rowCount;
 }

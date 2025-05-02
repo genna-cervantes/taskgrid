@@ -1,10 +1,12 @@
-import React, { useState } from "react";
-import { ColumnKey } from "../pages/Project";
+import React, { useContext, useState } from "react";
+import { ColumnKey, Task } from "../pages/Project";
 import { cn } from "../utils/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../utils/trpc";
+import { ActionContext } from "../contexts/ActionContext";
+import { RecentTaskContext } from "../contexts/RecentTaskContext";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -42,14 +44,20 @@ const AddTaskForm = ({
   });
 
   const utils = trpc.useUtils();
+  const actionContext = useContext(ActionContext)
+  const recentTaskContext = useContext(RecentTaskContext)
 
   const { data: usersInProject, isLoading: usersLoading } = trpc.getUsersInProject.useQuery({
       id: projectId,
     });
 
   const insertTask = trpc.insertTask.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: Task) => {
       console.log("Task created:", data);
+    
+      recentTaskContext?.setTask(data as Task) // keep track of this task for removal later if undone
+      actionContext?.setAction("added")
+
       utils.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
