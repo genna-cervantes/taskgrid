@@ -89,3 +89,10 @@ export const deleteTaskById = async (pool: Pool, taskId: string) => {
 
     return res.rowCount;
 }
+
+export const undoDeleteTask = async (pool: Pool, taskId: string) => {
+    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1';
+    const res = await pool.query(query, [taskId])
+
+    return res.rowCount;
+}

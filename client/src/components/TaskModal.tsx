@@ -5,6 +5,7 @@ import { trpc } from "../utils/trpc";
 import { getUsernameForProject } from "../utils/indexedb";
 import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
+import { RecentTaskContext } from "../contexts/RecentTaskContext";
 
 const TaskModal = ({
   task,
@@ -28,6 +29,7 @@ const TaskModal = ({
   const [userName, setUsername] = useState()
   
   const actionContext = useContext(ActionContext)
+  const recentTaskContext = useContext(RecentTaskContext)
   
     useEffect(() => {
       // check if name is set in storage
@@ -99,6 +101,8 @@ const TaskModal = ({
   // HANDLE METHODS
 
   const handleDeleteTask = () => {
+    recentTaskContext?.setTask(task) // keep track of this task for insertion later if undone
+
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
 

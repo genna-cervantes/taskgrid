@@ -42,16 +42,30 @@ const utils = trpc.useUtils();
     onError: (error) => {
         console.error("Failed to create task:", error.message);
     },
-    });
+});
+
+const undoDeleteTask = trpc.undoDeleteTask.useMutation({
+        onSuccess: (data) => {
+          console.log("Task reinserted:", data);
+          
+          utils.getTasks.invalidate({ id: projectId });
+        },
+        onError: (error) => {
+          console.error("Failed to create task:", error.message);
+        },
+        
+    })
     
     const handleUndo = () => {
-        console.log(action)
-        console.log(recentTaskContext)
         if (action === 'added' && recentTaskContext?.task?.id){
-            console.log('deleting')
-            deleteTaskById.mutate({taskId: recentTaskContext?.task?.id})
-            actionContext?.setAction(undefined)
+            deleteTaskById.mutate({taskId: recentTaskContext.task.id})
         }
+        
+        else if (action === 'deleted' && recentTaskContext?.task?.id){
+            undoDeleteTask.mutate({taskId: recentTaskContext.task.id})
+        }
+            
+        actionContext?.setAction(undefined)
     }
 
   return (
