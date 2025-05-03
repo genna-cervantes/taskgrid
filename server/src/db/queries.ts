@@ -98,7 +98,7 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
 }
 
 export const addProject = async (pool: Pool, projectId: string) => {
-    const query = 'INSERT INTO projects (project_id) VALUES ($1)';
+    const query = 'INSERT INTO projects (id) VALUES ($1)';
     const res = await pool.query(query, [projectId]);
 
     return res.rowCount;

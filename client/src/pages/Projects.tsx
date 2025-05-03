@@ -31,21 +31,30 @@ const Projects = () => {
   const [openSidebar, setOpenSidebar] = useState(false);
   const actionContext = useContext(ActionContext);
 
-  useEffect(() => {
-    // check if name is set in storage
-    const fetchUsername = async () => {
-      const userNameFromIdb = await getUsernameForProject(projectId);
-      setUsername(userNameFromIdb);
-    };
+  // check if name is set in storage
+  const fetchUsername = async () => {
+    const userNameFromIdb = await getUsernameForProject(projectId);
+    setUsername(userNameFromIdb);
+    return userNameFromIdb
+  };
 
+  useEffect(() => {
     fetchUsername();
   }, []);
 
+
   useEffect(() => {
-    if (!fromHome && !userName){
-      setUsernameModal(true);
-    }
-  }, [])
+    const checkUsername = async () => {
+      const username = await fetchUsername();
+  
+      if (!fromHome && (!username || username === "")) {
+        console.log(username);
+        setUsernameModal(true);
+      }
+    };
+  
+    checkUsername();
+  }, []);
 
   const handleShare = async () => {
     // if not prompt for name
