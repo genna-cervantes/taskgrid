@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
 import { getUsernameForProject } from "../utils/indexedb";
 import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
@@ -63,10 +63,11 @@ const Projects = () => {
           setUsernameModal={setUsernameModal}
         />
       )}
-      {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />}
+      {/* {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />} */}
       <div className="h-full flex flex-col">
-        <div className="flex justify-between px-6 items-end">
-          <SidebarButton openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
+        <div className="flex justify-between px-6 items-center py-4">
+          {/* <SidebarButton openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} /> */}
+          <Link to='/' className="font-bold">TaskGrid</Link>
           <div className="flex justify-end gap-x-4 items-center">
             <h1>{userName}</h1>
             <button

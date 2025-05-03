@@ -95,7 +95,7 @@ const Project = () => {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-4 p-4 flex-1 overflow-auto">
+    <div className="grid grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto">
       {(Object.keys(columns) as ColumnKey[]).map((col) => (
         <div
           key={col}
