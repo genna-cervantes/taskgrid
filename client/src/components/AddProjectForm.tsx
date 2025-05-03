@@ -7,11 +7,11 @@ import { v4 as uuidv4 } from "uuid";
 import { addProjectId } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
 
-const projectSchema = z.object({
+export const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
 });
 
-type ProjectFormData = z.infer<typeof projectSchema>;
+export type ProjectFormData = z.infer<typeof projectSchema>;
 
 const AddProjectForm = ({
   setAddProjectForm,
@@ -66,7 +66,7 @@ const AddProjectForm = ({
         >
           <span className="w-full flex flex-col">
             <label htmlFor="title" className="text-xs font-semibold mb-2">
-              Project:
+              Project Name:
             </label>
             <input {...register("name")} placeholder="New Project Name..." />
             {errors.name && (

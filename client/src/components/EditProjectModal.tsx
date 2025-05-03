@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { getProjectNameByKey } from "../utils/indexedb";
+import { getProjectNameByKey, updateProjectName } from "../utils/indexedb";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ProjectFormData, projectSchema } from "./AddProjectForm";
 
-const EditProjectModal = ({ projectId, setEditProjectModal, setEditModal }: { projectId: string, setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>, setEditModal: React.Dispatch<React.SetStateAction<string>> }) => {
+const EditProjectModal = ({
+  projectId,
+  setEditProjectModal,
+  setEditModal,
+}: {
+  projectId: string;
+  setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setEditModal: React.Dispatch<React.SetStateAction<string>>;
+}) => {
   // get name of project
   const [projectName, setProjectName] = useState("");
 
@@ -12,23 +23,37 @@ const EditProjectModal = ({ projectId, setEditProjectModal, setEditModal }: { pr
     };
 
     fetchProjectName();
-  }, []);
+  }, [projectId]);
 
-  useEffect(() => {
-    console.log(projectName)
-  }, [projectName])
-
-  const [errors, setErrors] = useState("");
+  const form = useForm<ProjectFormData>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: {
+      name: projectName,
+    },
+  });
 
   const handleClickOutside = () => {
-    setEditProjectModal(false)
-    setEditModal("")
-  }
+    setEditProjectModal(false);
+    setEditModal("");
+  };
+
+  useEffect(() => {
+    if (projectName) {
+      form.reset({ name: projectName });
+    }
+  }, [projectName]);
+
+  const onSubmit = async (data: ProjectFormData) => {
+    await updateProjectName(projectId, data.name);
+    setEditProjectModal(false);
+    setEditModal("");
+    window.location.reload();
+  };
 
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
-        onClick={handleClickOutside} // Close when clicking backdrop
+      onClick={handleClickOutside} // Close when clicking backdrop
     >
       <div
         id="edit-project-modal"
@@ -41,23 +66,28 @@ const EditProjectModal = ({ projectId, setEditProjectModal, setEditModal }: { pr
           </label>
           <h1>{projectId}</h1>
         </span>
-        <span className="w-full flex flex-col">
-          <label htmlFor="name" className="text-xs font-semibold mb-2">
-            Project Name:
-          </label>
-          <input
-            type="text"
-            id="name"
-            placeholder="New Task Title..."
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-          />
-          {errors && (
-            <p className="text-red-400 text-xs font-semibold mt-1">{errors}</p>
-          )}
-        </span>
-        <button className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
-        >Save</button>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-y-4"
+        >
+          <span className="w-full flex flex-col">
+            <label htmlFor="title" className="text-xs font-semibold mb-2">
+              Project Name:
+            </label>
+            <input {...form.register("name")} placeholder="New Project Name..." />
+            {form.formState.errors.name && (
+              <p className="text-red-400 text-xs font-semibold mt-1">
+                {form.formState.errors.name.message}
+              </p>
+            )}
+          </span>
+          <button
+            type="submit"
+            className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+          >
+            Save
+          </button>
+        </form>
       </div>
     </div>
   );
