@@ -1,19 +1,17 @@
-// tailwind.config.js
-module.exports = {
-    content: [
-      "./index.html",
-      "./src/**/*.{js,ts,jsx,tsx}", // adapt as needed
-    ],
-    theme: {
-      extend: {
-        fontFamily: {
-          noto: ['"Noto Sans"', 'sans-serif'],
-          rubik: ['"Rubik"', 'sans-serif'],
-        },
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        noto: ['"Noto Sans"', 'sans-serif'],
+        rubik: ['"Rubik"', 'sans-serif'],
       },
     },
-    plugins: [
-      require('tailwind-scrollbar')
-    ],
-  };
-  
+  },
+  plugins: [],
+}
+
