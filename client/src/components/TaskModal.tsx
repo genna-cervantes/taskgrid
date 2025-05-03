@@ -12,13 +12,13 @@ const TaskModal = ({
   projectId,
   setTaskDetailsModal,
   setUsernameModal,
-  username
+  username,
 }: {
   task: Task;
   projectId: string;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
-  username: string|undefined
+  username: string | undefined;
 }) => {
   const utils = trpc.useUtils();
 
@@ -28,10 +28,10 @@ const TaskModal = ({
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
-  
-  const actionContext = useContext(ActionContext)
-  const recentTaskContext = useContext(RecentTaskContext)
-  
+
+  const actionContext = useContext(ActionContext);
+  const recentTaskContext = useContext(RecentTaskContext);
+
   const { data: usersInProject, isLoading: usersLoading } =
     trpc.getUsersInProject.useQuery({
       id: projectId,
@@ -92,37 +92,39 @@ const TaskModal = ({
   // HANDLE METHODS
 
   const handleDeleteTask = () => {
-    recentTaskContext?.setTask(task) // keep track of this task for insertion later if undone
-    
+    recentTaskContext?.setTask(task); // keep track of this task for insertion later if undone
+
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
-    
-    actionContext?.setAction("deleted")
-    
-};
 
-const handleSaveTask = () => {
-    recentTaskContext?.setTask(task) // keep track of this task for rollback later if undone
+    actionContext?.setAction("deleted");
+  };
+
+  const handleSaveTask = () => {
+    recentTaskContext?.setTask(task); // keep track of this task for rollback later if undone
 
     if (task.title !== taskTitle) {
-        updateTaskTitle.mutate({title: taskTitle, taskId: task.id})
+      updateTaskTitle.mutate({ title: taskTitle, taskId: task.id });
     }
-    
-    if (task.description !== taskDescription){
-        updateTaskDescription.mutate({description: taskDescription, taskId: task.id})
+
+    if (task.description !== taskDescription) {
+      updateTaskDescription.mutate({
+        description: taskDescription,
+        taskId: task.id,
+      });
     }
-    
-    if (task.priority !== taskPriority){
-        updateTaskPriority.mutate({priority: taskPriority, taskId: task.id})
-    }   
-    
-    if (task.assignedTo !== taskAssignedTo){
-        updateAssignedTo.mutate({username: taskAssignedTo, taskId: task.id})
-    }   
-    
+
+    if (task.priority !== taskPriority) {
+      updateTaskPriority.mutate({ priority: taskPriority, taskId: task.id });
+    }
+
+    if (task.assignedTo !== taskAssignedTo) {
+      updateAssignedTo.mutate({ username: taskAssignedTo, taskId: task.id });
+    }
+
     setEditMode(false);
-    
-    actionContext?.setAction("edited")
+
+    actionContext?.setAction("edited");
   };
 
   const handleAssignToMe = async () => {
@@ -145,22 +147,23 @@ const handleSaveTask = () => {
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
-        <div className="flex justify-between">
-          <div className="flex gap-x-2 text-2xl font-bold">
-            <h1>[{task.projectTaskId}]</h1>
+        <div className="flex justify-between items-center w-full gap-4">
+          <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
+            <h1 className="shrink-0">[{task.projectTaskId}]</h1>
             {editMode ? (
               <input
                 type="text"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
+                className="w-full"
               />
             ) : (
-              <h1>{task.title}</h1>
+              <h1 className="truncate w-full" title={task.title}>{task.title}</h1>
             )}
           </div>
           <button
             onClick={() => setTaskDetailsModal(false)}
-            className="bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer"
+            className="bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
           >
             Close
           </button>
@@ -208,7 +211,7 @@ const handleSaveTask = () => {
             <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
               Assigned To:
             </h3>
-            {!editMode && (task.assignedTo !== username) && (
+            {!editMode && task.assignedTo !== username && (
               <button
                 onClick={handleAssignToMe}
                 className="font-semibold underline text-sm cursor-pointer"
@@ -232,7 +235,9 @@ const handleSaveTask = () => {
                 ))}
             </select>
           ) : (
-            <h3 className="pl-4">{task.assignedTo} {task.assignedTo === username ? '(You)' : ''}</h3>
+            <h3 className="pl-4">
+              {task.assignedTo} {task.assignedTo === username ? "(You)" : ""}
+            </h3>
           )}
         </div>
         <div className="flex flex-col gap-y-2">
@@ -251,12 +256,14 @@ const handleSaveTask = () => {
               Edit
             </button>
           )}
-          {!editMode && <button
-            onClick={handleDeleteTask}
-            className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
-          >
-            Delete
-          </button>}
+          {!editMode && (
+            <button
+              onClick={handleDeleteTask}
+              className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </div>

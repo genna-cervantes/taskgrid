@@ -9,6 +9,12 @@ import SidebarButton from "../components/SidebarButton";
 import Sidebar from "../components/Sidebar";
 
 const Projects = () => {
+
+  // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
+  // pag galing sa home walang share = true so wag na hingin agad ung name
+
+  // UNG SA KAGAYA SA SE NA DAPAT GALING FROM THAT LINK KUNIN UNG STATE IF NDI HINGIN NA AGAD UNG NAME IF WALA NAKASET KASI SHARED UN
+
   const navigate = useNavigate();
   const { projectId } = useParams();
 

@@ -106,7 +106,7 @@ const Project = () => {
           <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
             {col}
           </h2>
-          <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-190px)] scrollbar-none">
+          <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
             {columns[col].map((task) => (
               <React.Fragment key={task.id}>
                 <TaskBLock
