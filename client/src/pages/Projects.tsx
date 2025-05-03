@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getUsernameForProject } from "../utils/indexedb";
 import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
@@ -14,6 +14,8 @@ const Projects = () => {
   // pag galing sa home walang share = true so wag na hingin agad ung name
 
   // UNG SA KAGAYA SA SE NA DAPAT GALING FROM THAT LINK KUNIN UNG STATE IF NDI HINGIN NA AGAD UNG NAME IF WALA NAKASET KASI SHARED UN
+  const location = useLocation();
+  const fromHome = location.state?.from === "home";
 
   const navigate = useNavigate();
   const { projectId } = useParams();
@@ -39,6 +41,12 @@ const Projects = () => {
     fetchUsername();
   }, []);
 
+  useEffect(() => {
+    if (!fromHome && !userName){
+      setUsernameModal(true);
+    }
+  }, [])
+
   const handleShare = async () => {
     // if not prompt for name
     if (!userName) {
@@ -59,6 +67,7 @@ const Projects = () => {
       )}
       {usernameModal && (
         <UserNameModal
+          fromHome={fromHome}
           projectId={projectId}
           setUsernameModal={setUsernameModal}
         />

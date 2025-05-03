@@ -3,9 +3,11 @@ import { setUsernameForProject } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
 
 const UserNameModal = ({
+  fromHome,
   projectId,
   setUsernameModal,
 }: {
+  fromHome: boolean;
   projectId: string;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
@@ -26,6 +28,21 @@ const UserNameModal = ({
   });
 
   const handleSaveName = async () => {
+    if (!name) {
+      setError("Name is required!");
+      return;
+    }
+
+    if (name.length < 1) {
+      setError("Name is required!");
+      return;
+    }
+
+    if (name.length > 100) {
+      setError("Name is too long!");
+      return;
+    }
+
     if (usernames?.includes(name)) {
       setError("This name has already been registed to this board!");
       return;
@@ -40,7 +57,13 @@ const UserNameModal = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={() => setUsernameModal(false)} // Close when clicking backdrop
+      onClick={(e) => {
+        if (e.target === e.currentTarget && fromHome) {
+          setUsernameModal(false);
+        } else {
+          return;
+        }
+      }} // Close when clicking backdrop
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
@@ -50,22 +73,27 @@ const UserNameModal = ({
           <h1 className="text-sm font-bold">
             What name should others in this project call you?
           </h1>
-          <button
-            onClick={() => setUsernameModal(false)}
-            className="px-4 py-1 text-white text-sm font-semibold rounded-md bg-white/20 cursor-pointer"
-          >
-            Close
-          </button>
+          {fromHome && (
+            <button
+              onClick={() => setUsernameModal(false)}
+              className="px-4 py-1 text-white text-sm font-semibold rounded-md bg-white/20 cursor-pointer"
+            >
+              Close
+            </button>
+          )}
         </div>
-        <input
-          type="text"
-          placeholder="Karina Yoo"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        {error && (
-          <p className="text-red-400 text-xs font-semibold mt-1">{error}</p>
-        )}
+        <div className="w-full">
+          <input
+            type="text"
+            placeholder="Karina Yoo"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full"
+          />
+          {error && (
+            <p className="text-red-400 text-xs font-semibold mt-1">{error}</p>
+          )}
+        </div>
         <button
           onClick={handleSaveName}
           className="w-full bg-green-400 text-white font-semibold text-sm py-2 rounded-md cursor-pointer"

@@ -23,6 +23,8 @@ const ProjectBlock = ({
     <Link
       className="bg-[#282828] rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
       to={`/projects/${p.id}`}
+      state={{ from: "home" }
+    }
     >
       <div className="flex justify-between">
         <h1 className="font-bold">{p.name}</h1>
