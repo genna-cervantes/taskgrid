@@ -1,7 +1,7 @@
 import { openDB } from "idb";
 
 const initDB = async () => {
-  return await openDB("my-db", 6, {
+  return await openDB("my-db", 7, {
     upgrade(db) {
       if (!db.objectStoreNames.contains("userName")) {
         db.createObjectStore("userName"); // projectId will be the key
@@ -37,9 +37,9 @@ export const getAllProjects = async (): Promise<{ id: string; name: string }[]> 
   }));
 };
 
-export const addProjectId = async (projectId: string) => {
+export const addProjectId = async (projectId: string, projectName = "new project") => {
   const db = await initDB();
-  await db.put("projectIds", "new project", projectId);
+  await db.put("projectIds", projectName, projectId);
 };
 
 export const getProjectNameByKey = async (projectKey: string): Promise<string | undefined> => {
