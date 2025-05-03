@@ -5,6 +5,7 @@ import EditProjectModal from "../components/EditProjectModal";
 import { Link } from "react-router-dom";
 import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
+import DeleteProjectModal from "../components/DeleteProjectModal";
 
 const Home = () => {
   // const { data, isLoading } = trpc.hello.useQuery({ name: "Genna" });
@@ -12,6 +13,7 @@ const Home = () => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [editModal, setEditModal] = useState("");
   const [editProjectModal, setEditProjectModal] = useState(false);
+  const [deleteProjectModal, setDeleteProjectModal] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,6 +76,7 @@ const Home = () => {
               editModal={editModal}
               dropdownRef={dropdownRef}
               setEditProjectModal={setEditProjectModal}
+              setDeleteProjectModal={setDeleteProjectModal}
             />
           );
         })}
@@ -85,6 +88,9 @@ const Home = () => {
           setEditProjectModal={setEditProjectModal}
           setEditModal={setEditModal}
         />
+      )}
+      {deleteProjectModal && (
+        <DeleteProjectModal projectId={editModal} setDeleteProjectModal={setDeleteProjectModal} setEditModal={setEditModal} />
       )}
     </div>
   );

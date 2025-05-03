@@ -7,6 +7,7 @@ const ProjectBlock = ({
   editModal,
   dropdownRef,
   setEditProjectModal,
+  setDeleteProjectModal
 }: {
   p: {
     id: string;
@@ -16,6 +17,7 @@ const ProjectBlock = ({
   editModal: string;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   return (
     <Link
@@ -66,7 +68,11 @@ const ProjectBlock = ({
               >
                 edit project
               </button>
-              <button className="w-full h-1/2 hover:bg-red-400 text-white  p-2 px-4 rounded-md cursor-pointer">
+              <button onClick={(e) => {
+                setDeleteProjectModal(true);
+                e.preventDefault();
+                e.stopPropagation()
+              }} className="w-full h-1/2 hover:bg-red-400 text-white  p-2 px-4 rounded-md cursor-pointer">
                 leave project
               </button>
             </div>
