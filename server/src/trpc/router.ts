@@ -5,6 +5,7 @@ import { Pool } from "pg";
 import { addProject, deleteTask, deleteTaskById, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { TaskSchema } from '../schemas/schemas.js';
+import { rateLimitMiddleware } from './middleware.js';
 
 config()
 
@@ -19,12 +20,14 @@ const pool = new Pool({
 
 export const appRouter = router({
   getTasks: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
     .query(async ({input}) => {
       let tasks = await getTasksFromProjectId(pool, input.id)
       return tasks;
     }), 
   insertTask: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({id: z.string(), task: TaskSchema.omit({ id: true, projectTaskId: true })})))
     .mutation(async ({input}) => {
       let task = await insertTask(pool, input.task, input.id)
@@ -32,6 +35,7 @@ export const appRouter = router({
       return task;
     }),
   updateTaskProgress: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({taskId: z.string(), progress: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskProgress(pool, input.taskId, input.progress)
@@ -39,6 +43,7 @@ export const appRouter = router({
       return false;
     }),
   deleteTask: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await deleteTask(pool, input.taskId)
@@ -46,6 +51,7 @@ export const appRouter = router({
       return false;
     }),
   setUsername: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({username: z.string(), id: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await setUsername(pool, input.id, input.username)
@@ -53,12 +59,14 @@ export const appRouter = router({
       return false;
     }),
   getUsersInProject: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
     .query(async ({input}) => {
       let users = await getUsersInProject(pool, input.id)
       return users as string[];
     }),
   updateAssignedTo: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({username: z.string(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateAssignedTo(pool, input.taskId, input.username)
@@ -66,6 +74,7 @@ export const appRouter = router({
       return false;
     }),
   updateTaskTitle: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({title: z.string(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskTitle(pool, input.taskId, input.title)
@@ -73,6 +82,7 @@ export const appRouter = router({
       return false;
     }),
   updateTaskDescription: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({description: z.string().optional(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskDescription(pool, input.taskId, input.description)
@@ -80,6 +90,7 @@ export const appRouter = router({
       return false;
     }),
   updateTaskPriority: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({priority: z.string(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskPriority(pool, input.taskId, input.priority)
@@ -87,6 +98,7 @@ export const appRouter = router({
       return false;
     }),
   deleteTaskById: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await deleteTaskById(pool, input.taskId)
@@ -94,6 +106,7 @@ export const appRouter = router({
       return false;
     }),
   undoDeleteTask: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await undoDeleteTask(pool, input.taskId)
@@ -101,6 +114,7 @@ export const appRouter = router({
       return false;
     }),
   addProject: publicProcedure
+    .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await addProject(pool, input.id)

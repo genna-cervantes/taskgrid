@@ -19,3 +19,4 @@ const t = initTRPC.context<Context>().create({
 // Export reusable router and procedure builders
 export const router = t.router;
 export const publicProcedure = t.procedure;
+export const middleware = t.middleware
