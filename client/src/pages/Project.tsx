@@ -104,7 +104,7 @@ const Project = () => {
           className="flex-1 p-4 bg-[#282828] rounded-md group"
         >
           <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
-            {col}
+            {col} ({columns[col].length})
           </h2>
           <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
             {columns[col].map((task) => (
