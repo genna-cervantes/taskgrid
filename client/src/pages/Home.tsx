@@ -82,6 +82,11 @@ const Home = () => {
         })}
         <AddProjectBlock />
       </div>
+      <footer className="fixed bottom-0 py-6 w-full">
+        <h1 className="text-center text-xs opacity-50">
+          Send questions, issues, and suggestions to <span className="font-bold underline">taskan@email.com</span>
+        </h1>
+      </footer>
       {editProjectModal && (
         <EditProjectModal
           projectId={editModal}
