@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { getUsernameForProject } from "../utils/indexedb";
+import { getProjectNameByKey, getUsernameForProject } from "../utils/indexedb";
 import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
 import ActionModal from "../components/ActionModal";
@@ -29,7 +29,10 @@ const Projects = () => {
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
   const [userName, setUsername] = useState();
   const [openSidebar, setOpenSidebar] = useState(false);
+  const [projectName, setProjectName] = useState("")
+
   const actionContext = useContext(ActionContext);
+
 
   // check if name is set in storage
   const fetchUsername = async () => {
@@ -37,6 +40,15 @@ const Projects = () => {
     setUsername(userNameFromIdb);
     return userNameFromIdb
   };
+
+  const fetchProjectName = async () => {
+    const projectNameFromIdb = await getProjectNameByKey(projectId);
+    setProjectName(projectNameFromIdb ?? "")
+  }
+
+  useEffect(() => {
+    fetchProjectName()
+  }, [projectId])
 
   useEffect(() => {
     fetchUsername();
@@ -85,7 +97,10 @@ const Projects = () => {
       <div className="h-full flex flex-col">
         <div className="flex justify-between px-6 items-center py-4">
           {/* <SidebarButton openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} /> */}
-          <Link to='/' className="font-bold">TaskGrid</Link>
+          <div className="flex items-center gap-x-4">
+            <Link to='/' className="font-bold">TaskGrid</Link>
+            <h1 className="">{projectName}</h1>
+          </div>
           <div className="flex justify-end gap-x-4 items-center">
             <h1>{userName}</h1>
             <button

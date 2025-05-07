@@ -15,7 +15,7 @@ const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "http://localhost:3000/trpc", // Backend API URL
+      url: "http://localhost:3001/trpc", // Backend API URL
     }),
   ],
   transformer: superjson, // ✅ Fix: Add transformer to match backend

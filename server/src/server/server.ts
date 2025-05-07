@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../trpc/router.js";
 import { createContext } from "../trpc/trpc.js";
+import path from 'path'
 
 dotenv.config();
 
