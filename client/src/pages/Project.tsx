@@ -4,24 +4,8 @@ import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
 import { addProjectId } from "../utils/indexedb";
+import {Columns, Task, ColumnKey} from "../../../server/src/shared/types"
 
-// TASKS
-export type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  priority: "high" | "low" | "medium";
-  assignedTo: string;
-  progress: string;
-  projectTaskId: number;
-};
-
-// COLUMNS
-export type ColumnKey = "backlog" | "in progress" | "for checking" | "done";
-
-type Columns = {
-  [key in ColumnKey]: Task[];
-};
 
 const initialColumns: Columns = {
   backlog: [],

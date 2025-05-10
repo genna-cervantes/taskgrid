@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { cn } from "../utils/utils";
-import { ColumnKey } from "../pages/Project";
+import { ColumnKey } from "../../../server/src/shared/types";
 import AddTaskForm from "./AddTaskForm";
 
 const AddTask = ({username, projectId, col, className = ""}: {username: string|undefined, projectId: string, col: ColumnKey, className?: string}) => {

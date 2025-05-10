@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Task } from "../pages/Project";
+import { Task } from "../../../server/src/shared/types";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
 import { getUsernameForProject } from "../utils/indexedb";

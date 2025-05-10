@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { ColumnKey, Task } from "../pages/Project";
+import { ColumnKey, Task } from "../../../server/src/shared/types";
 import { cn } from "../utils/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";

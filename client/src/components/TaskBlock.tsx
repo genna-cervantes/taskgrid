@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ColumnKey, Task } from "../pages/Project";
+import { ColumnKey, Task } from "../../../server/src/shared/types";
 import TaskPriority from "./TaskPriority";
 import TaskModal from "./TaskModal";
 
