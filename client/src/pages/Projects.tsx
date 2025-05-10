@@ -7,6 +7,17 @@ import ActionModal from "../components/ActionModal";
 import { ActionContext } from "../contexts/ActionContext";
 import SidebarButton from "../components/SidebarButton";
 import Sidebar from "../components/Sidebar";
+import { trpc } from "../utils/trpc";
+import { groupTasksByColumn } from "../utils/utils";
+import { Columns } from "../../../server/src/shared/types";
+
+
+const initialColumns: Columns = {
+  backlog: [],
+  "in progress": [],
+  "for checking": [],
+  done: [],
+};
 
 const Projects = () => {
 
@@ -30,8 +41,17 @@ const Projects = () => {
   const [userName, setUsername] = useState();
   const [openSidebar, setOpenSidebar] = useState(false);
   const [projectName, setProjectName] = useState("")
+  const [columns, setColumns] = useState(initialColumns);
 
   const actionContext = useContext(ActionContext);
+
+  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
+
+    useEffect(() => {
+      if (data) {
+        setColumns(groupTasksByColumn(data));
+      }
+    }, [data]);
 
 
   // check if name is set in storage
@@ -101,6 +121,9 @@ const Projects = () => {
             <Link to='/' className="font-bold">TaskGrid</Link>
             <h1 className="">{projectName}</h1>
           </div>
+          <div>
+            <h1>filter</h1>
+          </div>
           <div className="flex justify-end gap-x-4 items-center">
             <h1>{userName}</h1>
             <button
@@ -111,7 +134,7 @@ const Projects = () => {
             </button>
           </div>
         </div>
-        <Outlet context={{ setUsernameModal, userName }} />
+        <Outlet context={{ setUsernameModal, userName, columns }} />
       </div>
       <div className="w-full flex justify-center">
         {actionContext?.action && (

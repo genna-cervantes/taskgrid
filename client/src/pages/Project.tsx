@@ -4,52 +4,24 @@ import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
 import { addProjectId } from "../utils/indexedb";
-import {Columns, Task, ColumnKey} from "../../../server/src/shared/types"
-
-
-const initialColumns: Columns = {
-  backlog: [],
-  "in progress": [],
-  "for checking": [],
-  done: [],
-};
-
-const groupTasksByColumn = (taskList: Task[]) => {
-  const grouped: Columns = {
-    backlog: [],
-    "in progress": [],
-    "for checking": [],
-    done: [],
-  };
-
-  taskList.forEach((t) => {
-    const key = t.progress as ColumnKey;
-    grouped[key].push(t);
-  });
-
-  return grouped;
-};
+import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 
 const Project = () => {
-  
   const { projectId } = useParams();
 
-  const {setUsernameModal, userName} = useOutletContext<{setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>, userName: string|undefined}>();
+  const { setUsernameModal, userName, columns } = useOutletContext<{
+    setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
+    userName: string | undefined;
+    columns: Columns
+  }>();
 
   const utils = trpc.useUtils();
-  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
-
-  const [columns, setColumns] = useState(initialColumns);
+  
   const [dragData, setDragData] = useState<{
     from: ColumnKey;
     task: Task;
   } | null>(null);
 
-  useEffect(() => {
-    if (data) {
-      setColumns(groupTasksByColumn(data));
-    }
-  }, [data]);
 
   const updateTaskProgress = trpc.updateTaskProgress.useMutation({
     onSuccess: (data) => {
@@ -79,40 +51,42 @@ const Project = () => {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto">
-      {(Object.keys(columns) as ColumnKey[]).map((col) => (
-        <div
-          key={col}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDrop(col)}
-          className="flex-1 p-4 bg-[#282828] rounded-md group"
-        >
-          <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
-            {col} ({columns[col].length})
-          </h2>
-          <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
-            {columns[col].map((task) => (
-              <React.Fragment key={task.id}>
-                <TaskBLock
-                  projectId={projectId}
-                  col={col}
-                  task={task}
-                  handleDragStart={handleDragStart}
-                  setUsernameModal={setUsernameModal}
-                  username={userName}
-                />
-              </React.Fragment>
-            ))}
+    <>
+      <div className="grid grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto">
+        {(Object.keys(columns) as ColumnKey[]).map((col) => (
+          <div
+            key={col}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => handleDrop(col)}
+            className="flex-1 p-4 bg-[#282828] rounded-md group"
+          >
+            <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
+              {col} ({columns[col].length})
+            </h2>
+            <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
+              {columns[col].map((task) => (
+                <React.Fragment key={task.id}>
+                  <TaskBLock
+                    projectId={projectId}
+                    col={col}
+                    task={task}
+                    handleDragStart={handleDragStart}
+                    setUsernameModal={setUsernameModal}
+                    username={userName}
+                  />
+                </React.Fragment>
+              ))}
+            </div>
+            <AddTask
+              projectId={projectId}
+              col={col}
+              className="hidden group-hover:block"
+              username={userName}
+            />
           </div>
-          <AddTask
-            projectId={projectId}
-            col={col}
-            className="hidden group-hover:block"
-            username={userName}
-          />
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   );
 };
 
