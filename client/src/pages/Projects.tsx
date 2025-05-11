@@ -42,6 +42,11 @@ const Projects = () => {
   const [openSidebar, setOpenSidebar] = useState(false);
   const [projectName, setProjectName] = useState("")
   const [columns, setColumns] = useState(initialColumns);
+  const [filter, setFilter] = useState({
+    priority: "",
+    assignedTo: ""
+  });
+  const [filterButton, setFilterButton] = useState(false)
 
   const actionContext = useContext(ActionContext);
 
@@ -52,6 +57,14 @@ const Projects = () => {
         setColumns(groupTasksByColumn(data));
       }
     }, [data]);
+
+    useEffect(() => {
+      if (filter.priority !== "" || filter.assignedTo !== ""){
+        setFilterButton(true)
+      }else{
+        setFilterButton(false)
+      }
+    }, [filter])
 
 
   // check if name is set in storage
@@ -101,6 +114,10 @@ const Projects = () => {
     setLinkCopiedModal(true);
   };
 
+  const { data: usersInProject, isLoading: usersLoading } = trpc.getUsersInProject.useQuery({
+        id: projectId,
+      });
+
   return (
     <>
       {linkCopiedModal && (
@@ -115,14 +132,43 @@ const Projects = () => {
       )}
       {/* {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />} */}
       <div className="h-full flex flex-col">
-        <div className="flex justify-between px-6 items-center py-4">
+        <div className="flex justify-between px-6 items-center py-3">
           {/* <SidebarButton openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} /> */}
           <div className="flex items-center gap-x-4">
             <Link to='/' className="font-bold">TaskGrid</Link>
             <h1 className="">{projectName}</h1>
           </div>
-          <div>
-            <h1>filter</h1>
+          <div className="bg-[#282828] px-3 py-[0.4rem] rounded-md flex items-center gap-x-3 text-xs">
+            <h1 className="text-xs">Filter by:</h1>
+            <div className="flex gap-x-2">
+              <select name="priorityFilter" className="text-xs bg-[#282828]"
+              onChange={(e) =>
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  priority: e.target.value
+                }))
+              } 
+              value={filter.priority}
+              >
+                <option value="">priority</option>
+                <option value="low">low</option>
+                <option value="medium">medium</option>
+                <option value="high">high</option>
+              </select>
+              <select name="assignedToFilter" id="" className="text-xs bg-[#282828]"
+              onChange={(e) =>
+                setFilter((prevFilter) => ({
+                  ...prevFilter,
+                  assignedTo: e.target.value
+                }))
+              } 
+              value={filter.assignedTo}>
+                <option value="">assigned to</option>
+                {!usersLoading && usersInProject?.map((u) => <option value={u}>{u}</option>)}
+              </select>
+            </div>
+            <button className="bg-green-400 px-3 py-[0.2rem] rounded-md font-semibold disabled:opacity-50" disabled={!filterButton}>apply</button>
+            {/* {filterButton && <button className="bg-red-400 px-3 py-[0.2rem] rounded-md font-semibold disabled:opacity-50">clear</button>} */}
           </div>
           <div className="flex justify-end gap-x-4 items-center">
             <h1>{userName}</h1>
