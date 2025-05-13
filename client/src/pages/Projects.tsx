@@ -50,8 +50,8 @@ const Projects = () => {
   const [projectName, setProjectName] = useState("");
   const [columns, setColumns] = useState(initialColumns);
   const [filter, setFilter] = useState({
-    priority: "",
-    assignedTo: ""
+    priority: priority,
+    assignedTo: assignedTo
   })
 
   const actionContext = useContext(ActionContext);
