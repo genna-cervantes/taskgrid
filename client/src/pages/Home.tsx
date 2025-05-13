@@ -63,7 +63,7 @@ const Home = () => {
   return (
     <div className="my-6">
       <h1 className="text-center text-2xl py-4">
-        Your <span className="text-green-400 font-semibold">TaskGrid</span>{" "}
+        Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
         Boards
       </h1>
       <div className="grid grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">

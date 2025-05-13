@@ -103,3 +103,30 @@ export const addProject = async (pool: Pool, projectId: string) => {
 
     return res.rowCount;
 }
+
+export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo: string, projectId: string) => {
+    
+    let query = "";
+    let res;
+
+    if (priority !== "" && assignedTo !== ""){
+        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND assign_to = $2 AND project_id = $3 AND is_active = TRUE';
+        res = await pool.query(query, [priority, assignedTo, projectId]);
+    }else if (priority !== "" && assignedTo == ""){
+        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
+        res = await pool.query(query, [priority, projectId])
+    }else if (priority == "" && assignedTo !== ""){
+        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE assign_to = $1 AND project_id = $2 AND is_active = TRUE'
+        res = await pool.query(query, [assignedTo, projectId]);
+    }else{
+        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE'
+        res = await pool.query(query, [projectId])
+    }
+
+    const tasks: Task[] = res.rows.map((task) => ({
+        ...task,
+        id: task.id.toString(),
+      }));
+
+    return tasks as Task[];   
+}

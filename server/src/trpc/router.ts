@@ -2,10 +2,10 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod';
 import { Pool } from "pg";
-import { addProject, deleteTask, deleteTaskById, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, deleteTask, deleteTaskById, getFilteredTasks, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
-import { TaskSchema } from '../schemas/schemas.js';
 import { rateLimitMiddleware } from './middleware.js';
+import { Task, TaskSchema } from '../shared/types.js';
 
 config()
 
@@ -120,6 +120,13 @@ export const appRouter = router({
       let taskCount = await addProject(pool, input.id)
       if (taskCount && taskCount > 0) return true
       return false;
+    }),
+  filterTask: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({priority: z.string(), assignedTo: z.string(), id: z.string()})))
+    .query(async ({input}) => {
+      let filteredTasks = await getFilteredTasks(pool, input.priority, input.assignedTo, input.id)
+      return filteredTasks as Task[]
     })
   
 });
