@@ -56,7 +56,7 @@ const Projects = () => {
 
   const actionContext = useContext(ActionContext);
 
-  const { data, isLoading, refetch: refetchData } = trpc.getTasks.useQuery({ id: projectId ?? "" });
+  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -127,7 +127,7 @@ const Projects = () => {
   }
   
   
-  const { data: filteredTasks, isLoading: filteredTasksIsLoading, refetch: refetchFilteredTasks } =
+  const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
   trpc.filterTask.useQuery({
     id: projectId,
     priority,

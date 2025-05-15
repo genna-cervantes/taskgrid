@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DB_USER: postgres
+      DB_HOST: db
+      DB_NAME: taskgrid
+      DB_PASSWORD: password
+      DB_PORT: 5432
+      PORT: 3000
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: .
+      dockerfile: ./client/Dockerfile
+    ports:
+      - "3001:80"
+    depends_on:
+      - server
+    networks:
+      - app-network
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskgrid
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:

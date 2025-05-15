@@ -23,7 +23,7 @@ const UserNameModal = ({
     },
   });
 
-  const { data: usernames, isLoading } = trpc.getUsersInProject.useQuery({
+  const { data: usernames } = trpc.getUsersInProject.useQuery({
     id: projectId,
   });
 

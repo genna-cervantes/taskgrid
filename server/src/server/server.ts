@@ -5,14 +5,13 @@ import dotenv from "dotenv";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../trpc/router.js";
 import { createContext } from "../trpc/trpc.js";
-import path from 'path'
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://taskan.cloud'],
+    origin: ['http://localhost:5173', 'https://taskan.cloud', 'http://localhost:3001'],
     methods: ['GET', 'POST', 'PUT']
 }));
 

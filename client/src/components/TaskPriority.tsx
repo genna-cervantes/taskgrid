@@ -1,5 +1,3 @@
-import React from 'react'
-
 const TaskPriority = ({priority}: {priority: string}) => {
 
     if (priority === 'low'){

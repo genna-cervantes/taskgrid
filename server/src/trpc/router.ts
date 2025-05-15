@@ -1,6 +1,6 @@
 // server/src/trpc/router.ts
 import { router, publicProcedure } from './trpc.js';
-import { z } from 'zod';
+import { z } from 'zod'
 import { Pool } from "pg";
 import { addProject, deleteTask, deleteTaskById, getFilteredTasks, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
@@ -30,6 +30,7 @@ export const appRouter = router({
     .use(rateLimitMiddleware)
     .input((z.object({id: z.string(), task: TaskSchema.omit({ id: true, projectTaskId: true })})))
     .mutation(async ({input}) => {
+      console.log('got here')
       let task = await insertTask(pool, input.task, input.id)
       // if (taskCount && taskCount > 0) return true
       return task;

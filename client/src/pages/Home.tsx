@@ -1,8 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { trpc } from "../utils/trpc";
+import { useEffect, useRef, useState } from "react";
 import { getAllProjects } from "../utils/indexedb";
 import EditProjectModal from "../components/EditProjectModal";
-import { Link } from "react-router-dom";
 import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
 import DeleteProjectModal from "../components/DeleteProjectModal";

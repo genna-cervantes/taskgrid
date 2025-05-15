@@ -1,6 +1,5 @@
 import { clsx } from 'clsx';
-import { ColumnKey, Columns } from '../../../server/src/shared/types';
-import { Task } from '../../../server/src/schemas/schemas';
+import { ColumnKey, Columns, Task } from '../../../server/src/shared/types';
 
 export function cn(...inputs: Parameters<typeof clsx>) {
   return clsx(...inputs);

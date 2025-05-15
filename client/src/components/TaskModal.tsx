@@ -1,8 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
-import { getUsernameForProject } from "../utils/indexedb";
 import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
