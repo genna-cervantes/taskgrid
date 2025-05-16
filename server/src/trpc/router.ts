@@ -118,8 +118,12 @@ export const appRouter = router({
     .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
     .mutation(async ({input}) => {
+      console.log('adding project')
       let taskCount = await addProject(pool, input.id)
-      if (taskCount && taskCount > 0) return true
+      if (taskCount && taskCount > 0) {
+        console.log('good return from db')
+        return true
+      }
       return false;
     }),
   filterTask: publicProcedure
