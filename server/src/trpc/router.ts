@@ -122,7 +122,7 @@ export const appRouter = router({
       let taskCount = await addProject(pool, input.id)
       if (taskCount && taskCount > 0) {
         console.log('good return from db')
-        return true
+        return taskCount
       }
       return false;
     }),
