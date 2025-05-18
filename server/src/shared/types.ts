@@ -22,3 +22,11 @@ export const TaskSchema = z.object({
 export type Task = z.infer<typeof TaskSchema>;
 
 export type InsertableTask = Omit<Task, "id" | "projectTaskId">;
+
+export const ProjectSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  guestId: z.string()
+})
+
+export type Project = z.infer<typeof ProjectSchema>

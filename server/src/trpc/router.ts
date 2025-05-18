@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -19,6 +19,13 @@ const pool = new Pool({
 
 
 export const appRouter = router({
+  getProjects: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({guestId: z.string()})))
+    .query(async ({input}) => {
+      let projects = await getProjectsFromGuestId(pool, input.guestId);
+      return projects;
+    }),
   getTasks: publicProcedure
     .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
@@ -116,10 +123,10 @@ export const appRouter = router({
     }),
   addProject: publicProcedure
     .use(rateLimitMiddleware)
-    .input((z.object({id: z.string(), name: z.string()})))
+    .input((z.object({id: z.string(), name: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
       console.log('adding project')
-      let taskCount = await addProject(pool, input.id, input.name)
+      let taskCount = await addProject(pool, input.id, input.name, input.guestId)
       if (taskCount && taskCount > 0) {
         console.log('good return from db')
         return taskCount
@@ -147,6 +154,11 @@ export const appRouter = router({
     .query(async ({input}) => {
       let filteredTasks = await getFilteredTasks(pool, input.priority, input.assignedTo, input.id)
       return filteredTasks as Task[]
+    }),
+  sample: publicProcedure
+    .use(rateLimitMiddleware)
+    .query(() => {
+      return 'hello'
     })
   
 });

@@ -1,5 +1,12 @@
 import { Pool } from "pg";
-import { InsertableTask, Task } from "../shared/types.js";
+import { InsertableTask, Project, Task } from "../shared/types.js";
+
+export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
+    const query = 'SELECT id, name, guest_id AS guestId FROM projects WHERE guest_id = $1;';
+    const res = await pool.query(query, [guestId])
+
+    return res.rows as Project[]
+}
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
     const query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
@@ -97,9 +104,9 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
     return res.rowCount;
 }
 
-export const addProject = async (pool: Pool, projectId: string, name: string) => {
-    const query = 'INSERT INTO projects (id, name) VALUES ($1, $2)';
-    const res = await pool.query(query, [projectId, name]);
+export const addProject = async (pool: Pool, projectId: string, name: string, guestId: string) => {
+    const query = 'INSERT INTO projects (id, name, guestId) VALUES ($1, $2, $3)';
+    const res = await pool.query(query, [projectId, name, guestId]);
 
     return res.rowCount;
 }

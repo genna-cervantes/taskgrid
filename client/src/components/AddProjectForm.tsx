@@ -5,6 +5,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { addProjectId } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
+import { useGuestId } from "../contexts/UserContext";
 
 export const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -30,6 +31,8 @@ const AddProjectForm = ({
     resolver: zodResolver(projectSchema),
   });
 
+  const guestId = useGuestId()
+
   const addProject = trpc.addProject.useMutation({
       onSuccess: (data) => {
         console.log("Project created:", data);
@@ -44,7 +47,7 @@ const AddProjectForm = ({
     const id = uuidv4() as string;
     
     await addProjectId(id, data.name);
-    addProject.mutate({id, name: data.name})
+    addProject.mutate({id, name: data.name, guestId})
 
     setAddProjectForm(false)
     window.location.reload();

@@ -4,8 +4,11 @@ import EditProjectModal from "../components/EditProjectModal";
 import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
 import DeleteProjectModal from "../components/DeleteProjectModal";
+import { v4 as uuidv4 } from "uuid";
 import { trpc } from "../utils/trpc";
 import { trpcClient } from "../main";
+import { useGuestId } from "../contexts/UserContext";
+import { Project } from "../../../server/src/shared/types";
 
 const Home = () => {
   // const { data, isLoading } = trpc.hello.useQuery({ name: "Genna" });
@@ -38,35 +41,9 @@ const Home = () => {
 
   const [projectIds, setProjectIds] = useState<{ id: string; name: string }[]>([]);
 
-  // useEffect(() => {
-  //   const fetchProjectIds = async () => {
-  //     const projects = await getAllProjects();
+  const guestId = useGuestId()
 
-  //     const fetchedProjects = await Promise.all(
-  //       projects.map(async (p) => {
-  //         try {
-  //           const nameFromDb = await trpcClient.getProjectNameByKey.query({ id: p.id });
-  //           return {
-  //             id: p.id,
-  //             name: nameFromDb || p.name,
-  //           };
-  //         } catch (error) {
-  //           console.error(`Error fetching name for project ${p.id}`, error);
-  //           return {
-  //             id: p.id,
-  //             name: p.name,
-  //           };
-  //         }
-  //       })
-  //     );
-
-  //     setProjectIds(fetchedProjects);
-  //   }
-  //   }, []);
-
-  useEffect(() => {
-    console.log(projectIds);
-  }, [projectIds]);
+  const {data: projects } = trpc.getProjects.useQuery({guestId})
 
   const handleClickOptions = (id: string) => {
     if (editModal === id) {
@@ -78,12 +55,16 @@ const Home = () => {
 
   return (
     <div className="my-6">
-      <h1 className="text-center text-2xl py-4">
+    <div className="text-center ">
+      <h1 className="text-2xl pt-4">
         Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
         Boards
       </h1>
+      <p className="text-xs pt-2 opacity-50">Guest ID: {guestId}</p>
+    </div>
+
       <div className="grid grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">
-        {projectIds.map((p) => {
+        {projects && projects.map((p: Project) => {
           return (
             <ProjectBlock
               key={p.id}
