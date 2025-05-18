@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { setUsernameForProject } from "../utils/indexedb";
+import { addProjectId, getProjectNameByKey, setUsernameForProject } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
 
 const UserNameModal = ({
@@ -27,6 +27,10 @@ const UserNameModal = ({
     id: projectId,
   });
 
+  const { data: projectName } = trpc.getProjectNameByKey.useQuery({
+    id: projectId,
+  });
+
   const handleSaveName = async () => {
     if (!name) {
       setError("Name is required!");
@@ -46,6 +50,10 @@ const UserNameModal = ({
     if (usernames?.includes(name)) {
       setError("This name has already been registed to this board!");
       return;
+    }
+
+    if (!fromHome && projectName){
+      await addProjectId(projectId, projectName);
     }
 
     await setUsernameForProject(projectId, name);

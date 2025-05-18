@@ -97,11 +97,25 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
     return res.rowCount;
 }
 
-export const addProject = async (pool: Pool, projectId: string) => {
-    const query = 'INSERT INTO projects (id) VALUES ($1)';
-    const res = await pool.query(query, [projectId]);
+export const addProject = async (pool: Pool, projectId: string, name: string) => {
+    const query = 'INSERT INTO projects (id, name) VALUES ($1, $2)';
+    const res = await pool.query(query, [projectId, name]);
 
     return res.rowCount;
+}
+
+export const editProjectName = async (pool: Pool, projectId: string, name: string) => {
+    const query = 'UPDATE projects SET name = $1 WHERE id = $2 AND is_active = TRUE';
+    const res = await pool.query(query, [name, projectId]);
+
+    return res.rowCount;
+}
+
+export const getProjectNameByKey = async (pool: Pool, id: string) => {
+    const query = 'SELECT name FROM projects WHERE id = $1';
+    const res = await pool.query(query, [id]);
+
+    return res.rows[0]?.name;
 }
 
 export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo: string, projectId: string) => {

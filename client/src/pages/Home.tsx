@@ -4,6 +4,8 @@ import EditProjectModal from "../components/EditProjectModal";
 import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
 import DeleteProjectModal from "../components/DeleteProjectModal";
+import { trpc } from "../utils/trpc";
+import { trpcClient } from "../main";
 
 const Home = () => {
   // const { data, isLoading } = trpc.hello.useQuery({ name: "Genna" });
@@ -36,15 +38,31 @@ const Home = () => {
 
   const [projectIds, setProjectIds] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
-    // check if name is set in storage
-    const fetchProjectIds = async () => {
-      const projects = await getAllProjects();
-      setProjectIds(projects);
-    };
+  // useEffect(() => {
+  //   const fetchProjectIds = async () => {
+  //     const projects = await getAllProjects();
 
-    fetchProjectIds();
-  }, []);
+  //     const fetchedProjects = await Promise.all(
+  //       projects.map(async (p) => {
+  //         try {
+  //           const nameFromDb = await trpcClient.getProjectNameByKey.query({ id: p.id });
+  //           return {
+  //             id: p.id,
+  //             name: nameFromDb || p.name,
+  //           };
+  //         } catch (error) {
+  //           console.error(`Error fetching name for project ${p.id}`, error);
+  //           return {
+  //             id: p.id,
+  //             name: p.name,
+  //           };
+  //         }
+  //       })
+  //     );
+
+  //     setProjectIds(fetchedProjects);
+  //   }
+  //   }, []);
 
   useEffect(() => {
     console.log(projectIds);

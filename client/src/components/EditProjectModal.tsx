@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { getProjectNameByKey, updateProjectName } from "../utils/indexedb";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ProjectFormData, projectSchema } from "./AddProjectForm";
+import { trpc } from "../utils/trpc";
 
 const EditProjectModal = ({
   projectId,
@@ -14,21 +14,22 @@ const EditProjectModal = ({
   setEditModal: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   // get name of project
-  const [projectName, setProjectName] = useState("");
 
-  useEffect(() => {
-    const fetchProjectName = async () => {
-      let projectName = await getProjectNameByKey(projectId);
-      setProjectName(projectName ?? "");
-    };
+   const editProjectName = trpc.editProjectName.useMutation({
+    onSuccess: (data) => {
+      console.log("Project created:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
 
-    fetchProjectName();
-  }, [projectId]);
+  const { data: projectNameFromDb } = trpc.getProjectNameByKey.useQuery({id: projectId})
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      name: projectName,
+      name: projectNameFromDb || "",
     },
   });
 
@@ -38,13 +39,14 @@ const EditProjectModal = ({
   };
 
   useEffect(() => {
-    if (projectName) {
-      form.reset({ name: projectName });
+    if (projectNameFromDb) {
+      form.reset({ name: projectNameFromDb });
     }
-  }, [projectName]);
+  }, [projectNameFromDb]);
 
   const onSubmit = async (data: ProjectFormData) => {
-    await updateProjectName(projectId, data.name);
+    // await updateProjectName(projectId, data.name);
+    editProjectName.mutate({id: projectId, name: data.name})
     setEditProjectModal(false);
     setEditModal("");
     window.location.reload();

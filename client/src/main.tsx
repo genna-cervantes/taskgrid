@@ -10,7 +10,7 @@ import {
 } from "./contexts/RecentTaskContext";
 
 const queryClient = new QueryClient();
-const trpcClient = trpc.createClient({
+export const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: import.meta.env.VITE_TRPC_URL, // Backend API URL

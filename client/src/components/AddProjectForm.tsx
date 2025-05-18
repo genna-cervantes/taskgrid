@@ -44,7 +44,7 @@ const AddProjectForm = ({
     const id = uuidv4() as string;
     
     await addProjectId(id, data.name);
-    addProject.mutate({id})
+    addProject.mutate({id, name: data.name})
 
     setAddProjectForm(false)
     window.location.reload();
