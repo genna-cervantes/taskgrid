@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import {
   Link,
   Outlet,
@@ -7,21 +7,13 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import { getProjectNameByKey, getUsernameForProject } from "../utils/indexedb";
 import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
 import ActionModal from "../components/ActionModal";
 import { ActionContext } from "../contexts/ActionContext";
 import { trpc } from "../utils/trpc";
 import { groupTasksByColumn } from "../utils/utils";
-import { Columns } from "../../../server/src/shared/types";
-
-const initialColumns: Columns = {
-  backlog: [],
-  "in progress": [],
-  "for checking": [],
-  done: [],
-};
+import { useGuestId } from "../contexts/UserContext";
 
 const Projects = () => {
   // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
@@ -40,75 +32,55 @@ const Projects = () => {
   }
 
   const [searchParams, setSearchParams] = useSearchParams()
-
   const priority = searchParams.get("priority") || ""
   const assignedTo = searchParams.get("assignedTo") || ""
 
   const [usernameModal, setUsernameModal] = useState(false);
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
-  const [userName, setUsername] = useState();
-  const [projectName, setProjectName] = useState("");
-  const [columns, setColumns] = useState(initialColumns);
   const [filter, setFilter] = useState({
     priority: priority,
     assignedTo: assignedTo
   })
 
+  const guestId = useGuestId()
   const actionContext = useContext(ActionContext);
 
+  const isFilterEnabled = priority !== "" || assignedTo !== ""
+
   const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
+  const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
+  trpc.filterTask.useQuery({
+    id: projectId,
+    priority,
+    assignedTo
+  }, {
+    enabled: isFilterEnabled
+  });
 
-  useEffect(() => {
-    if (data && !isLoading) {
-      console.log('called')
-      setColumns(groupTasksByColumn(data));
-    }
-  }, [data, isLoading]);
+  const columns = isFilterEnabled 
+  ? (filteredTasks && !filteredTasksIsLoading ? groupTasksByColumn(filteredTasks) : {})
+  : (data && !isLoading ? groupTasksByColumn(data) : {});
 
+  const { data: usersInProject, isLoading: usersLoading } =
+    trpc.getUsersInProject.useQuery({
+      id: projectId,
+    });
   
-  // check if name is set in storage
-  const fetchUsername = async () => {
-    const userNameFromIdb = await getUsernameForProject(projectId);
-    setUsername(userNameFromIdb);
-    return userNameFromIdb;
-  };
+  const {data: username} = trpc.getUsername.useQuery({id: projectId, guestId})
+  const {data: projectName} = trpc.getProjectNameByKey.useQuery({id: projectId})
   
-  const fetchProjectName = async () => {
-    const projectNameFromIdb = await getProjectNameByKey(projectId);
-    setProjectName(projectNameFromIdb ?? "");
-  };
+  if (!fromHome && (!username || username === "")) {
+    console.log(username);
+    setUsernameModal(true);
+  }
 
-  useEffect(() => {
-    fetchProjectName();
-  }, [projectId]);
-
-  useEffect(() => {
-    fetchUsername();
-  }, []);
-
-  useEffect(() => {
-    const checkUsername = async () => {
-      const username = await fetchUsername();
-      
-      if (!fromHome && (!username || username === "")) {
-        console.log(username);
-        setUsernameModal(true);
-      }
-    };
-
-    checkUsername();
-  }, []);
-
+  // helper functions
   const handleShare = async () => {
-    // if not prompt for name
-    if (!userName) {
-      // set name in indexedb
+    if (!username) {
       setUsernameModal(true);
       return;
-      // add name to users in projects db
     }
     
-    // copy link to clipboard
     setLinkCopiedModal(true);
   };
 
@@ -125,50 +97,24 @@ const Projects = () => {
     
     setSearchParams(newParams);
   }
-  
-  
-  const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
-  trpc.filterTask.useQuery({
-    id: projectId,
-    priority,
-    assignedTo
-  }, {
-    enabled: priority !== "" || assignedTo !== ""
-  });
-  
-  useEffect(() => {
-    if (filteredTasks && !filteredTasksIsLoading){
-      setColumns(groupTasksByColumn(filteredTasks));
-
-    }
-  }, [filteredTasks, filteredTasksIsLoading])
 
   const handleApplyFilter = () => {
     handleFilterChange([{key: "priority", value: filter.priority}, {key: "assignedTo", value: filter.assignedTo}])
-    // refetchFilteredTasks()
   }
   
   const handleClearFilter = () => {
+    setFilter({
+      priority: "",
+      assignedTo: ""
+    })
+
     setSearchParams((prevParams) => {
       const newParams = new URLSearchParams(prevParams.toString());
       newParams.delete("priority");
       newParams.delete("assignedTo");
       return newParams;
     });
-
-    setFilter({
-      priority: "",
-      assignedTo: ""
-    })
-
-    // refetchData()
-    window.location.reload()
   }
-
-  const { data: usersInProject, isLoading: usersLoading } =
-    trpc.getUsersInProject.useQuery({
-      id: projectId,
-    });
 
   return (
     <>
@@ -244,7 +190,7 @@ const Projects = () => {
 
           {/* Right side */}
           <div className="flex justify-end gap-x-4 items-center">
-            <h1>{userName}</h1>
+            <h1>{username}</h1>
             <button
               onClick={handleShare}
               className="px-3 py-1 rounded-md bg-green-400 text-sm font-bold cursor-pointer"
@@ -254,7 +200,7 @@ const Projects = () => {
           </div>
         </div>
 
-        <Outlet context={{ setUsernameModal, userName, columns }} />
+        <Outlet context={{ setUsernameModal, username, columns }}  />
       </div>
       <div className="w-full flex justify-center">
         {actionContext?.action && (

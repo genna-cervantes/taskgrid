@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -65,6 +65,13 @@ export const appRouter = router({
       let taskCount = await setUsername(pool, input.id, input.username)
       if (taskCount && taskCount > 0) return true
       return false;
+    }),
+  getUsername: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({id: z.string(), guestId: z.string()})))
+    .query(async ({input}) => {
+      let username = await getUsername(pool, input.id, input.guestId);
+      return username;
     }),
   getUsersInProject: publicProcedure
     .use(rateLimitMiddleware)

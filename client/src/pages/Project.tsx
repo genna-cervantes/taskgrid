@@ -8,9 +8,9 @@ import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 const Project = () => {
   const { projectId } = useParams();
 
-  const { setUsernameModal, userName, columns } = useOutletContext<{
+  const { setUsernameModal, username, columns } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
-    userName: string | undefined;
+    username: string | undefined;
     columns: Columns
   }>();
 
@@ -71,7 +71,7 @@ const Project = () => {
                     task={task}
                     handleDragStart={handleDragStart}
                     setUsernameModal={setUsernameModal}
-                    username={userName}
+                    username={username}
                   />
                 </React.Fragment>
               ))}
@@ -80,7 +80,7 @@ const Project = () => {
               projectId={projectId}
               col={col}
               className="hidden group-hover:block"
-              username={userName}
+              username={username}
             />
           </div>
         ))}

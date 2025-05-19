@@ -50,6 +50,13 @@ export const setUsername = async (pool: Pool, id: string, username: string) => {
     return res.rowCount;
 }
 
+export const getUsername = async (pool: Pool, id: string, guestId: string) => {
+    const query = 'SELECT username FROM users WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE'
+    const res = await pool.query(query, [id, guestId])
+
+    return res.rows[0].username ?? ""
+}
+
 export const getUsersInProject = async (pool: Pool, id: string) => {
     const query = 'SELECT username FROM users WHERE project_id = $1 AND is_active = TRUE'
     const res = await pool.query(query, [id]);
