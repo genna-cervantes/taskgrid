@@ -43,9 +43,9 @@ export const deleteTask = async (pool: Pool, taskId: string) => {
     return res.rowCount
 }
 
-export const setUsername = async (pool: Pool, id: string, username: string) => {
-    const query = 'INSERT INTO users (username, project_id) VALUES ($1, $2)';
-    const res = await pool.query(query, [username, id]);
+export const setUsername = async (pool: Pool, id: string, username: string, guestId: string) => {
+    const query = 'INSERT INTO users (username, project_id, guest_id) VALUES ($1, $2, $3)';
+    const res = await pool.query(query, [username, id, guestId]);
 
     return res.rowCount;
 }

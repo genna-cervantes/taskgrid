@@ -60,9 +60,9 @@ export const appRouter = router({
     }),
   setUsername: publicProcedure
     .use(rateLimitMiddleware)
-    .input((z.object({username: z.string(), id: z.string()})))
+    .input((z.object({username: z.string(), id: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
-      let taskCount = await setUsername(pool, input.id, input.username)
+      let taskCount = await setUsername(pool, input.id, input.username, input.guestId)
       if (taskCount && taskCount > 0) return true
       return false;
     }),

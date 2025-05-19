@@ -44,6 +44,8 @@ const Home = () => {
   const guestId = useGuestId()
   const { data: projects } = trpc.getProjects.useQuery({guestId})
 
+  // need loading screen
+
   return (
     <div className="my-6">
     <div className="text-center ">

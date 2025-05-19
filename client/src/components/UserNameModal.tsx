@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { addProjectId, getProjectNameByKey, setUsernameForProject } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
+import { useGuestId } from "../contexts/UserContext";
 
 const UserNameModal = ({
   fromHome,
@@ -11,6 +11,10 @@ const UserNameModal = ({
   projectId: string;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  
+  const utils = trpc.useUtils()
+  const guestId = useGuestId()
+
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
@@ -27,11 +31,8 @@ const UserNameModal = ({
     id: projectId,
   });
 
-  const { data: projectName } = trpc.getProjectNameByKey.useQuery({
-    id: projectId,
-  });
-
   const handleSaveName = async () => {
+    // data checks
     if (!name) {
       setError("Name is required!");
       return;
@@ -52,14 +53,9 @@ const UserNameModal = ({
       return;
     }
 
-    if (!fromHome && projectName){
-      await addProjectId(projectId, projectName);
-    }
-
-    await setUsernameForProject(projectId, name);
-    setUsernameInDb.mutate({ id: projectId, username: name });
+    setUsernameInDb.mutate({ id: projectId, username: name, guestId });
+    utils.getUsername.invalidate()
     setUsernameModal(false);
-    window.location.reload();
   };
 
   return (

@@ -116,6 +116,8 @@ const Projects = () => {
     });
   }
 
+  // need loading screen
+
   return (
     <>
       {linkCopiedModal && (
@@ -190,6 +192,7 @@ const Projects = () => {
 
           {/* Right side */}
           <div className="flex justify-end gap-x-4 items-center">
+            {/* add loading */}
             <h1>{username}</h1>
             <button
               onClick={handleShare}
