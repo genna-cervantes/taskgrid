@@ -3,7 +3,6 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
-import { addProjectId } from "../utils/indexedb";
 import { trpc } from "../utils/trpc";
 import { useGuestId } from "../contexts/UserContext";
 
@@ -18,10 +17,6 @@ const AddProjectForm = ({
 }: {
   setAddProjectForm: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  // get name
-  // generate uuid
-  // add to indexedb
-  // add to postgres db
 
   const {
     register,
@@ -31,26 +26,23 @@ const AddProjectForm = ({
     resolver: zodResolver(projectSchema),
   });
 
+  const utils = trpc.useUtils();
   const guestId = useGuestId()
 
   const addProject = trpc.addProject.useMutation({
-      onSuccess: (data) => {
-        console.log("Project created:", data);
-      },
-      onError: (error) => {
-        console.error("Failed to create task:", error.message);
-      },
-    });
-  
+    onSuccess: (data) => {
+      utils.getProjects.invalidate()
+      console.log("Project created:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
 
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
-    
-    await addProjectId(id, data.name);
     addProject.mutate({id, name: data.name, guestId})
-
     setAddProjectForm(false)
-    window.location.reload();
   };
 
   return (

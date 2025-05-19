@@ -1,37 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { deleteProjectById, getProjectNameByKey } from "../utils/indexedb";
+import React from "react";
+import { trpc } from "../utils/trpc";
+import { useGuestId } from "../contexts/UserContext";
 
 const DeleteProjectModal = ({
-  projectId,
+  editProject,
+  setEditProject,
   setDeleteProjectModal,
-  setEditModal,
 }: {
-  projectId: string;
+  editProject: {
+    projectId: string,
+    projectName: string
+  },
+  setEditProject: React.Dispatch<React.SetStateAction<{
+    projectId: string;
+    projectName: string;
+  }>>
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setEditModal: React.Dispatch<React.SetStateAction<string>>;
 }) => {
-  const [projectName, setProjectName] = useState("");
 
-  useEffect(() => {
-    const getProjectName = async () => {
-      let name = await getProjectNameByKey(projectId);
-      setProjectName(name ?? "");
-    };
+  const guestId = useGuestId()
+  const utils = trpc.useUtils()
 
-    getProjectName();
-  }, [projectId]);
+  const deleteProject = trpc.deleteProject.useMutation({
+    onSuccess: (data) => {
+      console.log("Project created:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
 
   const handleClickOutside = () => {
     setDeleteProjectModal(false);
-    setEditModal("");
+    setEditProject({
+      projectId: "",
+      projectName: ""
+    });
   };
 
   const handleLeave = async () => {
-    // delete from indexedb
-    await deleteProjectById(projectId);
+    deleteProject.mutate({id: editProject.projectId, guestId})
+    utils.getProjects.invalidate()
     setDeleteProjectModal(false);
-    setEditModal("");
-    window.location.reload();
+    setEditProject({
+      projectId: "",
+      projectName: ""
+    });
   };
 
   return (
@@ -46,7 +60,7 @@ const DeleteProjectModal = ({
       >
         <h1>
           Are you sure you want to leave{" "}
-          <span className="font-bold">{projectName}</span>?
+          <span className="font-bold">{editProject.projectName}</span>?
         </h1>
         <button
           onClick={() => handleLeave()}

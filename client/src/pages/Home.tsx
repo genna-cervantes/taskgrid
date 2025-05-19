@@ -1,20 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { getAllProjects } from "../utils/indexedb";
 import EditProjectModal from "../components/EditProjectModal";
 import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
 import DeleteProjectModal from "../components/DeleteProjectModal";
-import { v4 as uuidv4 } from "uuid";
 import { trpc } from "../utils/trpc";
-import { trpcClient } from "../main";
 import { useGuestId } from "../contexts/UserContext";
 import { Project } from "../../../server/src/shared/types";
 
 const Home = () => {
-  // const { data, isLoading } = trpc.hello.useQuery({ name: "Genna" });
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const [editModal, setEditModal] = useState("");
+  const [editProject, setEditProject] = useState({
+    projectId: "",
+    projectName: ""
+  })
   const [editProjectModal, setEditProjectModal] = useState(false);
   const [deleteProjectModal, setDeleteProjectModal] = useState(false);
 
@@ -28,7 +27,10 @@ const Home = () => {
         !dropdown.contains(event.target as Node) &&
         (!modal || !modal.contains(event.target as Node))
       ) {
-        setEditModal("");
+        setEditProject({
+          projectId: "",
+          projectName: ""
+        });
         setEditProjectModal(false);
       }
     };
@@ -37,21 +39,10 @@ const Home = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
-
-  const [projectIds, setProjectIds] = useState<{ id: string; name: string }[]>([]);
+  }, []); 
 
   const guestId = useGuestId()
-
-  const {data: projects } = trpc.getProjects.useQuery({guestId})
-
-  const handleClickOptions = (id: string) => {
-    if (editModal === id) {
-      setEditModal("");
-    } else {
-      setEditModal(id);
-    }
-  };
+  const { data: projects } = trpc.getProjects.useQuery({guestId})
 
   return (
     <div className="my-6">
@@ -69,8 +60,8 @@ const Home = () => {
             <ProjectBlock
               key={p.id}
               p={p}
-              handleClickOptions={handleClickOptions}
-              editModal={editModal}
+              editProject={editProject}
+              setEditProject={setEditProject}
               dropdownRef={dropdownRef}
               setEditProjectModal={setEditProjectModal}
               setDeleteProjectModal={setDeleteProjectModal}
@@ -86,13 +77,13 @@ const Home = () => {
       </footer>
       {editProjectModal && (
         <EditProjectModal
-          projectId={editModal}
+          editProject={editProject}
           setEditProjectModal={setEditProjectModal}
-          setEditModal={setEditModal}
+          setEditProject={setEditProject}
         />
       )}
       {deleteProjectModal && (
-        <DeleteProjectModal projectId={editModal} setDeleteProjectModal={setDeleteProjectModal} setEditModal={setEditModal} />
+        <DeleteProjectModal editProject={editProject} setDeleteProjectModal={setDeleteProjectModal} setEditProject={setEditProject} />
       )}
     </div>
   );

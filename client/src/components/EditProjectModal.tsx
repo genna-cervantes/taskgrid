@@ -1,21 +1,30 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ProjectFormData, projectSchema } from "./AddProjectForm";
 import { trpc } from "../utils/trpc";
+import { useGuestId } from "../contexts/UserContext";
 
 const EditProjectModal = ({
-  projectId,
+  editProject,
+  setEditProject,
   setEditProjectModal,
-  setEditModal,
 }: {
-  projectId: string;
-  setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setEditModal: React.Dispatch<React.SetStateAction<string>>;
+  editProject: {
+    projectId: string;
+    projectName: string;
+},
+  setEditProject: React.Dispatch<React.SetStateAction<{
+      projectId: string;
+      projectName: string;
+    }>>
+  setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
-  // get name of project
 
-   const editProjectName = trpc.editProjectName.useMutation({
+  const guestId = useGuestId()
+  const utils = trpc.useUtils()
+  
+  const editProjectName = trpc.editProjectName.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
     },
@@ -24,32 +33,31 @@ const EditProjectModal = ({
     },
   });
 
-  const { data: projectNameFromDb } = trpc.getProjectNameByKey.useQuery({id: projectId})
-
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
-      name: projectNameFromDb || "",
+      name: editProject.projectName || "",
     },
   });
 
-  const handleClickOutside = () => {
-    setEditProjectModal(false);
-    setEditModal("");
-  };
-
-  useEffect(() => {
-    if (projectNameFromDb) {
-      form.reset({ name: projectNameFromDb });
-    }
-  }, [projectNameFromDb]);
-
   const onSubmit = async (data: ProjectFormData) => {
     // await updateProjectName(projectId, data.name);
-    editProjectName.mutate({id: projectId, name: data.name})
+    editProjectName.mutate({id: editProject.projectId, name: data.name, guestId})
     setEditProjectModal(false);
-    setEditModal("");
-    window.location.reload();
+    setEditProject({
+      projectId: "",
+      projectName: ""
+    });
+    utils.getProjects.invalidate()
+  };
+
+  // helper functions
+  const handleClickOutside = () => {
+    setEditProjectModal(false);
+    setEditProject({
+      projectId: "",
+      projectName: ""
+    });
   };
 
   return (
@@ -66,7 +74,7 @@ const EditProjectModal = ({
           <label htmlFor="name" className="text-xs font-semibold mb-2">
             Project Id:
           </label>
-          <h1>{projectId}</h1>
+          <h1>{editProject.projectId}</h1>
         </span>
         <form
           onSubmit={form.handleSubmit(onSubmit)}

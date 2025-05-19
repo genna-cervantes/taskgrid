@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
-    const query = 'SELECT id, name, guest_id AS guestId FROM projects WHERE guest_id = $1;';
+    const query = 'SELECT id, name, guest_id AS guestId FROM projects WHERE guest_id = $1 AND is_active = TRUE;';
     const res = await pool.query(query, [guestId])
 
     return res.rows as Project[]
@@ -105,15 +105,15 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
 }
 
 export const addProject = async (pool: Pool, projectId: string, name: string, guestId: string) => {
-    const query = 'INSERT INTO projects (id, name, guestId) VALUES ($1, $2, $3)';
+    const query = 'INSERT INTO projects (id, name, guest_id) VALUES ($1, $2, $3)';
     const res = await pool.query(query, [projectId, name, guestId]);
 
     return res.rowCount;
 }
 
-export const editProjectName = async (pool: Pool, projectId: string, name: string) => {
-    const query = 'UPDATE projects SET name = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [name, projectId]);
+export const editProjectName = async (pool: Pool, projectId: string, name: string, guestId: string) => {
+    const query = 'UPDATE projects SET name = $1 WHERE id = $2 AND guest_id = $3 AND is_active = TRUE';
+    const res = await pool.query(query, [name, projectId, guestId]);
 
     return res.rowCount;
 }
@@ -123,6 +123,13 @@ export const getProjectNameByKey = async (pool: Pool, id: string) => {
     const res = await pool.query(query, [id]);
 
     return res.rows[0]?.name;
+}
+
+export const deleteProject = async (pool: Pool, id: string, guestId: string) => {
+    const query = 'UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2;';
+    const res = await pool.query(query, [id, guestId])
+
+    return res.rowCount;
 }
 
 export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo: string, projectId: string) => {

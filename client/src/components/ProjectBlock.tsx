@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 const ProjectBlock = ({
   p,
-  handleClickOptions,
-  editModal,
+  editProject,
+  setEditProject,
   dropdownRef,
   setEditProjectModal,
   setDeleteProjectModal
@@ -13,8 +13,14 @@ const ProjectBlock = ({
     id: string;
     name: string;
   };
-  handleClickOptions: (id: string) => void;
-  editModal: string;
+  editProject: {
+    projectId: string,
+    projectName: string
+  },
+  setEditProject: React.Dispatch<React.SetStateAction<{
+    projectId: string;
+    projectName: string;
+  }>>
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -34,7 +40,10 @@ const ProjectBlock = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              handleClickOptions(p.id);
+              setEditProject({
+                projectId: p.id,
+                projectName: p.name
+              });
             }}
           >
             <svg
@@ -55,10 +64,10 @@ const ProjectBlock = ({
             </svg>
           </button>
 
-          {editModal === p.id && (
+          {editProject.projectId === p.id && (
             <div
               ref={dropdownRef}
-              className="z-[99] absolute top-full right-0 mt-2 bg-[#3a3a3a] p-2 rounded-md shadow-lg z-50 w-max flex flex-col gap-y-2 text-sm"
+              className="z-10 absolute top-full right-0 mt-2 bg-[#3a3a3a] p-2 rounded-md shadow-lg w-max flex flex-col gap-y-2 text-sm"
             >
               <button
                 onClick={(e) => {
