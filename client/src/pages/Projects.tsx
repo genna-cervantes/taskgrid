@@ -66,16 +66,17 @@ const Projects = () => {
       id: projectId,  
   });
   
-  const {data: username} = trpc.getUsername.useQuery({id: projectId, guestId})
+  const {data: username, isLoading: usernameIsLoading} = trpc.getUsername.useQuery({id: projectId, guestId})
   const {data: projectName} = trpc.getProjectNameByKey.useQuery({id: projectId})
 
   // if guest id is not registered to project
   useEffect(() => {
     if (!fromHome && (!username || username === "")) {
-      console.log(guestId)
       setUsernameModal(true);
+    }else{
+      setUsernameModal(false);
     }
-  }, [fromHome, username])
+  }, [fromHome, username, usernameIsLoading])
 
   // helper functions
   const handleShare = async () => {
@@ -209,7 +210,7 @@ const Projects = () => {
         <Outlet context={{ setUsernameModal, username, columns }}  />
       </div>
       <div className="w-full flex justify-center">
-        {actionContext && (
+        {actionContext?.action && (
           <ActionModal projectId={projectId} actionContext={actionContext} />
         )}
       </div>
