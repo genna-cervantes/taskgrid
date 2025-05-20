@@ -13,8 +13,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 // Create a provider component
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [guestId] = useState<string>(() => {
-    const storedId = localStorage.getItem("guestId");
-    if (storedId) return storedId;
+    const storedId = localStorage.getItem("guestId"); // not getting valled
+    if (storedId) {
+      console.log('merong stored')
+      return storedId
+    };
     
     const newId = uuidv4();
     localStorage.setItem("guestId", newId);

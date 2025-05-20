@@ -42,7 +42,7 @@ const Home = () => {
   }, []); 
 
   const guestId = useGuestId()
-  const { data: projects } = trpc.getProjects.useQuery({guestId})
+  const { data: projects, isLoading: projectsIsLoading } = trpc.getProjects.useQuery({guestId})
 
   // need loading screen
 
@@ -57,6 +57,7 @@ const Home = () => {
     </div>
 
       <div className="grid grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">
+        {projectsIsLoading && 'Loading...'}
         {projects && projects.map((p: Project) => {
           return (
             <ProjectBlock

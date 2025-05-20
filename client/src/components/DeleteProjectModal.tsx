@@ -38,7 +38,7 @@ const DeleteProjectModal = ({
     });
   };
 
-  const handleLeave = async () => {
+  const handleLeave = () => {
     deleteProject.mutate({id: editProject.projectId, guestId})
     utils.getProjects.invalidate()
     setDeleteProjectModal(false);

@@ -32,7 +32,7 @@ const TaskModal = ({
   const recentTaskContext = useContext(RecentTaskContext);
 
   const { data: usersInProject, isLoading: usersLoading } =
-    trpc.getUsersInProject.useQuery({
+    trpc.getUsernamesInProject.useQuery({
       id: projectId,
     });
 

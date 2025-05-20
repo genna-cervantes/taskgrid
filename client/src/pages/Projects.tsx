@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Link,
   Outlet,
@@ -47,7 +47,7 @@ const Projects = () => {
 
   const isFilterEnabled = priority !== "" || assignedTo !== ""
 
-  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId ?? "" });
+  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId });
   const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
   trpc.filterTask.useQuery({
     id: projectId,
@@ -62,17 +62,20 @@ const Projects = () => {
   : (data && !isLoading ? groupTasksByColumn(data) : {});
 
   const { data: usersInProject, isLoading: usersLoading } =
-    trpc.getUsersInProject.useQuery({
-      id: projectId,
-    });
+    trpc.getUsernamesInProject.useQuery({
+      id: projectId,  
+  });
   
   const {data: username} = trpc.getUsername.useQuery({id: projectId, guestId})
   const {data: projectName} = trpc.getProjectNameByKey.useQuery({id: projectId})
-  
-  if (!fromHome && (!username || username === "")) {
-    console.log(username);
-    setUsernameModal(true);
-  }
+
+  // if guest id is not registered to project
+  useEffect(() => {
+    if (!fromHome && (!username || username === "")) {
+      console.log(guestId)
+      setUsernameModal(true);
+    }
+  }, [fromHome, username])
 
   // helper functions
   const handleShare = async () => {
@@ -206,8 +209,8 @@ const Projects = () => {
         <Outlet context={{ setUsernameModal, username, columns }}  />
       </div>
       <div className="w-full flex justify-center">
-        {actionContext?.action && (
-          <ActionModal projectId={projectId} action={actionContext.action} />
+        {actionContext && (
+          <ActionModal projectId={projectId} actionContext={actionContext} />
         )}
       </div>
     </>

@@ -48,7 +48,7 @@ const AddTaskForm = ({
   const actionContext = useContext(ActionContext)
   const recentTaskContext = useContext(RecentTaskContext)
 
-  const { data: usersInProject, isLoading: usersLoading } = trpc.getUsersInProject.useQuery({
+  const { data: usersInProject, isLoading: usersLoading } = trpc.getUsernamesInProject.useQuery({
       id: projectId,
     });
 

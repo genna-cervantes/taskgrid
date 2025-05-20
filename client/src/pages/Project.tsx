@@ -7,20 +7,18 @@ import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 
 const Project = () => {
   const { projectId } = useParams();
+  const utils = trpc.useUtils();
 
   const { setUsernameModal, username, columns } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
     username: string | undefined;
     columns: Columns
   }>();
-
-  const utils = trpc.useUtils();
   
   const [dragData, setDragData] = useState<{
     from: ColumnKey;
     task: Task;
   } | null>(null);
-
 
   const updateTaskProgress = trpc.updateTaskProgress.useMutation({
     onSuccess: (data) => {
@@ -32,6 +30,7 @@ const Project = () => {
     },
   });
 
+  // helper functions
   const handleDragStart = (fromColumn: ColumnKey, task: Task) => {
     setDragData({ from: fromColumn, task });
   };

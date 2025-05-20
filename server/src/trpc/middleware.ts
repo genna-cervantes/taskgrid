@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { middleware } from "./trpc.js";
 
 const rateLimitMap = new Map<string, { count: number; lastRequest: number }>();
-const RATE_LIMIT = 10; // max requests
+const RATE_LIMIT = 50; // max requests
 const TIME_WINDOW = 10 * 1000; // 10 seconds
 
 export const rateLimitMiddleware = middleware(({ctx, next}) => {

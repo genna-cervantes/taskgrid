@@ -58,6 +58,24 @@ export const getUsername = async (pool: Pool, id: string, guestId: string) => {
 }
 
 export const getUsersInProject = async (pool: Pool, id: string) => {
+    const query = 'SELECT username, guest_id AS guestId FROM users WHERE project_id = $1 AND is_active = TRUE;';
+    const res = await pool.query(query, [id])
+
+    if (res.rowCount === 0){
+        return []
+    }
+
+    let users = res.rows.map((r) => {
+        return {
+            username: r.username,
+            guestId: r.guestid
+        }
+    })
+
+    return users;
+}
+
+export const getUsernamesInProject = async (pool: Pool, id: string) => {
     const query = 'SELECT username FROM users WHERE project_id = $1 AND is_active = TRUE'
     const res = await pool.query(query, [id]);
 
