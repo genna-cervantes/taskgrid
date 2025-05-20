@@ -2,7 +2,8 @@ import { Pool } from "pg";
 import { InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
-    const query = 'SELECT id, name, guest_id AS guestId FROM projects WHERE guest_id = $1 AND is_active = TRUE;';
+
+    const query = "SELECT p.id, p.name, u.guest_id FROM users AS u LEFT JOIN projects AS p ON p.id = u.project_id WHERE u.guest_id = $1 AND p.is_active = TRUE AND u.is_active = TRUE;";
     const res = await pool.query(query, [guestId])
 
     return res.rows as Project[]

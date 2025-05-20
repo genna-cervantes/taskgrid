@@ -12,9 +12,17 @@ const Project = () => {
   const { setUsernameModal, username, columns } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
     username: string | undefined;
-    columns: Columns
+    columns: Columns;
   }>();
-  
+
+  if (!columns) {
+    return (
+      <p className="text-sm opacity-50 text-center mt-8">
+        Loading your taskan boards...
+      </p>
+    );
+  }
+
   const [dragData, setDragData] = useState<{
     from: ColumnKey;
     task: Task;
@@ -50,7 +58,7 @@ const Project = () => {
 
   return (
     <>
-      <div className="grid grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto">
         {(Object.keys(columns) as ColumnKey[]).map((col) => (
           <div
             key={col}

@@ -19,7 +19,7 @@ const pool = new Pool({
 
 
 export const appRouter = router({
-  getProjects: publicProcedure
+  getUserProjects: publicProcedure
     .use(rateLimitMiddleware)
     .input((z.object({guestId: z.string()})))
     .query(async ({input}) => {
