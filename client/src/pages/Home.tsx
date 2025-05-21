@@ -61,7 +61,7 @@ const Home = () => {
           Loading your taskan boards...
         </p>
       ) : (
-        <div className="grid grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">
           {projects &&
             projects.map((p: Project) => {
               return (
