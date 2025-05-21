@@ -152,7 +152,7 @@ const Projects = () => {
         />
       )}
       {/* {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />} */}
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col overflow-y-hidden">
         <div className="relative flex items-center pt-4 pb-2 md:py-4 px-6">
           {/* Three-column layout with grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 w-full items-center">
