@@ -103,7 +103,7 @@ const Projects = () => {
   const handleFilterChange = (
     filters: { key: string; value: string | undefined }[]
   ) => {
-    const newParams = new URLSearchParams(searchParams.toString());
+    const newParams = new URLSearchParams(searchParams?.toString());
 
     filters.forEach(({ key, value }) => {
       if (value) {
@@ -130,7 +130,7 @@ const Projects = () => {
     });
 
     setSearchParams((prevParams) => {
-      const newParams = new URLSearchParams(prevParams.toString());
+      const newParams = new URLSearchParams(prevParams?.toString());
       newParams.delete("priority");
       newParams.delete("assignedTo");
       return newParams;
