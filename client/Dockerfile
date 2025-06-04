@@ -11,7 +11,7 @@ WORKDIR /app/server
 RUN npm install
 
 WORKDIR /app/client
-RUN npm run dev
+RUN npm run build
 
 FROM nginx:alpine AS production
 
