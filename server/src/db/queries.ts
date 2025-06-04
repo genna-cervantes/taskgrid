@@ -10,7 +10,7 @@ export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 }
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
-    const query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [id]);
 
     const tasks: Task[] = res.rows.map((task) => ({
@@ -22,8 +22,8 @@ export const getTasksFromProjectId = async (pool: Pool, id: string) => {
 }
 
 export const insertTask = async (pool: Pool, task: InsertableTask, id: string) => {
-    const query = 'INSERT INTO tasks (project_id, title, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
-    const res = await pool.query(query, [id, task.title, task.description, task.priority, task.progress, task.assignedTo]);
+    const query = 'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
+    const res = await pool.query(query, [id, task.title, task.link, task.description, task.priority, task.progress, task.assignedTo]);
 
     res.rows[0].id = res.rows[0].id.toString()
 
@@ -109,6 +109,14 @@ export const updateTaskDescription = async (pool: Pool, taskId: string, descript
     return res.rowCount;
 }
 
+export const updateTaskLink = async (pool: Pool, taskId: string, link?: string) => {
+    const query = 'UPDATE tasks SET link = $1 WHERE id = $2';
+    const res = await pool.query(query, [link, taskId])
+
+    return res.rowCount;
+}
+
+
 export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
     const query = 'UPDATE tasks SET priority = $1 WHERE id = $2';
     const res = await pool.query(query, [priority, taskId]);
@@ -164,16 +172,16 @@ export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo:
     let res;
 
     if (priority !== "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND assign_to = $2 AND project_id = $3 AND is_active = TRUE';
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND assign_to = $2 AND project_id = $3 AND is_active = TRUE';
         res = await pool.query(query, [priority, assignedTo, projectId]);
     }else if (priority !== "" && assignedTo == ""){
-        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [priority, projectId])
     }else if (priority == "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE assign_to = $1 AND project_id = $2 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE assign_to = $1 AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [assignedTo, projectId]);
     }else{
-        query = 'SELECT id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE'
         res = await pool.query(query, [projectId])
     }
 

@@ -5,6 +5,9 @@ import { trpc } from "../utils/trpc";
 import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
+import { z } from 'zod';
+
+const linkSchema = z.string().url();
 
 const TaskModal = ({
   task,
@@ -27,6 +30,8 @@ const TaskModal = ({
   const [taskDescription, setTaskDescription] = useState(task.description);
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
+  const [taskLink, setTaskLink] = useState(task.link);
+  const [taskLinkError, setTaskLinkError] = useState("");
 
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
@@ -78,6 +83,16 @@ const TaskModal = ({
     },
   });
 
+  const updateTaskLink = trpc.updateTaskLink.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
   const updateTaskPriority = trpc.updateTaskPriority.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
@@ -100,6 +115,17 @@ const TaskModal = ({
   };
 
   const handleSaveTask = () => {
+
+    // validation
+    if (taskLink && task.link !== taskLink){
+      const isLink = linkSchema.safeParse(taskLink)
+      if (!isLink.success){
+        console.log('getting called')
+        setTaskLinkError("Invalid Link")
+        return;
+      }
+    }
+
     recentTaskContext?.setTask(task); // keep track of this task for rollback later if undone
 
     if (task.title !== taskTitle) {
@@ -109,6 +135,13 @@ const TaskModal = ({
     if (task.description !== taskDescription) {
       updateTaskDescription.mutate({
         description: taskDescription,
+        taskId: task.id,
+      });
+    }
+    
+    if (task.link !== taskLink){
+      updateTaskLink.mutate({
+        link: taskLink,
         taskId: task.id,
       });
     }
@@ -122,6 +155,7 @@ const TaskModal = ({
     }
 
     setEditMode(false);
+    setTaskLinkError("")
 
     actionContext?.setAction("edited");
   };
@@ -148,16 +182,16 @@ const TaskModal = ({
       >
         <div className="flex justify-between items-center w-full gap-4">
           <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
-            <h1 className="shrink-0 text-sm md:text-base">[{task.projectTaskId}]</h1>
+            <h1 className="shrink-0 text-sm md:text-lg">[{task.projectTaskId}]</h1>
             {editMode ? (
               <input
                 type="text"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
-                className="w-full"
+                className="w-full text-xs md:text-lg"
               />
             ) : (
-              <h1 className="truncate w-full text-sm md:text-base" title={task.title}>{task.title}</h1>
+              <h1 className="truncate w-full text-sm md:text-lg" title={task.title}>{task.title}</h1>
             )}
           </div>
           <button
@@ -173,13 +207,33 @@ const TaskModal = ({
           </h3>
           {editMode ? (
             <textarea
-              className="w-full"
+              className="w-full text-xs md:text-sm"
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           ) : (
             <h3 className="pl-4 text-xs md:text-sm">{task?.description ?? ""}</h3>
           )}
+        </div>
+        <div>
+          <h3 className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}>
+            Link:
+          </h3>
+          {editMode ? (
+            <input
+              className="w-full text-xs md:text-sm"
+              value={taskLink}
+              onChange={(e) => setTaskLink(e.target.value)}
+            />
+          ) : (
+            task?.link ? <a href={task.link} target="_blank" rel="noopener noreferrer" className="hover:underline text-xs md:text-sm">
+              {task?.link ?? ""}
+            </a> : <></>
+            // <h3 className="pl-4 text-xs md:text-sm">{task?.link ?? ""}</h3>
+          )}
+          {taskLinkError !== "" && <h4 className={`font-semibold text-xs text-red-400`}>
+            {taskLinkError}
+          </h4>}
         </div>
         <div>
           <h3 className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}>
@@ -192,7 +246,7 @@ const TaskModal = ({
                   key={p}
                   onClick={() => setTaskPriority(p)}
                   type="button"
-                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
+                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} text-xs md:text-base flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
                 >
                   {p}
                 </button>
@@ -222,14 +276,14 @@ const TaskModal = ({
           {editMode ? (
             <select
               id="assignTo"
-              className="w-full"
+              className="w-full text-xs md:text-base"
               value={taskAssignedTo}
               onChange={(e) => setTaskAssignedTo(e.target.value)}
             >
               {!usersLoading &&
                 usersInProject?.map((u) => (
-                  <option key={u} value={u} className="bg-[#464646]">
-                    {u}
+                  <option key={u} value={u} className="bg-[#464646] text-xs md:text-base">
+                    {u} {u === username ? '(You)' : ''}
                   </option>
                 ))}
             </select>
@@ -243,7 +297,7 @@ const TaskModal = ({
           {editMode ? (
             <button
               onClick={handleSaveTask}
-              className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-green-400 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Save
             </button>

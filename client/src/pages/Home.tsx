@@ -50,7 +50,7 @@ const Home = () => {
     <div className="my-6">
       <div className="text-center ">
         <h1 className="text-2xl pt-4">
-          Your <span className="text-green-400 font-semibold">TasKan1</span>{" "}
+          Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
           Boards
         </h1>
         <p className="text-xs pt-2 opacity-50">Guest ID: {guestId}</p>

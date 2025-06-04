@@ -28,6 +28,7 @@ CREATE TABLE public.tasks (
     id integer NOT NULL,
     title character varying(100) NOT NULL,
     description text,
+    link character varying(255),
     priority text,
     assign_to character varying(255),
     is_active boolean DEFAULT true NOT NULL,
