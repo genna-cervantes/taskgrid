@@ -143,12 +143,12 @@ const TaskModal = ({
       onClick={() => setTaskDetailsModal(false)} // Close when clicking backdrop
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
+        className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <div className="flex justify-between items-center w-full gap-4">
           <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
-            <h1 className="shrink-0">[{task.projectTaskId}]</h1>
+            <h1 className="shrink-0 text-sm md:text-base">[{task.projectTaskId}]</h1>
             {editMode ? (
               <input
                 type="text"
@@ -157,18 +157,18 @@ const TaskModal = ({
                 className="w-full"
               />
             ) : (
-              <h1 className="truncate w-full" title={task.title}>{task.title}</h1>
+              <h1 className="truncate w-full text-sm md:text-base" title={task.title}>{task.title}</h1>
             )}
           </div>
           <button
             onClick={() => setTaskDetailsModal(false)}
-            className="bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
+            className="bg-white/20 text-white text-xs md:text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
           >
             Close
           </button>
         </div>
         <div>
-          <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+          <h3 className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}>
             Description:
           </h3>
           {editMode ? (
@@ -178,11 +178,11 @@ const TaskModal = ({
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           ) : (
-            <h3 className="pl-4">{task?.description ?? ""}</h3>
+            <h3 className="pl-4 text-xs md:text-sm">{task?.description ?? ""}</h3>
           )}
         </div>
         <div>
-          <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+          <h3 className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}>
             Priority:
           </h3>
           {editMode ? (
@@ -201,19 +201,19 @@ const TaskModal = ({
           ) : (
             <span className="flex items-center pl-4 gap-x-2">
               <TaskPriority priority={task.priority} />
-              <h3 className="">{task.priority}</h3>
+              <h3 className="text-xs md:text-sm">{task.priority}</h3>
             </span>
           )}
         </div>
         <div>
           <div className="flex justify-between items-center">
-            <h3 className={`font-semibold ${editMode ? "text-xs pb-1" : ""}`}>
+            <h3 className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}>
               Assigned To:
             </h3>
             {!editMode && task.assignedTo !== username && (
               <button
                 onClick={handleAssignToMe}
-                className="font-semibold underline text-sm cursor-pointer"
+                className="font-semibold underline text-xs md:text-sm cursor-pointer"
               >
                 Assign To Me
               </button>
@@ -234,7 +234,7 @@ const TaskModal = ({
                 ))}
             </select>
           ) : (
-            <h3 className="pl-4">
+            <h3 className="pl-4 text-xs md:text-sm">
               {task.assignedTo} {task.assignedTo === username ? "(You)" : ""}
             </h3>
           )}
@@ -250,7 +250,7 @@ const TaskModal = ({
           ) : (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-white/20 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-white/20 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Edit
             </button>
@@ -258,7 +258,7 @@ const TaskModal = ({
           {!editMode && (
             <button
               onClick={handleDeleteTask}
-              className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-red-400 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Delete
             </button>
