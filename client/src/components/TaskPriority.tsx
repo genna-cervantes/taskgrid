@@ -3,7 +3,7 @@ const TaskPriority = ({priority}: {priority: string}) => {
     if (priority === 'low'){
         return (
           <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-green-400 inline-block" />
             {/* <span className="w-2 h-2 rounded-full bg-[#F5F5F5] inline-block" />
             <span className="w-2 h-2 rounded-full bg-[#F5F5F5] inline-block" /> */}
           </div>
@@ -12,8 +12,8 @@ const TaskPriority = ({priority}: {priority: string}) => {
     if (priority === 'medium'){
         return (
           <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
-            <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-orange-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-orange-400 inline-block" />
             {/* <span className="w-2 h-2 rounded-full bg-[#F5F5F5] inline-block" /> */}
           </div>
         )
@@ -21,9 +21,9 @@ const TaskPriority = ({priority}: {priority: string}) => {
     if (priority === 'high'){
         return (
           <div className="flex gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
-            <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
-            <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-red-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-red-400 inline-block" />
+            <span className="w-1 h-1 md:w-2 md:h-2 rounded-full bg-red-400 inline-block" />
           </div>
         )
 

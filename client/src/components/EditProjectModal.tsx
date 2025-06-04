@@ -48,7 +48,7 @@ const EditProjectModal = ({
       projectId: "",
       projectName: ""
     });
-    utils.getProjects.invalidate()
+    utils.getUserProjects.invalidate()
   };
 
   // helper functions

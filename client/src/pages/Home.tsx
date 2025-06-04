@@ -50,13 +50,13 @@ const Home = () => {
     <div className="my-6">
       <div className="text-center ">
         <h1 className="text-2xl pt-4">
-          Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
+          Your <span className="text-green-400 font-semibold">TasKan1</span>{" "}
           Boards
         </h1>
         <p className="text-xs pt-2 opacity-50">Guest ID: {guestId}</p>
       </div>
 
-      {projectsIsLoading ? (
+      {!projects && projectsIsLoading ? (
         <p className="text-sm opacity-50 text-center mt-8">
           Loading your taskan boards...
         </p>

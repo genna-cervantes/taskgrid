@@ -231,7 +231,7 @@ const Projects = () => {
 
             {/* Right side */}
             <div className="flex justify-end gap-x-4 items-center">
-              <h1 className="text-sm md:text-base">{username}</h1>
+              <h1 className="text-sm md:text-base truncate">{username}</h1>
               <button
                 onClick={handleShare}
                 className="px-1 md:px-3 py-1 rounded-md bg-green-400 text-xs md:text-sm font-bold cursor-pointer"

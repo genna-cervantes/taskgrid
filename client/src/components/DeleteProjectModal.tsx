@@ -40,7 +40,7 @@ const DeleteProjectModal = ({
 
   const handleLeave = () => {
     deleteProject.mutate({id: editProject.projectId, guestId})
-    utils.getProjects.invalidate()
+    utils.getUserProjects.invalidate()
     setDeleteProjectModal(false);
     setEditProject({
       projectId: "",
