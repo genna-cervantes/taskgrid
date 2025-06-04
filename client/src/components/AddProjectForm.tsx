@@ -51,7 +51,7 @@ const AddProjectForm = ({
       onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-xl flex flex-col gap-y-4"
+        className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form

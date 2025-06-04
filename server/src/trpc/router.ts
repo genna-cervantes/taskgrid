@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -108,6 +108,14 @@ export const appRouter = router({
     .input((z.object({description: z.string().optional(), taskId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await updateTaskDescription(pool, input.taskId, input.description)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
+  updateTaskLink: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({link: z.string().optional(), taskId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await updateTaskLink(pool, input.taskId, input.link)
       if (taskCount && taskCount > 0) return true
       return false;
     }),

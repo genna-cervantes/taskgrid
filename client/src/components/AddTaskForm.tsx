@@ -13,6 +13,7 @@ const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high"], {
     required_error: "Priority is required",
   }),
+  link: z.string().url(),
   assignedTo: z.string({
     required_error: "Assignee is required",
   }),
@@ -79,7 +80,7 @@ const AddTaskForm = ({
       onClick={() => setAddModal(false)} // Close when clicking backdrop
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-6 w-full max-w-md"
+        className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form
@@ -90,7 +91,7 @@ const AddTaskForm = ({
             <label htmlFor="title" className="text-xs font-semibold mb-2">
               Task Title:
             </label>
-            <input {...register("title")} placeholder="New Task Title..." />
+            <input {...register("title")} placeholder="New Task Title..." className="text-xs md:text-base" />
             {errors.title && (
               <p className="text-red-400 text-xs font-semibold mt-1">
                 {errors.title.message}
@@ -104,10 +105,26 @@ const AddTaskForm = ({
             <textarea
               {...register("description")}
               placeholder="New Task Description..."
+              className="text-xs md:text-base"
             />
             {errors.description && (
               <p className="text-red-400 text-xs font-semibold mt-1">
                 {errors.description.message}
+              </p>
+            )}
+          </span>
+          <span className="w-full flex flex-col">
+            <label htmlFor="description" className="text-xs font-semibold mb-2">
+              Task Link:
+            </label>
+            <input
+              {...register("link")}
+              placeholder="New Task Link..."
+              className="text-xs md:text-base"
+            />
+            {errors.link && (
+              <p className="text-red-400 text-xs font-semibold mt-1">
+                {errors.link.message}
               </p>
             )}
           </span>
@@ -121,7 +138,7 @@ const AddTaskForm = ({
                     key={p}
                   onClick={() => setValue("priority", p, { shouldValidate: true })}
                   type="button"
-                  className={`${selectedPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
+                  className={`${selectedPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer text-xs md:text-base`}
                 >
                   {p}
                 </button>
@@ -137,7 +154,7 @@ const AddTaskForm = ({
             <label htmlFor="assignTo" className="text-xs font-semibold mb-2">
               Assign To:
             </label>
-            <select {...register("assignedTo")} id="assignTo">
+            <select {...register("assignedTo")} id="assignTo" className="text-xs md:text-base">
               {!usersLoading && usersInProject?.map((u) => (
                 <option key={u} value={u} className="bg-[#464646]">
                   {u} {u === username ? '(You)' : ''}
@@ -147,7 +164,7 @@ const AddTaskForm = ({
           </span>
           <button
             type="submit"
-            className="w-full text-sm bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40"
+            className="w-full bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base"
           >
             Add Task
           </button>

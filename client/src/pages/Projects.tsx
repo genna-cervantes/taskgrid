@@ -345,9 +345,9 @@ const Projects = () => {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-check-icon lucide-check"
                   >
                     <path d="M20 6 9 17l-5-5" />
@@ -369,9 +369,9 @@ const Projects = () => {
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       className="lucide lucide-x-icon lucide-x"
                     >
                       <path d="M18 6 6 18" />
@@ -386,7 +386,13 @@ const Projects = () => {
           </div>
         </div>
 
-        <Outlet context={{ setUsernameModal, username, columns }} />
+        {Object.keys(columns).length > 0 ? (
+          <Outlet context={{ setUsernameModal, username, columns }} />
+        ) : (
+          <p className="text-sm opacity-50 text-center mt-8">
+            Loading your tasks...
+          </p>
+        )}
       </div>
       <div className="w-full flex justify-center">
         {actionContext?.action && (

@@ -16,6 +16,7 @@ export const TaskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   assignedTo: z.string(),
   progress: z.string(),
+  link: z.string(),
   projectTaskId: z.number(),
 });
 
