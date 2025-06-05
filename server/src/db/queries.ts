@@ -5,7 +5,7 @@ export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 
     const query = "SELECT p.id, p.name, up.guest_id AS guestId FROM user_project_link AS up LEFT JOIN projects AS p ON p.id = up.project_id WHERE up.guest_id = $1 AND p.is_active = TRUE AND up.is_active = TRUE;";
     const res = await pool.query(query, [guestId])
-    
+
     return res.rows as Project[]
 }
 
@@ -51,29 +51,29 @@ export const insertUser = async (pool: Pool, username: string, guestId: string) 
     return res.rowCount;
 }
 
-export const setUsername = async (pool:Pool, username: string, guestId: string) => {
-    const query = 'UPDATE users SET username = $1 WHERE guest_id = $2;';
-    const res = await pool.query(query, [username, guestId]);
+export const setUsername = async (pool:Pool, username: string, guestId: string, id: string) => {
+    const query = 'UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3;';
+    const res = await pool.query(query, [username, guestId, id]);
     
     return res.rowCount;
 }
 
 export const checkGuestId = async (pool: Pool, guestId: string) => {
-    const query = 'SELECT COUNT(*) FROM users WHERE guest_id = $1;';
+    const query = 'SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;';
     const res = await pool.query(query, [guestId]);
 
     return parseInt(res.rows[0].count);
 }
 
 export const getUsername = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'SELECT username FROM users WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE'
+    const query = 'SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE'
     const res = await pool.query(query, [id, guestId])
 
     return res.rows[0].username ?? ""
 }
 
 export const getUsersInProject = async (pool: Pool, id: string) => {
-    const query = 'SELECT username, guest_id AS guestId FROM users WHERE project_id = $1 AND is_active = TRUE;';
+    const query = 'SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;';
     const res = await pool.query(query, [id])
 
     if (res.rowCount === 0){
@@ -91,7 +91,7 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
 }
 
 export const getUsernamesInProject = async (pool: Pool, id: string) => {
-    const query = 'SELECT username FROM users WHERE project_id = $1 AND is_active = TRUE'
+    const query = 'SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE'
     const res = await pool.query(query, [id]);
 
     if (res.rowCount === 0){
@@ -159,9 +159,9 @@ export const addProject = async (pool: Pool, projectId: string, name: string, gu
     return res.rowCount;
 }
 
-export const addUserProjectLink = async (pool: Pool, projectId: string, guestId: string) => {
-    const query = 'INSERT INTO user_project_link (project_id, guest_id) VALUES ($1, $2);';
-    const res = await pool.query(query, [projectId, guestId]);
+export const addUserProjectLink = async (pool: Pool, projectId: string, guestId: string, username: string) => {
+    const query = 'INSERT INTO user_project_link (project_id, guest_id, username) VALUES ($1, $2, $3);';
+    const res = await pool.query(query, [projectId, guestId, username]);
 
     return res.rowCount;
 }
