@@ -17,7 +17,7 @@ $$;
 
 -- Projects table
 CREATE TABLE public.projects (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
     name character varying(100),
     guest_id character varying(36),
     is_active boolean DEFAULT true NOT NULL,
