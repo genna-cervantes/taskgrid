@@ -12,6 +12,9 @@ export default {
         noto: ['"Noto Sans"', 'sans-serif'],
         rubik: ['"Rubik"', 'sans-serif'],
       },
+      fontSize: {
+        xxs: '0.5rem',
+      },
     },
   },
   plugins: [scrollbar()],
