@@ -56,7 +56,6 @@ ALTER TABLE ONLY public.tasks ALTER COLUMN id SET DEFAULT nextval('public.tasks_
 CREATE TABLE public.users (
     id integer NOT NULL,
     username character varying(100),
-    project_id uuid NOT NULL,
     guest_id character varying(36),
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -67,6 +66,31 @@ CREATE TABLE public.users (
 CREATE SEQUENCE public.users_id_seq START WITH 1 INCREMENT BY 1;
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq');
+
+ALTER TABLE public.users ADD CONSTRAINT users_guest_id_key UNIQUE (guest_id);
+
+-- User Project Link table
+CREATE TABLE public.user_project_link (
+    id integer NOT NULL,
+    project_id uuid NOT NULL,
+    guest_id character varying(36),
+    username character varying(255),
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+
+    -- Foreign key constraints
+    CONSTRAINT fk_project
+      FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE,
+
+    CONSTRAINT fk_guest
+      FOREIGN KEY (guest_id) REFERENCES public.users(guest_id) ON DELETE SET NULL
+);
+
+-- User Project Link ID sequence
+CREATE SEQUENCE public.user_project_link_id_seq START WITH 1 INCREMENT BY 1;
+ALTER SEQUENCE public.user_project_link_id_seq OWNED BY public.user_project_link.id;
+ALTER TABLE ONLY public.user_project_link ALTER COLUMN id SET DEFAULT nextval('public.user_project_link_id_seq');
 
 -- Trigger
 CREATE TRIGGER set_project_task_id
