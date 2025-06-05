@@ -3,9 +3,9 @@ import { InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 
-    const query = "SELECT p.id, p.name, u.guest_id FROM users AS u LEFT JOIN projects AS p ON p.id = u.project_id WHERE u.guest_id = $1 AND p.is_active = TRUE AND u.is_active = TRUE;";
+    const query = "SELECT p.id, p.name, up.guest_id AS guestId FROM user_project_link AS up LEFT JOIN projects AS p ON p.id = up.project_id WHERE up.guest_id = $1 AND p.is_active = TRUE AND up.is_active = TRUE;";
     const res = await pool.query(query, [guestId])
-
+    
     return res.rows as Project[]
 }
 
@@ -62,9 +62,7 @@ export const checkGuestId = async (pool: Pool, guestId: string) => {
     const query = 'SELECT COUNT(*) FROM users WHERE guest_id = $1;';
     const res = await pool.query(query, [guestId]);
 
-    console.log(res.rows[0])
-
-    return res.rows[0].count;
+    return parseInt(res.rows[0].count);
 }
 
 export const getUsername = async (pool: Pool, id: string, guestId: string) => {
@@ -157,6 +155,13 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
 export const addProject = async (pool: Pool, projectId: string, name: string, guestId: string) => {
     const query = 'INSERT INTO projects (id, name, guest_id) VALUES ($1, $2, $3)';
     const res = await pool.query(query, [projectId, name, guestId]);
+
+    return res.rowCount;
+}
+
+export const addUserProjectLink = async (pool: Pool, projectId: string, guestId: string) => {
+    const query = 'INSERT INTO user_project_link (project_id, guest_id) VALUES ($1, $2);';
+    const res = await pool.query(query, [projectId, guestId]);
 
     return res.rowCount;
 }

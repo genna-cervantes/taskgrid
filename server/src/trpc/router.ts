@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, checkGuestId, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, addUserProjectLink, checkGuestId, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -79,7 +79,7 @@ export const appRouter = router({
     .input((z.object({guestId: z.string()})))
     .query(async({input}) => {
       let userCount = await checkGuestId(pool, input.guestId)
-      if (userCount && userCount > 0) return true
+      if (userCount && userCount === 1) return true
       return false;
     }),
   getUsername: publicProcedure
@@ -164,7 +164,8 @@ export const appRouter = router({
     .input((z.object({id: z.string(), name: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await addProject(pool, input.id, input.name, input.guestId)
-      if (taskCount && taskCount > 0) {
+      let userProjectLinkCount = await addUserProjectLink(pool, input.id, input.guestId);
+      if (taskCount && userProjectLinkCount && taskCount > 0 && userProjectLinkCount > 0) {
         return taskCount
       }
       return false;
