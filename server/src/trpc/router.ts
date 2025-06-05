@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, addUserProjectLink, checkGuestId, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, addUserProjectLink, checkGuestId, deleteProject, deleteTask, deleteTaskById, deleteUserProjectLink, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -199,8 +199,10 @@ export const appRouter = router({
     .use(rateLimitMiddleware)
     .input((z.object({id: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
-      let taskCount = await deleteProject(pool, input.id, input.guestId)
-      if (taskCount && taskCount > 0) return true
+      let projectCount = await deleteProject(pool, input.id, input.guestId)
+      let userProjectLinkCount = await deleteUserProjectLink(pool, input.id, input.guestId)
+
+      if (projectCount && projectCount > 0 && userProjectLinkCount && userProjectLinkCount > 0) return true
       return false;
     }),
   filterTask: publicProcedure

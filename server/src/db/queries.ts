@@ -52,7 +52,7 @@ export const insertUser = async (pool: Pool, username: string, guestId: string) 
 }
 
 export const setUsername = async (pool:Pool, username: string, guestId: string, id: string) => {
-    const query = 'UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3;';
+    const query = 'UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;';
     const res = await pool.query(query, [username, guestId, id]);
     
     return res.rowCount;
@@ -103,28 +103,28 @@ export const getUsernamesInProject = async (pool: Pool, id: string) => {
 }
 
 export const updateAssignedTo = async (pool: Pool, taskId: string, username: string) => {
-    const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [username, taskId])
 
     return res.rowCount;
 }
 
 export const updateTaskTitle = async (pool: Pool, taskId: string, title: string) => {
-    const query = 'UPDATE tasks SET title = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET title = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [title, taskId]);
 
     return res.rowCount;
 }
 
 export const updateTaskDescription = async (pool: Pool, taskId: string, description?: string) => {
-    const query = 'UPDATE tasks SET description = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET description = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [description, taskId])
 
     return res.rowCount;
 }
 
 export const updateTaskLink = async (pool: Pool, taskId: string, link?: string) => {
-    const query = 'UPDATE tasks SET link = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET link = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [link, taskId])
 
     return res.rowCount;
@@ -132,21 +132,21 @@ export const updateTaskLink = async (pool: Pool, taskId: string, link?: string) 
 
 
 export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
-    const query = 'UPDATE tasks SET priority = $1 WHERE id = $2';
+    const query = 'UPDATE tasks SET priority = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [priority, taskId]);
 
     return res.rowCount;
 }
 
 export const deleteTaskById = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1';
+    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [taskId])
 
     return res.rowCount;
 }
 
 export const undoDeleteTask = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1';
+    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [taskId])
 
     return res.rowCount;
@@ -174,16 +174,23 @@ export const editProjectName = async (pool: Pool, projectId: string, name: strin
 }
 
 export const getProjectNameByKey = async (pool: Pool, id: string) => {
-    const query = 'SELECT name FROM projects WHERE id = $1';
+    const query = 'SELECT name FROM projects WHERE id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [id]);
 
     return res.rows[0]?.name;
 }
 
 export const deleteProject = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2;';
+    const query = 'UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2 AND is_active = TRUE;';
     const res = await pool.query(query, [id, guestId])
 
+    return res.rowCount;
+}
+
+export const deleteUserProjectLink = async (pool: Pool, id: string, guestId: string) => {
+    const query = 'UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE;';
+    const res = await pool.query(query, [id, guestId])
+    
     return res.rowCount;
 }
 
