@@ -8,6 +8,8 @@ import { useGuestId } from "../contexts/UserContext";
 import { Project } from "../../../server/src/shared/types";
 
 const Home = () => {
+
+  const userContext = useGuestId();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [editProject, setEditProject] = useState({
     projectId: "",
@@ -40,11 +42,17 @@ const Home = () => {
     };
   }, []);
 
-  const guestId = useGuestId();
-  const { data: projects, isLoading: projectsIsLoading } =
-    trpc.getUserProjects.useQuery({ guestId });
 
+  const { data: projects, isLoading: projectsIsLoading } =
+    trpc.getUserProjects.useQuery({ guestId: userContext.guestId ?? "" });
+
+  
   // need loading screen
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
 
   return (
     <div className="my-6">
@@ -53,7 +61,7 @@ const Home = () => {
           Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
           Boards
         </h1>
-        <p className="text-xs pt-2 opacity-50">Guest ID: {guestId}</p>
+        <p className="text-xs pt-2 opacity-50">Guest ID: {userContext.guestId ?? "Loading..."}</p>
       </div>
 
       {!projects && projectsIsLoading ? (

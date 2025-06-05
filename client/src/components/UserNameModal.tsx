@@ -13,14 +13,15 @@ const UserNameModal = ({
 }) => {
   
   const utils = trpc.useUtils()
-  const guestId = useGuestId()
+  const userContext = useGuestId()
 
+  
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [guestIdModal, setGuestIdModal] = useState(false);
   const [provideGuestId, setProvideGuestId] = useState("");
   const [provideGuestIdError, setProvideGuestIdError] = useState("");
-
+  
   const setUsernameInDb = trpc.setUsername.useMutation({
     onSuccess: (data) => {
       console.log("Name set:", data);
@@ -29,65 +30,71 @@ const UserNameModal = ({
       console.error("Failed to create task:", error.message);
     },
   });
-
+  
   const { data: users } = trpc.getUsersInProject.useQuery({
     id: projectId,
   });
-
+  
   const handleSaveName = async () => {
     // data checks
     if (!name) {
       setError("Name is required!");
       return;
     }
-
+    
     if (name.length < 1) {
       setError("Name is required!");
       return;
     }
-
+    
     if (name.length > 100) {
       setError("Name is too long!");
       return;
     }
-
+    
     if (users?.some((u) => u.username === name)) {
       setError("This name has already been registed to this board!");
       return;
     }
-
-    setUsernameInDb.mutate({ id: projectId, username: name, guestId });
+    
+    setUsernameInDb.mutate({ id: projectId, username: name, guestId: userContext.guestId ?? "" });
     utils.getUsername.invalidate()
     setUsernameModal(false);
   };
-
+  
   const handleSaveProvideGuestId = () => {
     if (!provideGuestId) {
       setProvideGuestIdError("Guest ID is required!");
       return;
     }
-
+    
     if (provideGuestId.length < 1) {
       setProvideGuestIdError("Guest ID is required!");
       return;
     }
-
+    
     if (provideGuestId.length > 36) {
       setProvideGuestIdError("Guest ID is invalid!");
       return;
     }
-
+    
     if (!users?.some((u) => u.guestId === provideGuestId)) {
       setProvideGuestIdError("The Guest ID provided is not registered to this project!");
       return;
     }    
-
+    
     utils.getUsername.invalidate;
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
   }
-
+  
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
+  
   return (
     <>
       {/* provide guest id modal */}

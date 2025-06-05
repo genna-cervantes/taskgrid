@@ -43,44 +43,46 @@ const Projects = () => {
     assignedTo: assignedTo,
   });
 
-  const guestId = useGuestId();
+  const userContext = useGuestId();
+
+  
   const actionContext = useContext(ActionContext);
   const { isMobile } = useDeviceDetect();
-
+  
   const isFilterEnabled = priority !== "" || assignedTo !== "";
-
+  
   const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId });
   const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
-    trpc.filterTask.useQuery(
-      {
-        id: projectId,
-        priority,
-        assignedTo,
-      },
-      {
-        enabled: isFilterEnabled,
-      }
-    );
-
-  const columns = isFilterEnabled
-    ? filteredTasks && !filteredTasksIsLoading
-      ? groupTasksByColumn(filteredTasks)
-      : {}
-    : data && !isLoading
-      ? groupTasksByColumn(data)
-      : {};
-
-  const { data: usersInProject, isLoading: usersLoading } =
-    trpc.getUsernamesInProject.useQuery({
+  trpc.filterTask.useQuery(
+    {
       id: projectId,
-    });
-
+      priority,
+      assignedTo,
+    },
+    {
+      enabled: isFilterEnabled,
+    }
+  );
+  
+  const columns = isFilterEnabled
+  ? filteredTasks && !filteredTasksIsLoading
+  ? groupTasksByColumn(filteredTasks)
+  : {}
+  : data && !isLoading
+  ? groupTasksByColumn(data)
+  : {};
+  
+  const { data: usersInProject, isLoading: usersLoading } =
+  trpc.getUsernamesInProject.useQuery({
+    id: projectId,
+  });
+  
   const { data: username, isLoading: usernameIsLoading } =
-    trpc.getUsername.useQuery({ id: projectId, guestId });
+  trpc.getUsername.useQuery({ id: projectId, guestId: userContext.guestId ?? "" });
   const { data: projectName } = trpc.getProjectNameByKey.useQuery({
     id: projectId,
   });
-
+  
   // if guest id is not registered to project
   useEffect(() => {
     if (!fromHome && (!username || username === "")) {
@@ -89,22 +91,22 @@ const Projects = () => {
       setUsernameModal(false);
     }
   }, [fromHome, username, usernameIsLoading]);
-
+  
   // helper functions
   const handleShare = async () => {
     if (!username) {
       setUsernameModal(true);
       return;
     }
-
+    
     setLinkCopiedModal(true);
   };
-
+  
   const handleFilterChange = (
     filters: { key: string; value: string | undefined }[]
   ) => {
     const newParams = new URLSearchParams(searchParams?.toString());
-
+    
     filters.forEach(({ key, value }) => {
       if (value) {
         newParams.set(key, value);
@@ -112,23 +114,23 @@ const Projects = () => {
         newParams.delete(key);
       }
     });
-
+    
     setSearchParams(newParams);
   };
-
+  
   const handleApplyFilter = () => {
     handleFilterChange([
       { key: "priority", value: filter.priority },
       { key: "assignedTo", value: filter.assignedTo },
     ]);
   };
-
+  
   const handleClearFilter = () => {
     setFilter({
       priority: "",
       assignedTo: "",
     });
-
+    
     setSearchParams((prevParams) => {
       const newParams = new URLSearchParams(prevParams?.toString());
       newParams.delete("priority");
@@ -136,9 +138,14 @@ const Projects = () => {
       return newParams;
     });
   };
-
+  
   // need loading screen
-
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
+  
   return (
     <>
       {linkCopiedModal && (
@@ -146,9 +153,9 @@ const Projects = () => {
       )}
       {usernameModal && (
         <UserNameModal
-          fromHome={fromHome}
-          projectId={projectId}
-          setUsernameModal={setUsernameModal}
+        fromHome={fromHome}
+        projectId={projectId}
+        setUsernameModal={setUsernameModal}
         />
       )}
       {/* {openSidebar && <Sidebar setOpenSidebar={setOpenSidebar} />} */}

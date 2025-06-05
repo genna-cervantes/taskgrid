@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, checkGuestId, deleteProject, deleteTask, deleteTaskById, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -58,12 +58,28 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true
       return false;
     }),
+  insertUser: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({username: z.string(), guestId: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await insertUser(pool, input.username, input.guestId)
+      if (taskCount && taskCount > 0) return true
+      return false;
+    }),
   setUsername: publicProcedure
     .use(rateLimitMiddleware)
-    .input((z.object({username: z.string(), id: z.string(), guestId: z.string()})))
+    .input((z.object({username: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
-      let taskCount = await setUsername(pool, input.id, input.username, input.guestId)
-      if (taskCount && taskCount > 0) return true
+      let userCount = await setUsername(pool, input.username, input.guestId)
+      if (userCount && userCount > 0) return true
+      return false;
+    }),
+  checkGuestId: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({guestId: z.string()})))
+    .query(async({input}) => {
+      let userCount = await checkGuestId(pool, input.guestId)
+      if (userCount && userCount > 0) return true
       return false;
     }),
   getUsername: publicProcedure

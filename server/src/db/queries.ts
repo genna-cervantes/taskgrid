@@ -44,11 +44,27 @@ export const deleteTask = async (pool: Pool, taskId: string) => {
     return res.rowCount
 }
 
-export const setUsername = async (pool: Pool, id: string, username: string, guestId: string) => {
-    const query = 'INSERT INTO users (username, project_id, guest_id) VALUES ($1, $2, $3)';
-    const res = await pool.query(query, [username, id, guestId]);
+export const insertUser = async (pool: Pool, username: string, guestId: string) => {
+    const query = 'INSERT INTO users (username, guest_id) VALUES ($1, $2)';
+    const res = await pool.query(query, [username, guestId]);
 
     return res.rowCount;
+}
+
+export const setUsername = async (pool:Pool, username: string, guestId: string) => {
+    const query = 'UPDATE users SET username = $1 WHERE guest_id = $2;';
+    const res = await pool.query(query, [username, guestId]);
+    
+    return res.rowCount;
+}
+
+export const checkGuestId = async (pool: Pool, guestId: string) => {
+    const query = 'SELECT COUNT(*) FROM users WHERE guest_id = $1;';
+    const res = await pool.query(query, [guestId]);
+
+    console.log(res.rows[0])
+
+    return res.rows[0].count;
 }
 
 export const getUsername = async (pool: Pool, id: string, guestId: string) => {

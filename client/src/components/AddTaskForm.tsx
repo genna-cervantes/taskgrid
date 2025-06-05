@@ -13,7 +13,7 @@ const taskSchema = z.object({
   priority: z.enum(["low", "medium", "high"], {
     required_error: "Priority is required",
   }),
-  link: z.string().url(),
+  link: z.union([z.string().url("Invalid URL"), z.literal("")]).optional(),
   assignedTo: z.string({
     required_error: "Assignee is required",
   }),
