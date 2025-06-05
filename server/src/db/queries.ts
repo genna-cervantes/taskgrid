@@ -22,7 +22,7 @@ export const getTasksFromProjectId = async (pool: Pool, id: string) => {
 }
 
 export const insertTask = async (pool: Pool, task: InsertableTask, id: string) => {
-    const query = 'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
+    const query = 'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
     const res = await pool.query(query, [id, task.title, task.link, task.description, task.priority, task.progress, task.assignedTo]);
 
     res.rows[0].id = res.rows[0].id.toString()
