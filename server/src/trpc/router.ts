@@ -68,9 +68,9 @@ export const appRouter = router({
     }),
   setUsername: publicProcedure
     .use(rateLimitMiddleware)
-    .input((z.object({username: z.string(), guestId: z.string()})))
+    .input((z.object({username: z.string(), guestId: z.string(), id: z.string()})))
     .mutation(async ({input}) => {
-      let userCount = await setUsername(pool, input.username, input.guestId)
+      let userCount = await setUsername(pool, input.username, input.guestId, input.id)
       if (userCount && userCount > 0) return true
       return false;
     }),
@@ -164,9 +164,19 @@ export const appRouter = router({
     .input((z.object({id: z.string(), name: z.string(), guestId: z.string()})))
     .mutation(async ({input}) => {
       let taskCount = await addProject(pool, input.id, input.name, input.guestId)
-      let userProjectLinkCount = await addUserProjectLink(pool, input.id, input.guestId);
+      let userProjectLinkCount = await addUserProjectLink(pool, input.id, input.guestId, "");
       if (taskCount && userProjectLinkCount && taskCount > 0 && userProjectLinkCount > 0) {
         return taskCount
+      }
+      return false;
+    }),
+  insertUserProjectLink: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({id: z.string(), username: z.string(), guestId: z.string()})))
+    .mutation(async ({input}) => {
+      let userProjectLinkCount = await addUserProjectLink(pool, input.id, input.guestId, input.username);
+      if (userProjectLinkCount && userProjectLinkCount > 0) {
+        return userProjectLinkCount
       }
       return false;
     }),

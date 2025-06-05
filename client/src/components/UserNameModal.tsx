@@ -15,19 +15,27 @@ const UserNameModal = ({
   const utils = trpc.useUtils()
   const userContext = useGuestId()
 
-  
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [guestIdModal, setGuestIdModal] = useState(false);
   const [provideGuestId, setProvideGuestId] = useState("");
   const [provideGuestIdError, setProvideGuestIdError] = useState("");
   
-  const setUsernameInDb = trpc.setUsername.useMutation({
+  const setUsername = trpc.setUsername.useMutation({
     onSuccess: (data) => {
       console.log("Name set:", data);
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
+    onSuccess: (data) => {
+      console.log("User project link set:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to create user project link:", error.message);
     },
   });
   
@@ -57,9 +65,23 @@ const UserNameModal = ({
       return;
     }
     
-    setUsernameInDb.mutate({ id: projectId, username: name, guestId: userContext.guestId ?? "" });
-    utils.getUsername.invalidate()
+    // update
+    if (userContext.guestId == null){
+      setError("Guest Id is required!");
+      return;
+    }
+
+
+    if (users?.some((u) => u.guestId === userContext.guestId)) {
+      setUsername.mutate({id: projectId, username: name, guestId: userContext.guestId})
+      setUsernameModal(false);
+      return;
+    }
+
+    // insert
+    insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
     setUsernameModal(false);
+    utils.getUsername.invalidate;
   };
   
   const handleSaveProvideGuestId = () => {
@@ -83,10 +105,10 @@ const UserNameModal = ({
       return;
     }    
     
-    utils.getUsername.invalidate;
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
+    utils.getUsername.invalidate;
   }
   
   if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
