@@ -18,9 +18,11 @@ const DeleteProjectModal = ({
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
 
-  const guestId = useGuestId()
-  const utils = trpc.useUtils()
+  const userContext = useGuestId();
 
+  
+  const utils = trpc.useUtils()
+  
   const deleteProject = trpc.deleteProject.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
@@ -29,7 +31,7 @@ const DeleteProjectModal = ({
       console.error("Failed to create task:", error.message);
     },
   })
-
+  
   const handleClickOutside = () => {
     setDeleteProjectModal(false);
     setEditProject({
@@ -37,9 +39,9 @@ const DeleteProjectModal = ({
       projectName: ""
     });
   };
-
+  
   const handleLeave = () => {
-    deleteProject.mutate({id: editProject.projectId, guestId})
+    deleteProject.mutate({id: editProject.projectId, guestId: userContext.guestId ?? ""})
     utils.getUserProjects.invalidate()
     setDeleteProjectModal(false);
     setEditProject({
@@ -47,11 +49,17 @@ const DeleteProjectModal = ({
       projectName: ""
     });
   };
-
+  
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
+  
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
-      onClick={handleClickOutside}
+    className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+    onClick={handleClickOutside}
     >
       <div
         id="edit-project-modal"

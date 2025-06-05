@@ -18,6 +18,8 @@ $$;
 -- Projects table
 CREATE TABLE public.projects (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(100),
+    guest_id character varying(36),
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
@@ -55,6 +57,7 @@ CREATE TABLE public.users (
     id integer NOT NULL,
     username character varying(100),
     project_id uuid NOT NULL,
+    guest_id character varying(36),
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL

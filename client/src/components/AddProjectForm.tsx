@@ -27,8 +27,9 @@ const AddProjectForm = ({
   });
 
   const utils = trpc.useUtils();
-  const guestId = useGuestId()
+  const userContext = useGuestId();
 
+  
   const addProject = trpc.addProject.useMutation({
     onSuccess: (data) => {
       utils.getUserProjects.invalidate()
@@ -38,17 +39,23 @@ const AddProjectForm = ({
       console.error("Failed to create task:", error.message);
     },
   });
-
+  
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
-    addProject.mutate({id, name: data.name, guestId})
+    addProject.mutate({id, name: data.name, guestId: userContext.guestId ?? ""})
     setAddProjectForm(false)
   };
-
+  
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
+  
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"

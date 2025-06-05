@@ -21,7 +21,9 @@ const EditProjectModal = ({
   setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
 
-  const guestId = useGuestId()
+  const userContext = useGuestId()
+
+  
   const utils = trpc.useUtils()
   
   const editProjectName = trpc.editProjectName.useMutation({
@@ -32,17 +34,17 @@ const EditProjectModal = ({
       console.error("Failed to create task:", error.message);
     },
   });
-
+  
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: editProject.projectName || "",
     },
   });
-
+  
   const onSubmit = async (data: ProjectFormData) => {
     // await updateProjectName(projectId, data.name);
-    editProjectName.mutate({id: editProject.projectId, name: data.name, guestId})
+    editProjectName.mutate({id: editProject.projectId, name: data.name, guestId: userContext.guestId ?? ""})
     setEditProjectModal(false);
     setEditProject({
       projectId: "",
@@ -50,7 +52,7 @@ const EditProjectModal = ({
     });
     utils.getUserProjects.invalidate()
   };
-
+  
   // helper functions
   const handleClickOutside = () => {
     setEditProjectModal(false);
@@ -59,7 +61,13 @@ const EditProjectModal = ({
       projectName: ""
     });
   };
-
+  
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+    return <>
+      Loading Guest ID...
+    </>
+  }
+  
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
