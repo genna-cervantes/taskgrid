@@ -33,7 +33,7 @@ const ProjectBlock = ({
     }
     >
       <div className="flex justify-between">
-        <h1 className="font-bold">{p.name}</h1>
+        <h1 className="font-bold truncate">{p.name}</h1>
         <div className="relative">
           <button
             className="cursor-pointer px-1 py-1"
