@@ -26,6 +26,12 @@ const DeleteProjectModal = ({
   const deleteProject = trpc.deleteProject.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
+      utils.getUserProjects.invalidate()
+      setDeleteProjectModal(false);
+      setEditProject({
+        projectId: "",
+        projectName: ""
+      });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -42,12 +48,6 @@ const DeleteProjectModal = ({
   
   const handleLeave = () => {
     deleteProject.mutate({id: editProject.projectId, guestId: userContext.guestId ?? ""})
-    utils.getUserProjects.invalidate()
-    setDeleteProjectModal(false);
-    setEditProject({
-      projectId: "",
-      projectName: ""
-    });
   };
   
   if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){

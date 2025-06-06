@@ -29,6 +29,12 @@ const EditProjectModal = ({
   const editProjectName = trpc.editProjectName.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
+      setEditProjectModal(false);
+      setEditProject({
+        projectId: "",
+        projectName: ""
+      });
+      utils.getUserProjects.invalidate()
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -45,12 +51,6 @@ const EditProjectModal = ({
   const onSubmit = async (data: ProjectFormData) => {
     // await updateProjectName(projectId, data.name);
     editProjectName.mutate({id: editProject.projectId, name: data.name, guestId: userContext.guestId ?? ""})
-    setEditProjectModal(false);
-    setEditProject({
-      projectId: "",
-      projectName: ""
-    });
-    utils.getUserProjects.invalidate()
   };
   
   // helper functions
