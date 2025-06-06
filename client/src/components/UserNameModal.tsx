@@ -81,8 +81,7 @@ const UserNameModal = ({
     // insert
     insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
     setUsernameModal(false);
-    utils.getUsername.invalidate;
-    window.location.reload();
+    utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
   };
   
   const handleSaveProvideGuestId = () => {
@@ -109,7 +108,7 @@ const UserNameModal = ({
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
-    utils.getUsername.invalidate;
+    utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
   }
   
   if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
