@@ -33,6 +33,8 @@ const UserNameModal = ({
   const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
     onSuccess: (data) => {
       console.log("User project link set:", data);
+      setUsernameModal(false);
+      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
     },
     onError: (error) => {
       console.error("Failed to create user project link:", error.message);
@@ -80,8 +82,6 @@ const UserNameModal = ({
 
     // insert
     insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
-    setUsernameModal(false);
-    utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
   };
   
   const handleSaveProvideGuestId = () => {
