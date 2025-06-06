@@ -82,6 +82,7 @@ const UserNameModal = ({
     insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
     setUsernameModal(false);
     utils.getUsername.invalidate;
+    window.location.reload();
   };
   
   const handleSaveProvideGuestId = () => {
@@ -210,7 +211,7 @@ const UserNameModal = ({
           </div>
           <button
             onClick={handleSaveName}
-            className="w-full bg-green-400 text-white text-sm md:text-base font-semibold text-sm py-2 rounded-md cursor-pointer"
+            className="w-full bg-green-400 text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer"
           >
             Save
           </button>
