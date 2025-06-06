@@ -24,6 +24,8 @@ const UserNameModal = ({
   const setUsername = trpc.setUsername.useMutation({
     onSuccess: (data) => {
       console.log("Name set:", data);
+      setUsernameModal(false);
+      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -33,8 +35,6 @@ const UserNameModal = ({
   const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
     onSuccess: (data) => {
       console.log("User project link set:", data);
-      setUsernameModal(false);
-      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
     },
     onError: (error) => {
       console.error("Failed to create user project link:", error.message);
