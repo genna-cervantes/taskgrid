@@ -45,7 +45,6 @@ const Projects = () => {
 
   const userContext = useGuestId();
 
-  
   const actionContext = useContext(ActionContext);
   const { isMobile } = useDeviceDetect();
   
@@ -85,7 +84,7 @@ const Projects = () => {
   
   // if guest id is not registered to project
   useEffect(() => {
-    if (!fromHome && (!username || username === "")) {
+    if (!fromHome && (!usernameIsLoading && (!username || username === ""))) {
       setUsernameModal(true);
     } else {
       setUsernameModal(false);
