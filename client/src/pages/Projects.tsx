@@ -92,7 +92,9 @@ const Projects = () => {
   
   // if guest id is not registered to project
   useEffect(() => {
-    if ((!projectsIsLoading && !isOwnBoard) && !fromHome && (!usernameIsLoading && (!username || username === ""))) {
+    if (projectsIsLoading && usernameIsLoading){
+      setUsernameModal(true);
+    }else if ((!projectsIsLoading && !isOwnBoard) && !fromHome && (!usernameIsLoading && (!username || username === ""))) {
       setUsernameModal(true);
     } else {
       setUsernameModal(false);
