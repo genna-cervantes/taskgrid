@@ -22,7 +22,8 @@ const Projects = () => {
 
   // UNG SA KAGAYA SA SE NA DAPAT GALING FROM THAT LINK KUNIN UNG STATE IF NDI HINGIN NA AGAD UNG NAME IF WALA NAKASET KASI SHARED UN
   const location = useLocation();
-  const fromHome = location.state?.from === "home";
+  const fromHome = location.state?.from === "home"; // tracks ownership
+  let isOwnBoard = true;
 
   const navigate = useNavigate();
   const { projectId } = useParams();
@@ -30,6 +31,15 @@ const Projects = () => {
   if (!projectId) {
     navigate("/");
     return;
+  }
+  
+  const userContext = useGuestId();
+
+  const { data: projects, isLoading: projectsIsLoading } =
+      trpc.getUserProjects.useQuery({ guestId: userContext.guestId ?? "" });
+
+  if (!projects?.some((p) => p.id === projectId)){
+    isOwnBoard = false;
   }
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -42,8 +52,6 @@ const Projects = () => {
     priority: priority,
     assignedTo: assignedTo,
   });
-
-  const userContext = useGuestId();
 
   const actionContext = useContext(ActionContext);
   const { isMobile } = useDeviceDetect();
@@ -84,12 +92,12 @@ const Projects = () => {
   
   // if guest id is not registered to project
   useEffect(() => {
-    if (!fromHome && (!usernameIsLoading && (!username || username === ""))) {
+    if ((!projectsIsLoading && !isOwnBoard) && !fromHome && (!usernameIsLoading && (!username || username === ""))) {
       setUsernameModal(true);
     } else {
       setUsernameModal(false);
     }
-  }, [fromHome, username, usernameIsLoading]);
+  }, [fromHome, username, usernameIsLoading, projectsIsLoading]);
   
   // helper functions
   const handleShare = async () => {
