@@ -64,11 +64,26 @@ const Project = () => {
             key={col}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(col)}
-            className="flex-1 p-4 bg-[#282828] rounded-md group"
+            className="flex-1 px-4 py-3 bg-[#282828] rounded-md group"
           >
-            <h2 className="font-semibold text-sm capitalize py-2 text-center font-noto">
-              {col} ({columns[col].length})
-            </h2>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-x-2">
+                <h2 className="font-semibold text-sm capitalize py-1 text-center font-noto">
+                  {col}
+                </h2>
+                <div className="px-2 flex justify-center items-center font-semibold text-xs capitalize py-1 text-center font-noto rounded-full bg-gray-500/20">
+                  {columns[col].length} 
+                </div>
+              </div>
+              <AddTask
+                type=""
+                projectId={projectId}
+                col={col}
+                className="hidden group-hover:block"
+                username={username}
+              />
+            </div>
+        
             <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
               {columns[col].map((task) => (
                 <React.Fragment key={task.id}>
@@ -84,6 +99,7 @@ const Project = () => {
               ))}
             </div>
             <AddTask
+              type="block"
               projectId={projectId}
               col={col}
               className="hidden group-hover:block"
