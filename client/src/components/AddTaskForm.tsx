@@ -164,9 +164,27 @@ const AddTaskForm = ({
           </span>
           <button
             type="submit"
-            className="w-full bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base"
+            className="w-full bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base disabled:cursor-not-allowed disabled:bg-white/40"
+            disabled={insertTask.isLoading}
           >
-            Add Task
+            {!insertTask.isLoading ? (
+              "Add Task"
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            )}
           </button>
         </form>
       </div>

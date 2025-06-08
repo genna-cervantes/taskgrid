@@ -19,8 +19,6 @@ const DeleteProjectModal = ({
 }) => {
 
   const userContext = useGuestId();
-
-  
   const utils = trpc.useUtils()
   
   const deleteProject = trpc.deleteProject.useMutation({
@@ -72,9 +70,27 @@ const DeleteProjectModal = ({
         </h1>
         <button
           onClick={() => handleLeave()}
-          className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+          className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+          disabled={deleteProject.isLoading}
         >
-          Leave
+          {!deleteProject.isLoading ? (
+            "Leave"
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          )}
         </button>
       </div>
     </div>
