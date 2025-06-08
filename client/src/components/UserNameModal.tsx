@@ -15,6 +15,8 @@ const UserNameModal = ({
   const utils = trpc.useUtils()
   const userContext = useGuestId()
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [guestIdModal, setGuestIdModal] = useState(false);
@@ -31,9 +33,11 @@ const UserNameModal = ({
       console.error("Failed to create task:", error.message);
     },
   });
-
+  
   const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
     onSuccess: (data) => {
+      setUsernameModal(false);
+      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
       console.log("User project link set:", data);
     },
     onError: (error) => {
@@ -44,6 +48,8 @@ const UserNameModal = ({
   const { data: users } = trpc.getUsersInProject.useQuery({
     id: projectId,
   });
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
   
   const handleSaveName = async () => {
     // data checks
@@ -72,16 +78,21 @@ const UserNameModal = ({
       setError("Guest Id is required!");
       return;
     }
-
-
+    
+    setIsLoading(true)
+    
     if (users?.some((u) => u.guestId === userContext.guestId)) {
       setUsername.mutate({id: projectId, username: name, guestId: userContext.guestId})
+      setIsLoading(false)
       setUsernameModal(false);
       return;
     }
-
+    
     // insert
     insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
+
+    await sleep(5000);
+    setIsLoading(false)
   };
   
   const handleSaveProvideGuestId = () => {
@@ -210,9 +221,27 @@ const UserNameModal = ({
           </div>
           <button
             onClick={handleSaveName}
-            className="w-full bg-green-400 text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer"
+            className="w-full bg-green-400 text-white text-sm md:text-base font-semibold py-2 flex justify-center items-center rounded-md cursor-pointer disabled:cursor-not-allowed"
+            disabled={insertUserProjectLink.isLoading || setUsername.isLoading}
           >
-            Save
+            {!isLoading ? (
+                "Save"
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              )}
           </button>
         </div>
       </div>

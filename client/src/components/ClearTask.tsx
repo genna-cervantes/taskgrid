@@ -1,9 +1,6 @@
-import { useContext, useState } from "react";
-import { trpc } from "../utils/trpc";
+import { useState } from "react";
 import { cn } from "../utils/utils";
 import ArchiveTaskModal from "./ArchiveTaskModal";
-import { RecentTaskContext } from "../contexts/RecentTaskContext";
-import { ActionContext } from "../contexts/ActionContext";
 import { Task } from "../../../server/src/shared/types";
 
 const ClearTask = ({
@@ -17,31 +14,8 @@ const ClearTask = ({
   col: string;
   className: string;
 }) => {
-    const recentTaskContext = useContext(RecentTaskContext)
-    const actionContext = useContext(ActionContext)
 
   const [archiveModal, setArchiveModal] = useState(false);
-
-  const utils = trpc.useUtils();
-
-  const archiveTasksByColumn = trpc.archiveTaskByColumn.useMutation({
-    onSuccess: (data) => {
-      console.log("Task deleted:", data);
-      utils.getTasks.invalidate({ id: projectId });
-    },
-    onError: (error) => {
-      console.error("Failed to create task:", error.message);
-    },
-  });
-
-  const handleClearTask = () => {
-    recentTaskContext?.setTasks([...tasks]); // keep track of this task for insertion later if undone
-
-    archiveTasksByColumn.mutate({ id: projectId, column: col });
-    setArchiveModal(false);
-
-    actionContext?.setAction("archived");
-  };
 
   const handleClickClearTask = () => {
     setArchiveModal(true);
@@ -53,7 +27,8 @@ const ClearTask = ({
         archiveModal={archiveModal}
         setArchiveModal={setArchiveModal}
         column={col}
-        handleClearTask={handleClearTask}
+        projectId={projectId}
+        tasks={tasks}
       />
       <button onClick={handleClickClearTask}>
         <svg

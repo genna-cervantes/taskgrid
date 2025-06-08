@@ -17,7 +17,6 @@ const AddProjectForm = ({
 }: {
   setAddProjectForm: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-
   const {
     register,
     handleSubmit,
@@ -29,33 +28,38 @@ const AddProjectForm = ({
   const utils = trpc.useUtils();
   const userContext = useGuestId();
 
-  
   const addProject = trpc.addProject.useMutation({
     onSuccess: (data) => {
-      utils.getUserProjects.invalidate()
+      utils.getUserProjects.invalidate();
       console.log("Project created:", data);
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
-  
+
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
-    addProject.mutate({id, name: data.name, guestId: userContext.guestId ?? ""})
-    setAddProjectForm(false)
+    addProject.mutate({
+      id,
+      name: data.name,
+      guestId: userContext.guestId ?? "",
+    });
+    setAddProjectForm(false);
   };
-  
-  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
-    return <>
-      Loading Guest ID...
-    </>
+
+  if (
+    userContext.isLoading &&
+    userContext.guestId == null &&
+    !userContext.guestId
+  ) {
+    return <>Loading Guest ID...</>;
   }
-  
+
   return (
     <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
@@ -78,9 +82,27 @@ const AddProjectForm = ({
           </span>
           <button
             type="submit"
-            className="w-full text-sm bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40"
+            className="w-full text-sm bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 flex justify-center items-center disabled:cursor-not-allowed disabled:bg-white/40"
+            disabled={addProject.isLoading}
           >
-            Add Project
+            {!addProject.isLoading ? (
+              "Add Project"
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            )}
           </button>
         </form>
       </div>
