@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { trpc } from "../utils/trpc";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
+import { Task } from "../../../server/src/shared/types";
 
 const ActionModal = ({
   actionContext,
@@ -100,33 +101,42 @@ const ActionModal = ({
     },
   });
 
+  // ARCHIVE TASKS
+  const undoArchiveTasks = async (tasks: Task[]) => {
+    await Promise.all(
+      tasks.map(t => undoDeleteTask.mutateAsync({ taskId: t.id }))
+    );
+  };
+
   const handleUndo = () => {
     if (!actionContext?.action){
       return;
     }
 
-    if (actionContext.action === "added" && recentTaskContext?.task?.id) {
-      deleteTaskById.mutate({ taskId: recentTaskContext.task.id });
-    } else if (actionContext.action === "deleted" && recentTaskContext?.task?.id) {
-      undoDeleteTask.mutate({ taskId: recentTaskContext.task.id });
-    } else if (actionContext.action === "edited" && recentTaskContext?.task?.id) {
+    if (actionContext.action === "added" && recentTaskContext?.tasks?.[0].id) {
+      deleteTaskById.mutate({ taskId: recentTaskContext.tasks[0].id });
+    } else if (actionContext.action === "deleted" && recentTaskContext?.tasks?.[0].id) {
+      undoDeleteTask.mutate({ taskId: recentTaskContext.tasks[0].id });
+    } else if (actionContext.action === "edited" && recentTaskContext?.tasks?.[0].id) {
       // edit spec task id to the most recent task details
       updateTaskTitle.mutate({
-        taskId: recentTaskContext.task.id,
-        title: recentTaskContext.task.title,
+        taskId: recentTaskContext.tasks[0].id,
+        title: recentTaskContext.tasks[0].title,
       });
       updateTaskDescription.mutate({
-        taskId: recentTaskContext.task.id,
-        description: recentTaskContext.task.description,
+        taskId: recentTaskContext.tasks[0].id,
+        description: recentTaskContext.tasks[0].description,
       });
       updateTaskPriority.mutate({
-        taskId: recentTaskContext.task.id,
-        priority: recentTaskContext.task.priority,
+        taskId: recentTaskContext.tasks[0].id,
+        priority: recentTaskContext.tasks[0].priority,
       });
       updateAssignedTo.mutate({
-        taskId: recentTaskContext.task.id,
-        username: recentTaskContext.task.assignedTo,
+        taskId: recentTaskContext.tasks[0].id,
+        username: recentTaskContext.tasks[0].assignedTo,
       });
+    }else if (actionContext.action === "archived" && recentTaskContext?.tasks){
+      undoArchiveTasks(recentTaskContext.tasks)
     }
 
     actionContext?.setAction(undefined);

@@ -2,7 +2,7 @@
 import { router, publicProcedure } from './trpc.js';
 import { z } from 'zod'
 import { Pool } from "pg";
-import { addProject, addUserProjectLink, checkGuestId, deleteProject, deleteTask, deleteTaskById, deleteUserProjectLink, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
+import { addProject, addUserProjectLink, archiveTasksInColumn, checkGuestId, deleteProject, deleteTask, deleteTaskById, deleteUserProjectLink, editProjectName, getFilteredTasks, getProjectNameByKey, getProjectsFromGuestId, getTasksFromProjectId, getUsername, getUsernamesInProject, getUsersInProject, insertTask, insertUser, setUsername, undoDeleteTask, updateAssignedTo, updateTaskDescription, updateTaskLink, updateTaskPriority, updateTaskProgress, updateTaskTitle } from '../db/queries.js';
 import { config } from "dotenv";
 import { rateLimitMiddleware } from './middleware.js';
 import { Task, TaskSchema } from '../shared/types.js';
@@ -188,7 +188,7 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true
       return false;
     }),
-  getProjectNameByKey: publicProcedure
+    getProjectNameByKey: publicProcedure
     .use(rateLimitMiddleware)
     .input((z.object({id: z.string()})))
     .query(async ({input}) => {
@@ -211,6 +211,14 @@ export const appRouter = router({
     .query(async ({input}) => {
       let filteredTasks = await getFilteredTasks(pool, input.priority, input.assignedTo, input.id)
       return filteredTasks as Task[]
+    }),
+  archiveTaskByColumn: publicProcedure
+    .use(rateLimitMiddleware)
+    .input((z.object({id: z.string(), column: z.string()})))
+    .mutation(async ({input}) => {
+      let taskCount = await archiveTasksInColumn(pool, input.id, input.column)
+      if (taskCount && taskCount > 0) return true
+      return false;
     }),
   sample: publicProcedure
     .use(rateLimitMiddleware)

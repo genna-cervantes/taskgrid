@@ -4,6 +4,7 @@ import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
 import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
+import ClearTask from "../components/ClearTask";
 
 const Project = () => {
   const { projectId } = useParams();
@@ -75,13 +76,17 @@ const Project = () => {
                   {columns[col].length} 
                 </div>
               </div>
-              <AddTask
-                type=""
-                projectId={projectId}
-                col={col}
-                className="hidden group-hover:block"
-                username={username}
-              />
+              <div className="flex items-center gap-x-1">
+                <AddTask
+                  type=""
+                  projectId={projectId}
+                  col={col}
+                  className="hidden group-hover:block"
+                  username={username}
+                />
+                <ClearTask tasks={columns[col] as Task[]} projectId={projectId} col={col} className="hidden group-hover:block" />
+              </div>
+
             </div>
         
             <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
