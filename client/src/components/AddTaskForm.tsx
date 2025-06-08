@@ -57,7 +57,7 @@ const AddTaskForm = ({
     onSuccess: (data: Task) => {
       console.log("Task created:", data);
     
-      recentTaskContext?.setTask(data as Task) // keep track of this task for removal later if undone
+      recentTaskContext?.setTasks([data as Task]) // keep track of this task for removal later if undone
       actionContext?.setAction("added")
 
       utils.getTasks.invalidate({ id: projectId });

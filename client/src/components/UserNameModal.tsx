@@ -62,7 +62,7 @@ const UserNameModal = ({
       return;
     }
     
-    if (users?.some((u) => u.username === name)) {
+    if (users?.some((u) => u?.username === name)) {
       setError("This name has already been registed to this board!");
       return;
     }

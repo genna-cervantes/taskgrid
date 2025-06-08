@@ -69,7 +69,7 @@ export const getUsername = async (pool: Pool, id: string, guestId: string) => {
     const query = 'SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE'
     const res = await pool.query(query, [id, guestId])
 
-    return res.rows[0].username ?? ""
+    return res.rows[0]?.username ?? ""
 }
 
 export const getUsersInProject = async (pool: Pool, id: string) => {
@@ -146,7 +146,7 @@ export const deleteTaskById = async (pool: Pool, taskId: string) => {
 }
 
 export const undoDeleteTask = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1 AND is_active = TRUE';
+    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1';
     const res = await pool.query(query, [taskId])
 
     return res.rowCount;
@@ -219,4 +219,11 @@ export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo:
       }));
 
     return tasks as Task[];   
+}
+
+export const archiveTasksInColumn = async (pool: Pool, id: string, column: string) => {
+    const query = "UPDATE tasks SET is_active = False WHERE project_id = $1 AND progress = $2 AND is_active = TRUE;";
+    const res = await pool.query(query, [id, column]);
+
+    return res.rowCount;
 }

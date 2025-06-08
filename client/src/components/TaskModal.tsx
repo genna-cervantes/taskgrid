@@ -106,7 +106,7 @@ const TaskModal = ({
   // HANDLE METHODS
 
   const handleDeleteTask = () => {
-    recentTaskContext?.setTask(task); // keep track of this task for insertion later if undone
+    recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
 
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
@@ -126,7 +126,7 @@ const TaskModal = ({
       }
     }
 
-    recentTaskContext?.setTask(task); // keep track of this task for rollback later if undone
+    recentTaskContext?.setTasks([task]); // keep track of this task for rollback later if undone
 
     if (task.title !== taskTitle) {
       updateTaskTitle.mutate({ title: taskTitle, taskId: task.id });

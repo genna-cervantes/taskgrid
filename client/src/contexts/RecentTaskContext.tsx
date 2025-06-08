@@ -1,13 +1,13 @@
 import React, { createContext, useState } from 'react';
 import { Task } from '../../../server/src/shared/types';
 
-export const RecentTaskContext = createContext<{ task: Task|undefined, setTask: (task: Task|undefined) => void } | undefined>(undefined);
+export const RecentTaskContext = createContext<{ tasks: Task[]|undefined, setTasks: (task: Task[]|undefined) => void } | undefined>(undefined);
 
 export const RecentTaskProvider = ({ children }: { children: React.ReactNode }) => {
-    const [task, setTask] = useState<Task|undefined>(undefined);
+    const [tasks, setTasks] = useState<Task[]|undefined>(undefined);
   
     return (
-      <RecentTaskContext.Provider value={{ task, setTask }}>
+      <RecentTaskContext.Provider value={{ tasks, setTasks }}>
         {children}
       </RecentTaskContext.Provider>
     );
