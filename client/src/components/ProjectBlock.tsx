@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { trpc } from "../utils/trpc";
+import { useGuestId } from "../contexts/UserContext";
 
 const ProjectBlock = ({
   p,
@@ -7,6 +9,7 @@ const ProjectBlock = ({
   setEditProject,
   dropdownRef,
   setEditProjectModal,
+  setManageProjectModal,
   setDeleteProjectModal
 }: {
   p: {
@@ -23,8 +26,16 @@ const ProjectBlock = ({
   }>>
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setManageProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+
+  // check if owner
+  const userContext = useGuestId();
+  const {data: ownerGuestId} = trpc.getProjectOwner.useQuery({id: p.id})
+
+  const isOwner = Boolean(ownerGuestId) && userContext?.guestId === ownerGuestId ;
+
   return (
     <Link
       className="bg-[#282828] rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
@@ -79,6 +90,16 @@ const ProjectBlock = ({
               >
                 edit project
               </button>
+              {isOwner && <button
+                onClick={(e) => {
+                  setManageProjectModal(true);
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="w-full h-1/2 hover:bg-white/20 text-white  p-2 px-4 rounded-md cursor-pointer"
+              >
+                manage project
+              </button>}
               <button onClick={(e) => {
                 setDeleteProjectModal(true);
                 e.preventDefault();
