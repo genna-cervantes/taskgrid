@@ -6,6 +6,7 @@ import DeleteProjectModal from "../components/DeleteProjectModal";
 import { trpc } from "../utils/trpc";
 import { useGuestId } from "../contexts/UserContext";
 import { Project } from "../../../server/src/shared/types";
+import ManageProjectModal from "../components/ManageProjectModal";
 
 const Home = () => {
 
@@ -16,6 +17,7 @@ const Home = () => {
     projectName: "",
   });
   const [editProjectModal, setEditProjectModal] = useState(false);
+  const [manageProjectModal, setManageProjectModal] = useState(false);
   const [deleteProjectModal, setDeleteProjectModal] = useState(false);
 
   useEffect(() => {
@@ -80,6 +82,7 @@ const Home = () => {
                   setEditProject={setEditProject}
                   dropdownRef={dropdownRef}
                   setEditProjectModal={setEditProjectModal}
+                  setManageProjectModal={setManageProjectModal}
                   setDeleteProjectModal={setDeleteProjectModal}
                 />
               );
@@ -97,8 +100,15 @@ const Home = () => {
       {editProjectModal && (
         <EditProjectModal
           editProject={editProject}
-          setEditProjectModal={setEditProjectModal}
           setEditProject={setEditProject}
+          setEditProjectModal={setEditProjectModal}
+        />
+      )}
+      {manageProjectModal && (
+        <ManageProjectModal
+          editProject={editProject}
+          setEditProject={setEditProject}
+          setManageProjectModal={setManageProjectModal}
         />
       )}
       {deleteProjectModal && (

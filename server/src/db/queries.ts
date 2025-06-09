@@ -72,6 +72,13 @@ export const getUsername = async (pool: Pool, id: string, guestId: string) => {
     return res.rows[0]?.username ?? ""
 }
 
+export const kickUserFromProject = async (pool: Pool, id: string, guestId: string) => {
+    const query = 'UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2;';
+    const res = await pool.query(query, [id, guestId]);
+
+    return res.rowCount;
+}
+
 export const getUsersInProject = async (pool: Pool, id: string) => {
     const query = 'SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;';
     const res = await pool.query(query, [id])
@@ -157,6 +164,13 @@ export const addProject = async (pool: Pool, projectId: string, name: string, gu
     const res = await pool.query(query, [projectId, name, guestId]);
 
     return res.rowCount;
+}
+
+export const getProjectOwner = async (pool: Pool, projectId: string) => {
+    const query = 'SELECT guest_id FROM projects WHERE id = $1 AND is_active = TRUE;';
+    const res = await pool.query(query, [projectId]);
+
+    return res.rows[0]?.guest_id;
 }
 
 export const addUserProjectLink = async (pool: Pool, projectId: string, guestId: string, username: string) => {
