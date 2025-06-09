@@ -30,6 +30,7 @@ const AddProjectForm = ({
 
   const addProject = trpc.addProject.useMutation({
     onSuccess: (data) => {
+      setAddProjectForm(false);
       utils.getUserProjects.invalidate();
       console.log("Project created:", data);
     },
@@ -45,7 +46,6 @@ const AddProjectForm = ({
       name: data.name,
       guestId: userContext.guestId ?? "",
     });
-    setAddProjectForm(false);
   };
 
   if (

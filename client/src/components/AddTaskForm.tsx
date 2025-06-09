@@ -59,6 +59,7 @@ const AddTaskForm = ({
     
       recentTaskContext?.setTasks([data as Task]) // keep track of this task for removal later if undone
       actionContext?.setAction("added")
+      setAddModal(false)
 
       utils.getTasks.invalidate({ id: projectId });
     },
@@ -69,7 +70,6 @@ const AddTaskForm = ({
 
   const onSubmit = (data: TaskFormData) => {
     insertTask.mutate({id: projectId, task: {...data, progress: col}});
-    setAddModal(false)
   };
 
   const selectedPriority = watch("priority");
