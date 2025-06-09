@@ -3,7 +3,7 @@ import { trpc } from "../utils/trpc";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import { Task } from "../../../server/src/shared/types";
 
-const ActionModal = ({
+const TaskActionToast = ({
   actionContext,
   projectId,
 }: {
@@ -189,4 +189,4 @@ const ActionModal = ({
   );
 };
 
-export default ActionModal;
+export default TaskActionToast;
