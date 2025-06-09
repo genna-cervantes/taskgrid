@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
-import ActionModal from "../components/ActionModal";
+import TaskActionToast from "../components/TaskActionToast";
 import { ActionContext } from "../contexts/ActionContext";
 import { trpc } from "../utils/trpc";
 import { groupTasksByColumn } from "../utils/utils";
@@ -414,7 +414,7 @@ const Projects = () => {
       </div>
       <div className="w-full flex justify-center">
         {actionContext?.action && (
-          <ActionModal projectId={projectId} actionContext={actionContext} />
+          <TaskActionToast projectId={projectId} actionContext={actionContext} />
         )}
       </div>
     </>
