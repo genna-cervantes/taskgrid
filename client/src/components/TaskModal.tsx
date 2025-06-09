@@ -238,19 +238,16 @@ const TaskModal = ({
                 value={taskLink}
                 onChange={(e) => setTaskLink(e.target.value)}
               />
-            ) : task?.link ? (
+            ) : task?.link && (
               <a
                 href={task.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline text-xs md:text-sm"
+                className="hover:underline text-xs md:text-sm pl-4"
               >
                 {task?.link ?? ""}
               </a>
-            ) : (
-              <></>
-            )
-            // <h3 className="pl-4 text-xs md:text-sm">{task?.link ?? ""}</h3>
+            ) 
           }
           {taskLinkError !== "" && (
             <h4 className={`font-semibold text-xs text-red-400`}>

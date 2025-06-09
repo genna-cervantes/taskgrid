@@ -15,6 +15,7 @@ import { trpc } from "../utils/trpc";
 import { groupTasksByColumn } from "../utils/utils";
 import { useGuestId } from "../contexts/UserContext";
 import useDeviceDetect from "../hooks/useDeviceDetect";
+import LoadingModal from "../components/LoadingModal";
 
 const Projects = () => {
   // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
@@ -45,7 +46,7 @@ const Projects = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const priority = searchParams.get("priority") || "";
   const assignedTo = searchParams.get("assignedTo") || "";
-
+  
   const [usernameModal, setUsernameModal] = useState(false);
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
   const [filter, setFilter] = useState({
@@ -92,9 +93,7 @@ const Projects = () => {
   
   // if guest id is not registered to project
   useEffect(() => {
-    if (projectsIsLoading || usernameIsLoading){
-      setUsernameModal(true);
-    }else if ((!projectsIsLoading && !isOwnBoard) && !fromHome && (!usernameIsLoading && (!username || username === ""))) {
+    if ((!projectsIsLoading && !isOwnBoard) && !fromHome && (!usernameIsLoading && (!username || username === ""))) {
       setUsernameModal(true);
     } else {
       setUsernameModal(false);
@@ -157,6 +156,9 @@ const Projects = () => {
   
   return (
     <>
+      {(projectsIsLoading || usernameIsLoading) && (
+        <LoadingModal />
+      )}
       {linkCopiedModal && (
         <LinkCopiedModal setLinkCopiedModal={setLinkCopiedModal} />
       )}
