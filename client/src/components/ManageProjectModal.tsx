@@ -78,7 +78,7 @@ const ManageProjectModal = ({
                 disabled={kickUser.isLoading}
               >
                 {!kickUser.isLoading ? (
-                  "kick"
+                  "Kick"
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
