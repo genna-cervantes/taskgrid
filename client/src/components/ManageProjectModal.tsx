@@ -50,7 +50,13 @@ const ManageProjectModal = ({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
-      onClick={handleClickOutside} // Close when clicking backdrop
+      onClick={(e) => {
+        if (kickUser.isLoading) {
+          e.stopPropagation();
+        } else {
+          handleClickOutside;
+        }
+      }} 
     >
       <div
         id="edit-project-modal"

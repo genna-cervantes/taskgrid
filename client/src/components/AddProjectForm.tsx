@@ -59,7 +59,13 @@ const AddProjectForm = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={() => setAddProjectForm(false)} // Close when clicking backdrop
+      onClick={(e) => {
+        if (addProject.isLoading) {
+          e.stopPropagation();
+        } else {
+          setAddProjectForm(false);
+        }
+      }}
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"

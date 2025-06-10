@@ -173,7 +173,14 @@ const TaskModal = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={() => setTaskDetailsModal(false)} // Close when clicking backdrop
+      onClick={(e) => {
+        if (updateAssignedTo.isLoading || updateTaskDescription.isLoading || updateTaskLink.isLoading || updateTaskPriority.isLoading || updateTaskTitle.isLoading || deleteTask.isLoading) {
+          e.stopPropagation();
+        } else {
+          setTaskDetailsModal(false)
+        }
+      }
+      } // Close when clicking backdrop
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"

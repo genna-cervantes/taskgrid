@@ -28,12 +28,12 @@ const AddTaskForm = ({
   projectId,
   col,
   setAddModal,
-  username
+  username,
 }: {
   projectId: string;
-  col: string
+  col: string;
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
-  username: string|undefined
+  username: string | undefined;
 }) => {
   const {
     register,
@@ -46,20 +46,21 @@ const AddTaskForm = ({
   });
 
   const utils = trpc.useUtils();
-  const actionContext = useContext(ActionContext)
-  const recentTaskContext = useContext(RecentTaskContext)
+  const actionContext = useContext(ActionContext);
+  const recentTaskContext = useContext(RecentTaskContext);
 
-  const { data: usersInProject, isLoading: usersLoading } = trpc.getUsernamesInProject.useQuery({
+  const { data: usersInProject, isLoading: usersLoading } =
+    trpc.getUsernamesInProject.useQuery({
       id: projectId,
     });
 
   const insertTask = trpc.insertTask.useMutation({
     onSuccess: (data: Task) => {
       console.log("Task created:", data);
-    
-      recentTaskContext?.setTasks([data as Task]) // keep track of this task for removal later if undone
-      actionContext?.setAction("added")
-      setAddModal(false)
+
+      recentTaskContext?.setTasks([data as Task]); // keep track of this task for removal later if undone
+      actionContext?.setAction("added");
+      setAddModal(false);
 
       utils.getTasks.invalidate({ id: projectId });
     },
@@ -69,7 +70,7 @@ const AddTaskForm = ({
   });
 
   const onSubmit = (data: TaskFormData) => {
-    insertTask.mutate({id: projectId, task: {...data, progress: col}});
+    insertTask.mutate({ id: projectId, task: { ...data, progress: col } });
   };
 
   const selectedPriority = watch("priority");
@@ -77,7 +78,13 @@ const AddTaskForm = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={() => setAddModal(false)} // Close when clicking backdrop
+      onClick={(e) => {
+        if (insertTask.isLoading) {
+          e.stopPropagation();
+        } else {
+          setAddModal(false);
+        }
+      }} // Close when clicking backdrop
     >
       <div
         className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
@@ -91,7 +98,11 @@ const AddTaskForm = ({
             <label htmlFor="title" className="text-xs font-semibold mb-2">
               Task Title:
             </label>
-            <input {...register("title")} placeholder="New Task Title..." className="text-xs md:text-base" />
+            <input
+              {...register("title")}
+              placeholder="New Task Title..."
+              className="text-xs md:text-base"
+            />
             {errors.title && (
               <p className="text-red-400 text-xs font-semibold mt-1">
                 {errors.title.message}
@@ -135,8 +146,10 @@ const AddTaskForm = ({
             <span className="flex gap-x-2 text-sm">
               {priorityLevels.map((p) => (
                 <button
-                    key={p}
-                  onClick={() => setValue("priority", p, { shouldValidate: true })}
+                  key={p}
+                  onClick={() =>
+                    setValue("priority", p, { shouldValidate: true })
+                  }
                   type="button"
                   className={`${selectedPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer text-xs md:text-base`}
                 >
@@ -154,17 +167,22 @@ const AddTaskForm = ({
             <label htmlFor="assignTo" className="text-xs font-semibold mb-2">
               Assign To:
             </label>
-            <select {...register("assignedTo")} id="assignTo" className="text-xs md:text-base">
-              {!usersLoading && usersInProject?.map((u) => (
-                <option key={u} value={u} className="bg-[#464646]">
-                  {u} {u === username ? '(You)' : ''}
-                </option>
-              ))}
+            <select
+              {...register("assignedTo")}
+              id="assignTo"
+              className="text-xs md:text-base"
+            >
+              {!usersLoading &&
+                usersInProject?.map((u) => (
+                  <option key={u} value={u} className="bg-[#464646]">
+                    {u} {u === username ? "(You)" : ""}
+                  </option>
+                ))}
             </select>
           </span>
           <button
             type="submit"
-            className="w-full bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base disabled:cursor-not-allowed disabled:bg-white/40"
+            className="w-full flex justify-center bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base disabled:cursor-not-allowed disabled:bg-white/40"
             disabled={insertTask.isLoading}
           >
             {!insertTask.isLoading ? (

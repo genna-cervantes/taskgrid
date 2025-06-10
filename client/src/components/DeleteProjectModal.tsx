@@ -8,56 +8,68 @@ const DeleteProjectModal = ({
   setDeleteProjectModal,
 }: {
   editProject: {
-    projectId: string,
-    projectName: string
-  },
-  setEditProject: React.Dispatch<React.SetStateAction<{
     projectId: string;
     projectName: string;
-  }>>
+  };
+  setEditProject: React.Dispatch<
+    React.SetStateAction<{
+      projectId: string;
+      projectName: string;
+    }>
+  >;
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-
   const userContext = useGuestId();
-  const utils = trpc.useUtils()
-  
+  const utils = trpc.useUtils();
+
   const deleteProject = trpc.deleteProject.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
-      utils.getUserProjects.invalidate()
+      utils.getUserProjects.invalidate();
       setDeleteProjectModal(false);
       setEditProject({
         projectId: "",
-        projectName: ""
+        projectName: "",
       });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
-  })
-  
+  });
+
   const handleClickOutside = () => {
     setDeleteProjectModal(false);
     setEditProject({
       projectId: "",
-      projectName: ""
+      projectName: "",
     });
   };
-  
+
   const handleLeave = () => {
-    deleteProject.mutate({id: editProject.projectId, guestId: userContext.guestId ?? ""})
+    deleteProject.mutate({
+      id: editProject.projectId,
+      guestId: userContext.guestId ?? "",
+    });
   };
-  
-  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
-    return <>
-      Loading Guest ID...
-    </>
+
+  if (
+    userContext.isLoading &&
+    userContext.guestId == null &&
+    !userContext.guestId
+  ) {
+    return <>Loading Guest ID...</>;
   }
-  
+
   return (
     <div
-    className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
-    onClick={handleClickOutside}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+      onClick={(e) => {
+        if (deleteProject.isLoading) {
+          e.stopPropagation();
+        } else {
+          handleClickOutside();
+        }
+      }}
     >
       <div
         id="edit-project-modal"
