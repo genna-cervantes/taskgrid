@@ -47,6 +47,7 @@ const ProjectBlock = ({
         <h1 className="font-bold truncate">{p.name}</h1>
         <div className="relative">
           <button
+            title="Edit Project"
             className="cursor-pointer px-1 py-1"
             onClick={(e) => {
               e.preventDefault();
