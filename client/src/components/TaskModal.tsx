@@ -32,7 +32,9 @@ const TaskModal = ({
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
   const [taskLink, setTaskLink] = useState(task.link);
+
   const [taskLinkError, setTaskLinkError] = useState("");
+  const [taskAsssignedToError, setTaskAssignedToError] = useState("");
 
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
@@ -120,10 +122,14 @@ const TaskModal = ({
     if (taskLink && task.link !== taskLink) {
       const isLink = linkSchema.safeParse(taskLink);
       if (!isLink.success) {
-        console.log("getting called");
         setTaskLinkError("Invalid Link");
         return;
       }
+    }
+    
+    if (taskAssignedTo.length < 1){
+      setTaskAssignedToError("At least one assignee is required");
+      return;
     }
 
     recentTaskContext?.setTasks([task]); // keep track of this task for rollback later if undone
@@ -331,6 +337,11 @@ const TaskModal = ({
                 {at} {at === username ? "(You)" : ""}
               </h3>
             ))
+          )}
+          {taskAsssignedToError !== "" && (
+            <h4 className={`font-semibold text-xs text-red-400 mt-1`}>
+              {taskAsssignedToError}
+            </h4>
           )}
         </div>
         <div className="flex flex-col gap-y-2">
