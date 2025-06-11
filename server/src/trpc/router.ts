@@ -157,12 +157,12 @@ export const appRouter = router({
     }),
   updateAssignedTo: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ username: z.string(), taskId: z.string() }))
+    .input(z.object({ assignTo: z.array(z.string()), taskId: z.string() }))
     .mutation(async ({ input }) => {
       let taskCount = await updateAssignedTo(
         pool,
         input.taskId,
-        input.username
+        input.assignTo
       );
       if (taskCount && taskCount > 0) return true;
       return false;

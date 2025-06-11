@@ -150,7 +150,7 @@ const TaskModal = ({
     }
 
     if (task.assignedTo !== taskAssignedTo) {
-      updateAssignedTo.mutate({ username: taskAssignedTo, taskId: task.id });
+      updateAssignedTo.mutate({ assignTo: taskAssignedTo, taskId: task.id });
     }
 
     setEditMode(false);
@@ -163,7 +163,7 @@ const TaskModal = ({
     // check if name is set in storage
     if (username) {
       // update assigned to
-      updateAssignedTo.mutate({ taskId: task.id, username });
+      updateAssignedTo.mutate({ taskId: task.id, assignTo: [username] });
     } else {
       setTaskDetailsModal(false);
       setUsernameModal(true);
@@ -295,7 +295,7 @@ const TaskModal = ({
             >
               Assigned To:
             </h3>
-            {!editMode && task.assignedTo !== username && (
+            {username && !editMode && !task.assignedTo.includes(username) && (
               <button
                 onClick={handleAssignToMe}
                 className="font-semibold underline text-xs md:text-sm cursor-pointer disabled:cursor-not-allowed"
@@ -325,9 +325,13 @@ const TaskModal = ({
           {editMode ? (
             <select
               id="assignTo"
-              className="w-full text-xs md:text-base"
+              multiple
+              className="w-full text-xs md:text-base" // set a height to show multiple options
               value={taskAssignedTo}
-              onChange={(e) => setTaskAssignedTo(e.target.value)}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                setTaskAssignedTo(selected);
+              }}
             >
               {!usersLoading &&
                 usersInProject?.map((u) => (
@@ -340,10 +344,13 @@ const TaskModal = ({
                   </option>
                 ))}
             </select>
+
           ) : (
-            <h3 className="pl-4 text-xs md:text-sm">
-              {task.assignedTo} {task.assignedTo === username ? "(You)" : ""}
-            </h3>
+            task.assignedTo.map((at) => (
+              <h3 className="pl-4 text-xs md:text-sm">
+                {at} {at === username ? "(You)" : ""}
+              </h3>
+            ))
           )}
         </div>
         <div className="flex flex-col gap-y-2">
