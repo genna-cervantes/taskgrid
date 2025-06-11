@@ -109,9 +109,9 @@ export const getUsernamesInProject = async (pool: Pool, id: string) => {
     return usernames;
 }
 
-export const updateAssignedTo = async (pool: Pool, taskId: string, username: string) => {
+export const updateAssignedTo = async (pool: Pool, taskId: string, assignTo: string[]) => {
     const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [username, taskId])
+    const res = await pool.query(query, [assignTo, taskId])
 
     return res.rowCount;
 }
@@ -214,13 +214,13 @@ export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo:
     let res;
 
     if (priority !== "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND assign_to = $2 AND project_id = $3 AND is_active = TRUE';
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND $2 = ANY(assign_to) AND project_id = $3 AND is_active = TRUE';
         res = await pool.query(query, [priority, assignedTo, projectId]);
     }else if (priority !== "" && assignedTo == ""){
         query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [priority, projectId])
     }else if (priority == "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE assign_to = $1 AND project_id = $2 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE $1 = ANY(assign_to) AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [assignedTo, projectId]);
     }else{
         query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE'

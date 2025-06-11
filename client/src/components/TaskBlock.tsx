@@ -35,7 +35,20 @@ const TaskBlock = ({
           <TaskPriority priority={task.priority} />
           <div className="flex justify-between text-xs">
             <p className="font-semibold">[{task.projectTaskId}]</p>
-            <p>{task.assignedTo} {task.assignedTo === username ? '(You)' : ''}</p>
+            <div className="text-xs" title={task.assignedTo.join(" ")}>
+              {(() => {
+                const formatted = task.assignedTo
+                  .map((at) => `${at}${at === username ? ' (You)' : ''}`)
+                  .join(', ');
+
+                const maxLen = 30;
+                const display = formatted.length > maxLen
+                  ? formatted.slice(0, maxLen).trimEnd() + '...'
+                  : formatted;
+
+                return display;
+              })()}
+            </div>
           </div>
         </div>
       </div>
