@@ -76,20 +76,26 @@ const SelectAssignee = ({
         )}
       </button>
       {(showDropdown || showModal) && (
-        <div className="flex flex-col gap-y-1 mt-2">
+        <div className="flex flex-col mt-2" role="group" aria-label="Assign users">
           {usersInProject.map((u) => {
             const isChecked = taskAssignedTo.includes(u);
             return (
-              <div
+              <label
                 key={u}
-                className="inline-flex items-center space-x-2 cursor-pointer"
-                onClick={() => handleUserToggle(u)}
+                className="inline-flex items-center space-x-2 cursor-pointer rounded px-2 py-1 hover:bg-white/5 focus-within:bg-white/10"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleUserToggle(u);
+                  }
+                }}
               >
                 <input
                   type="checkbox"
                   checked={isChecked}
-                  onChange={() => {}} // Controlled by parent div onClick
-                  className="peer hidden"
+                  onChange={() => handleUserToggle(u)}
+                  className="sr-only peer"
                 />
                 <div
                   className={`w-4 h-4 rounded border border-gray-400 flex items-center justify-center ${
@@ -98,20 +104,19 @@ const SelectAssignee = ({
                 >
                   {isChecked && (
                     <svg
-                      className="w-3 h-3 text-white"
+                      className="w-3 h-3"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M5 13l4 4L19 7" />
                     </svg>
                   )}
                 </div>
                 <span className="text-sm">
                   {u} {u === username && "(You)"}
                 </span>
-              </div>
+              </label>
             );
           })}
         </div>
