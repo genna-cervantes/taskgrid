@@ -142,7 +142,7 @@ const TaskActionToast = ({
       });
       updateAssignedTo.mutate({
         taskId: recentTaskContext.tasks[0].id,
-        username: recentTaskContext.tasks[0].assignedTo,
+        assignTo: recentTaskContext.tasks[0].assignedTo,
       });
     } else if (
       actionContext.action === "archived" &&
