@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../utils/trpc";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
+import SelectAssignee from "./SelectAssignee";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -14,12 +15,12 @@ const taskSchema = z.object({
     required_error: "Priority is required",
   }),
   link: z.union([z.string().url("Invalid URL"), z.literal("")]).optional(),
-  assignedTo: z.string({
-    required_error: "Assignee is required",
-  }),
+  assignedTo: z
+    .array(z.string())
+    .min(1, { message: "At least one assignee is required" }),
 });
 
-type TaskFormData = z.infer<typeof taskSchema>;
+export type TaskFormData = z.infer<typeof taskSchema>;
 
 export const priorityLevels = ["low", "medium", "high"] as const;
 export type PriorityLevel = (typeof priorityLevels)[number];
@@ -49,7 +50,9 @@ const AddTaskForm = ({
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const { data: usersInProject, isLoading: usersLoading } =
+  const [taskAssignedTo, setTaskAssignedTo] = useState<string[]>([])
+
+  const { data: usersInProject } =
     trpc.getUsernamesInProject.useQuery({
       id: projectId,
     });
@@ -70,6 +73,7 @@ const AddTaskForm = ({
   });
 
   const onSubmit = (data: TaskFormData) => {
+    console.log('inserting')
     insertTask.mutate({ id: projectId, task: { ...data, progress: col } });
   };
 
@@ -164,21 +168,7 @@ const AddTaskForm = ({
             )}
           </span>
           <span className="w-full flex flex-col">
-            <label htmlFor="assignTo" className="text-xs font-semibold mb-2">
-              Assign To:
-            </label>
-            <select
-              {...register("assignedTo")}
-              id="assignTo"
-              className="text-xs md:text-base"
-            >
-              {!usersLoading &&
-                usersInProject?.map((u) => (
-                  <option key={u} value={u} className="bg-[#464646]">
-                    {u} {u === username ? "(You)" : ""}
-                  </option>
-                ))}
-            </select>
+            <SelectAssignee setValue={setValue} setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
           </span>
           <button
             type="submit"
