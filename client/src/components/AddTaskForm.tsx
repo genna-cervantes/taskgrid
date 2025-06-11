@@ -169,6 +169,11 @@ const AddTaskForm = ({
           </span>
           <span className="w-full flex flex-col">
             <SelectAssignee setValue={setValue} setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
+            {errors.assignedTo && (
+              <p className="text-red-400 text-xs font-semibold mt-1">
+                {errors.assignedTo.message}
+              </p>
+            )}
           </span>
           <button
             type="submit"
