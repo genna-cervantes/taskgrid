@@ -6,6 +6,7 @@ import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import { z } from "zod";
+import SelectAssignee from "./SelectAssignee";
 
 const linkSchema = z.string().url();
 
@@ -36,7 +37,7 @@ const TaskModal = ({
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const { data: usersInProject, isLoading: usersLoading } =
+  const { data: usersInProject } =
     trpc.getUsernamesInProject.useQuery({
       id: projectId,
     });
@@ -290,11 +291,11 @@ const TaskModal = ({
         </div>
         <div>
           <div className="flex justify-between items-center">
-            <h3
+            {!editMode && <h3
               className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}
             >
               Assigned To:
-            </h3>
+            </h3>}
             {username && !editMode && !task.assignedTo.includes(username) && (
               <button
                 onClick={handleAssignToMe}
@@ -323,31 +324,10 @@ const TaskModal = ({
             )}
           </div>
           {editMode ? (
-            <select
-              id="assignTo"
-              multiple
-              className="w-full text-xs md:text-base" // set a height to show multiple options
-              value={taskAssignedTo}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, (option) => option.value);
-                setTaskAssignedTo(selected);
-              }}
-            >
-              {!usersLoading &&
-                usersInProject?.map((u) => (
-                  <option
-                    key={u}
-                    value={u}
-                    className="bg-[#464646] text-xs md:text-base"
-                  >
-                    {u} {u === username ? "(You)" : ""}
-                  </option>
-                ))}
-            </select>
-
+            <SelectAssignee showModal={true} setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
           ) : (
             task.assignedTo.map((at) => (
-              <h3 className="pl-4 text-xs md:text-sm">
+              <h3 key={at} className="pl-4 text-xs md:text-sm">
                 {at} {at === username ? "(You)" : ""}
               </h3>
             ))
