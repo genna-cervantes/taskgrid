@@ -7,17 +7,15 @@ const SelectAssignee = ({
   setValue,
   taskAssignedTo,
   username,
-  usersInProject,
-  showModal
+  usersInProject
 }: {
   setTaskAssignedTo: React.Dispatch<React.SetStateAction<string[]>>;
   setValue?: UseFormSetValue<TaskFormData>;
   taskAssignedTo: string[];
   username: string;
   usersInProject: string[];
-  showModal?: boolean
 }) => {
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(true);
 
   const handleUserToggle = (user: string) => {
     const updatedAssignees = taskAssignedTo.includes(user)
@@ -75,7 +73,7 @@ const SelectAssignee = ({
           </svg>
         )}
       </button>
-      {(showDropdown || showModal) && (
+      {showDropdown && (
         <div className="flex flex-col mt-2" role="group" aria-label="Assign users">
           {usersInProject.map((u) => {
             const isChecked = taskAssignedTo.includes(u);
