@@ -52,10 +52,12 @@ const ProjectBlock = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setEditProject({
-                projectId: p.id,
-                projectName: p.name
-              });
+
+              if (editProject.projectId === p.id) {
+                setEditProject({ projectId: "", projectName: "" });
+              } else {
+                setEditProject({ projectId: p.id, projectName: p.name });
+              }
             }}
           >
             <svg
