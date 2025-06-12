@@ -231,12 +231,12 @@ const TaskModal = ({
           {editMode ? (
             <textarea
               placeholder="What's this about?"
-              className="w-full text-sm"
+              className="w-full text-sm md:text-base"
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           ) : (
-            <h3 className="pl-4 text-sm">
+            <h3 className="pl-4 text-sm md:text-base">
               {task?.description ?? ""}
             </h3>
           )}
@@ -251,7 +251,7 @@ const TaskModal = ({
             editMode ? (
               <input
                 placeholder="https://"
-                className="w-full text-sm"
+                className="w-full text-sm md:text-base"
                 value={taskLink}
                 onChange={(e) => setTaskLink(e.target.value)}
               />
@@ -260,7 +260,7 @@ const TaskModal = ({
                 href={task.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline text-sm pl-4"
+                className="hover:underline text-sm md:text-base pl-4"
               >
                 {task?.link ?? ""}
               </a>
@@ -294,7 +294,7 @@ const TaskModal = ({
           ) : (
             <span className="flex items-center pl-4 gap-x-2">
               <TaskPriority priority={task.priority} />
-              <h3 className="text-sm">{task.priority}</h3>
+              <h3 className="text-sm md:text-base">{task.priority}</h3>
             </span>
           )}
         </div>
@@ -336,7 +336,7 @@ const TaskModal = ({
             <SelectAssignee setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
           ) : (
             task.assignedTo.map((at) => (
-              <h3 key={at} className="pl-4 text-sm">
+              <h3 key={at} className="pl-4 text-sm md:text-base">
                 {at} {at === username ? "(You)" : ""}
               </h3>
             ))
@@ -351,7 +351,7 @@ const TaskModal = ({
           {editMode ? (
             <button
               onClick={handleSaveTask}
-              className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              className="bg-green-400 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={updateAssignedTo.isLoading || updateTaskDescription.isLoading || updateTaskLink.isLoading || updateTaskPriority.isLoading || updateTaskTitle.isLoading}
             >
               {(!updateAssignedTo.isLoading && !updateTaskDescription.isLoading && !updateTaskLink.isLoading && !updateTaskPriority.isLoading && !updateTaskTitle.isLoading) ? (
@@ -376,7 +376,7 @@ const TaskModal = ({
           ) : (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-white/20 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-white/20 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer"
             >
               Edit
             </button>
@@ -384,7 +384,7 @@ const TaskModal = ({
           {!editMode && (
             <button
               onClick={handleDeleteTask}
-              className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              className="bg-red-400 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={deleteTask.isLoading}
             >
               {!deleteTask.isLoading ? (
