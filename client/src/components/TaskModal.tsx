@@ -162,6 +162,7 @@ const TaskModal = ({
 
     setEditMode(false);
     setTaskLinkError("");
+    setTaskAssignedToError("");
 
     actionContext?.setAction("edited");
   };
@@ -330,7 +331,7 @@ const TaskModal = ({
             )}
           </div>
           {editMode ? (
-            <SelectAssignee showModal={true} setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
+            <SelectAssignee setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
           ) : (
             task.assignedTo.map((at) => (
               <h3 key={at} className="pl-4 text-xs md:text-sm">
