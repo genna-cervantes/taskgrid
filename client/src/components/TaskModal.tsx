@@ -196,7 +196,7 @@ const TaskModal = ({
       >
         <div className="flex justify-between items-center w-full gap-4">
           <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
-            <h1 className="shrink-0 text-sm md:text-lg">
+            <h1 className="shrink-0 text-lg">
               [{task.projectTaskId}]
             </h1>
             {editMode ? (
@@ -204,11 +204,11 @@ const TaskModal = ({
                 type="text"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
-                className="w-full text-xs md:text-lg"
+                className="w-full text-lg"
               />
             ) : (
               <h1
-                className="truncate w-full text-sm md:text-lg"
+                className="truncate w-full text-lg"
                 title={task.title}
               >
                 {task.title}
@@ -217,39 +217,41 @@ const TaskModal = ({
           </div>
           <button
             onClick={() => setTaskDetailsModal(false)}
-            className="bg-white/20 text-white text-xs md:text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
+            className="bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
           >
             Close
           </button>
         </div>
         <div>
           <h3
-            className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}
+            className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
           >
             Description:
           </h3>
           {editMode ? (
             <textarea
-              className="w-full text-xs md:text-sm"
+              placeholder="What's this about?"
+              className="w-full text-sm"
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           ) : (
-            <h3 className="pl-4 text-xs md:text-sm">
+            <h3 className="pl-4 text-sm">
               {task?.description ?? ""}
             </h3>
           )}
         </div>
         <div>
           <h3
-            className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}
+            className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
           >
             Link:
           </h3>
           {
             editMode ? (
               <input
-                className="w-full text-xs md:text-sm"
+                placeholder="https://"
+                className="w-full text-sm"
                 value={taskLink}
                 onChange={(e) => setTaskLink(e.target.value)}
               />
@@ -258,7 +260,7 @@ const TaskModal = ({
                 href={task.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline text-xs md:text-sm pl-4"
+                className="hover:underline text-sm pl-4"
               >
                 {task?.link ?? ""}
               </a>
@@ -272,7 +274,7 @@ const TaskModal = ({
         </div>
         <div>
           <h3
-            className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}
+            className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
           >
             Priority:
           </h3>
@@ -283,7 +285,7 @@ const TaskModal = ({
                   key={p}
                   onClick={() => setTaskPriority(p)}
                   type="button"
-                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} text-xs md:text-base flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
+                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} text-sm md:text-base flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
                 >
                   {p}
                 </button>
@@ -292,14 +294,14 @@ const TaskModal = ({
           ) : (
             <span className="flex items-center pl-4 gap-x-2">
               <TaskPriority priority={task.priority} />
-              <h3 className="text-xs md:text-sm">{task.priority}</h3>
+              <h3 className="text-sm">{task.priority}</h3>
             </span>
           )}
         </div>
         <div>
           <div className="flex justify-between items-center">
             {!editMode && <h3
-              className={`font-semibold text-xs md:text-sm ${editMode ? "text-xs pb-1" : ""}`}
+              className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
             >
               Assigned To:
             </h3>}
@@ -334,7 +336,7 @@ const TaskModal = ({
             <SelectAssignee setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
           ) : (
             task.assignedTo.map((at) => (
-              <h3 key={at} className="pl-4 text-xs md:text-sm">
+              <h3 key={at} className="pl-4 text-sm">
                 {at} {at === username ? "(You)" : ""}
               </h3>
             ))
@@ -349,7 +351,7 @@ const TaskModal = ({
           {editMode ? (
             <button
               onClick={handleSaveTask}
-              className="bg-green-400 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              className="bg-green-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={updateAssignedTo.isLoading || updateTaskDescription.isLoading || updateTaskLink.isLoading || updateTaskPriority.isLoading || updateTaskTitle.isLoading}
             >
               {(!updateAssignedTo.isLoading && !updateTaskDescription.isLoading && !updateTaskLink.isLoading && !updateTaskPriority.isLoading && !updateTaskTitle.isLoading) ? (
@@ -374,7 +376,7 @@ const TaskModal = ({
           ) : (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-white/20 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-white/20 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Edit
             </button>
@@ -382,7 +384,7 @@ const TaskModal = ({
           {!editMode && (
             <button
               onClick={handleDeleteTask}
-              className="bg-red-400 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              className="bg-red-400 w-full text-white text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={deleteTask.isLoading}
             >
               {!deleteTask.isLoading ? (
