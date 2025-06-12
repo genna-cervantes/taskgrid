@@ -48,7 +48,6 @@ const Home = () => {
   const { data: projects, isLoading: projectsIsLoading } =
     trpc.getUserProjects.useQuery({ guestId: userContext.guestId ?? "" });
 
-  
   // need loading screen
   if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
     return <>

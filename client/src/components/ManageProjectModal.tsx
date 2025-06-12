@@ -36,7 +36,9 @@ const ManageProjectModal = ({
   });
 
   const handleClickOutside = () => {
+    console.log('hello')
     setManageProjectModal(false);
+    console.log('hello2')
     setEditProject({
       projectId: "",
       projectName: "",
@@ -54,7 +56,7 @@ const ManageProjectModal = ({
         if (kickUser.isLoading) {
           e.stopPropagation();
         } else {
-          handleClickOutside;
+          handleClickOutside();
         }
       }} 
     >
