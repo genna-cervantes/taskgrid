@@ -43,7 +43,7 @@ const ClearTask = ({
           strokeLinejoin="round"
           className={cn(
             className,
-            "lucide lucide-archive-x-icon lucide-archive-x text-[#464646] hover:text-white/70"
+            "lucide lucide-archive-x-icon lucide-archive-x text-faintBlack dark:text-light dark:hover:text-fadedWhite hover:text-lmLightBackground"
           )}
         >
           <rect width="20" height="5" x="2" y="3" rx="1" />

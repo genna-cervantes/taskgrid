@@ -156,7 +156,7 @@ const TaskActionToast = ({
   };
 
   return (
-    <div className="z-50 fixed bottom-8 bg-[#464646]/50 rounded-md flex justify-center items-center text-sm font-semibold gap-x-2 px-4 py-2">
+    <div className="z-50 fixed bottom-8 dark:bg-light/50 bg-lmLightBackground/50 rounded-md flex justify-center items-center text-sm font-semibold gap-x-2 px-4 py-2">
       <h1 className="capitalize">{actionContext?.action} Task!</h1>
       <div className="flex gap-x-[3px]">
         <button

@@ -68,7 +68,7 @@ const AddProjectForm = ({
       }}
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
+        className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form
@@ -88,7 +88,7 @@ const AddProjectForm = ({
           </span>
           <button
             type="submit"
-            className="w-full text-sm bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 flex justify-center items-center disabled:cursor-not-allowed disabled:bg-white/40"
+            className="w-full text-sm bg-green-500 text-white rounded-md py-2 cursor-pointer hover:bg-green-600 flex justify-center items-center disabled:cursor-not-allowed disabled:bg-gray-300"
             disabled={addProject.isLoading}
           >
             {!addProject.isLoading ? (

@@ -38,17 +38,16 @@ const ProjectBlock = ({
 
   return (
     <Link
-      className="bg-[#282828] rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
+      className="dark:bg-backgroundDark bg-lmMidBackground rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
       to={`/projects/${p.id}`}
-      state={{ from: "home" }
-    }
+      state={{ from: "home" }}
     >
       <div className="flex justify-between">
-        <h1 className="font-bold truncate">{p.name}</h1>
+        <h1 className="font-bold truncate dark:text-fadedWhite text-fadedBlack">{p.name}</h1>
         <div className="relative">
           <button
             title="Edit Project"
-            className="cursor-pointer px-1 py-1"
+            className="cursor-pointer px-1 py-1 dark:text-fadedWhite text-fadedBlack hover:dark:text-midWhite hover:text-midBlack"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -81,7 +80,7 @@ const ProjectBlock = ({
           {editProject.projectId === p.id && (
             <div
               ref={dropdownRef}
-              className="z-10 absolute top-full right-0 mt-2 bg-[#3a3a3a] p-2 rounded-md shadow-lg w-max flex flex-col gap-y-2 text-sm"
+              className="z-10 absolute top-full right-0 mt-2 bg-lmBackground dark:bg-[#3a3a3a] p-2 rounded-md shadow-lg w-max flex flex-col gap-y-2 text-sm"
             >
               <button
                 onClick={(e) => {
@@ -89,7 +88,7 @@ const ProjectBlock = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="w-full h-1/2 hover:bg-white/20 text-white  p-2 px-4 rounded-md cursor-pointer"
+                className="w-full h-1/2 dark:hover:bg-white/20 hover:bg-lmMidBackground dark:text-white text-fadedBlack  p-2 px-4 rounded-md cursor-pointer"
               >
                 edit project
               </button>
@@ -99,7 +98,7 @@ const ProjectBlock = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="w-full h-1/2 hover:bg-white/20 text-white  p-2 px-4 rounded-md cursor-pointer"
+                className="w-full h-1/2 dark:hover:bg-white/20 hover:bg-lmMidBackground dark:text-white text-fadedBlack p-2 px-4 rounded-md cursor-pointer"
               >
                 manage project
               </button>}
@@ -107,14 +106,14 @@ const ProjectBlock = ({
                 setDeleteProjectModal(true);
                 e.preventDefault();
                 e.stopPropagation()
-              }} className="w-full h-1/2 hover:bg-red-400 text-white  p-2 px-4 rounded-md cursor-pointer">
+              }} className="w-full h-1/2 hover:bg-red-400 dark:text-white text-fadedBlack p-2 px-4 rounded-md cursor-pointer">
                 leave project
               </button>
             </div>
           )}
         </div>
       </div>
-      <h3 className="text-sm">{p.id}</h3>
+      <h3 className="text-sm dark:text-midWhite text-midBlack">{p.id}</h3>
     </Link>
   );
 };

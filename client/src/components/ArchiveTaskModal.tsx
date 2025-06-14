@@ -56,7 +56,7 @@ const ArchiveTaskModal = ({
         } // Close when clicking backdrop
       >
         <div
-          className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
+          className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
           onClick={(e) => e.stopPropagation()} // Prevent close on modal click
         >
           <h2 className="text-sm md:text-base">
@@ -91,7 +91,7 @@ const ArchiveTaskModal = ({
             </button>
             <button
               onClick={() => setArchiveModal(false)}
-              className="bg-white/20 w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-faintWhite w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Cancel
             </button>

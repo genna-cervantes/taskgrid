@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply bg-white text-gray-900 transition-colors;
+  }
+  html.dark {
+    @apply bg-gray-900 text-gray-100;
+  }
   input, textarea, select {
     @apply bg-transparent;
   }

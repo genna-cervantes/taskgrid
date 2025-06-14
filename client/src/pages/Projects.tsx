@@ -186,12 +186,12 @@ const Projects = () => {
 
             {/* Center filter - Now properly centered */}
             <div className="hidden md:flex justify-center">
-              <div className="bg-[#282828] px-3 py-[0.4rem] rounded-md flex items-center gap-x-3 text-xs">
+              <div className="dark:bg-backgroundDark bg-lmMidBackground px-3 py-[0.4rem] rounded-md flex items-center gap-x-3 text-xs">
                 <h1 className="text-xs whitespace-nowrap">Filter by:</h1>
                 <div className="flex gap-x-2">
                   <select
                     name="priorityFilter"
-                    className="text-xs bg-[#282828] w-20"
+                    className="text-xs dark:bg-backgroundDark bg-lmMidBackground w-20"
                     onChange={(e) =>
                       setFilter((prevFilter) => ({
                         ...prevFilter,
@@ -207,7 +207,7 @@ const Projects = () => {
                   </select>
                   <select
                     name="assignedToFilter"
-                    className="text-xs bg-[#282828] w-24"
+                    className="text-xs dark:bg-backgroundDark bg-lmMidBackground w-24"
                     onChange={(e) =>
                       setFilter((prevFilter) => ({
                         ...prevFilter,
@@ -284,14 +284,14 @@ const Projects = () => {
           </h1>
         </div>
         <div className="w-full flex justify-center">
-          <div className="flex flex-wrap bg-[#282828] px-3 my-3 py-2 rounded-md md:hidden items-center gap-x-2 gap-y-2 text-xs">
+          <div className="flex flex-wrap dark:bg-backgroundDark bg-lmMidBackground px-3 my-3 py-2 rounded-md md:hidden items-center gap-x-2 gap-y-2 text-xs">
             <h1 className="text-xs mr-1">Filter by:</h1>
 
             {/* Priority filter - with fixed width */}
             <div className="relative w-20">
               <select
                 name="priorityFilter"
-                className="w-full appearance-none bg-[#282828] border border-gray-700 rounded px-2 py-1"
+                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground border border-gray-700 rounded px-2 py-1"
                 onChange={(e) =>
                   setFilter((prevFilter) => ({
                     ...prevFilter,
@@ -320,7 +320,7 @@ const Projects = () => {
             <div className="relative w-24">
               <select
                 name="assignedToFilter"
-                className="w-full appearance-none bg-[#282828] border border-gray-700 rounded px-2 py-1"
+                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground border border-gray-700 rounded px-2 py-1"
                 onChange={(e) =>
                   setFilter((prevFilter) => ({
                     ...prevFilter,

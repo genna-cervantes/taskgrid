@@ -91,7 +91,7 @@ const AddTaskForm = ({
       }} // Close when clicking backdrop
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
+        className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form
@@ -155,7 +155,11 @@ const AddTaskForm = ({
                     setValue("priority", p, { shouldValidate: true })
                   }
                   type="button"
-                  className={`${selectedPriority === p ? "bg-white/40" : "bg-white/20"} flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer text-xs md:text-base`}
+                  className={`${
+                        selectedPriority === p
+                          ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
+                          : "bg-lmBackground/60"
+                      } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
                 >
                   {p}
                 </button>
@@ -177,7 +181,7 @@ const AddTaskForm = ({
           </span>
           <button
             type="submit"
-            className="w-full flex justify-center bg-white/20 rounded-md py-2 cursor-pointer hover:bg-white/40 text-xs md:text-base disabled:cursor-not-allowed disabled:bg-white/40"
+            className="w-full flex justify-center text-midBlack dark:text-fadedWhite font-semibold bg-lmBackground hover:bg-lmMidBackground dark:bg-faintWhite rounded-md py-2 cursor-pointer dark:hover:bg-midWhite text-xs md:text-base disabled:cursor-not-allowed disabled:bg-midWhite"
             disabled={insertTask.isLoading}
           >
             {!insertTask.isLoading ? (
