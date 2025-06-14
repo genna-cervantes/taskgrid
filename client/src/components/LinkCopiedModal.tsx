@@ -34,7 +34,7 @@ const LinkCopiedModal = ({
         Share this board with colleagues to track task progress.
         <button
           onClick={handleCopyLink}
-          className="bg-green-400 text-sm font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+          className="bg-green-400 text-sm text-white font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
           disabled={isLoading}
         >
           {linkCopied ? (
