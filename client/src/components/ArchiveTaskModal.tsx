@@ -91,7 +91,7 @@ const ArchiveTaskModal = ({
             </button>
             <button
               onClick={() => setArchiveModal(false)}
-              className="bg-faintWhite w-full text-white text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
+              className="bg-lmBackground hover:bg-lmMidBackground w-full text-fadedBlack text-xs md:text-sm font-semibold py-2 rounded-md cursor-pointer"
             >
               Cancel
             </button>

@@ -228,7 +228,7 @@ const Projects = () => {
                 <div className="flex gap-x-2">
                   <button
                     onClick={handleApplyFilter}
-                    className="bg-green-400 px-3 py-[0.2rem] rounded-md font-semibold disabled:opacity-50 whitespace-nowrap"
+                    className="bg-green-400 text-fadedWhite px-3 py-[0.2rem] rounded-md font-semibold disabled:opacity-50 whitespace-nowrap"
                     disabled={
                       filter.priority === "" && filter.assignedTo === ""
                     }
@@ -238,7 +238,7 @@ const Projects = () => {
                   {(priority !== "" || assignedTo !== "") && (
                     <button
                       onClick={handleClearFilter}
-                      className="bg-red-400 px-3 py-[0.2rem] rounded-md font-semibold whitespace-nowrap"
+                      className="bg-red-400 text-fadedWhite px-3 py-[0.2rem] rounded-md font-semibold whitespace-nowrap"
                     >
                       Clear
                     </button>
@@ -252,7 +252,7 @@ const Projects = () => {
               <h1 className="text-sm md:text-base truncate">{username}</h1>
               <button
                 onClick={handleShare}
-                className="px-1 md:px-3 py-1 rounded-md bg-green-400 text-xs md:text-sm font-bold cursor-pointer"
+                className="px-1 md:px-3 py-1 rounded-md text-white bg-green-400 text-xs md:text-sm font-bold cursor-pointer"
               >
                 {isMobile ? (
                   <svg
@@ -291,7 +291,7 @@ const Projects = () => {
             <div className="relative w-20">
               <select
                 name="priorityFilter"
-                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground border border-gray-700 rounded px-2 py-1"
+                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground rounded px-2 py-1"
                 onChange={(e) =>
                   setFilter((prevFilter) => ({
                     ...prevFilter,
@@ -320,7 +320,7 @@ const Projects = () => {
             <div className="relative w-24">
               <select
                 name="assignedToFilter"
-                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground border border-gray-700 rounded px-2 py-1"
+                className="w-full appearance-none dark:bg-backgroundDark bg-lmMidBackground rounded px-2 py-1"
                 onChange={(e) =>
                   setFilter((prevFilter) => ({
                     ...prevFilter,
@@ -352,7 +352,7 @@ const Projects = () => {
             <div className="flex gap-x-2 ml-auto">
               <button
                 onClick={handleApplyFilter}
-                className="bg-green-400 px-1 md:px-3 py-1 rounded-md font-semibold disabled:opacity-50"
+                className="bg-green-400 px-1 md:px-3 py-1 text-fadedWhite rounded-md font-semibold disabled:opacity-50"
                 disabled={filter.priority === "" && filter.assignedTo === ""}
               >
                 {isMobile ? (
@@ -377,7 +377,7 @@ const Projects = () => {
               {(priority !== "" || assignedTo !== "") && (
                 <button
                   onClick={handleClearFilter}
-                  className="bg-red-400 px-1 md:px-3 py-1 rounded-md font-semibold"
+                  className="bg-red-400 px-1 md:px-3 py-1 text-fadedWhite rounded-md font-semibold"
                 >
                   {isMobile ? (
                     <svg
