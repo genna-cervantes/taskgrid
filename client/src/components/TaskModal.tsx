@@ -39,10 +39,9 @@ const TaskModal = ({
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const { data: usersInProject } =
-    trpc.getUsernamesInProject.useQuery({
-      id: projectId,
-    });
+  const { data: usersInProject } = trpc.getUsernamesInProject.useQuery({
+    id: projectId,
+  });
 
   const deleteTask = trpc.deleteTask.useMutation({
     onSuccess: (data) => {
@@ -110,7 +109,7 @@ const TaskModal = ({
 
   const handleDeleteTask = () => {
     recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
-    
+
     deleteTask.mutate({ taskId: task.id });
     setTaskDetailsModal(false);
 
@@ -126,8 +125,8 @@ const TaskModal = ({
         return;
       }
     }
-    
-    if (taskAssignedTo.length < 1){
+
+    if (taskAssignedTo.length < 1) {
       setTaskAssignedToError("At least one assignee is required");
       return;
     }
@@ -182,23 +181,27 @@ const TaskModal = ({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => {
-        if (updateAssignedTo.isLoading || updateTaskDescription.isLoading || updateTaskLink.isLoading || updateTaskPriority.isLoading || updateTaskTitle.isLoading || deleteTask.isLoading) {
+        if (
+          updateAssignedTo.isLoading ||
+          updateTaskDescription.isLoading ||
+          updateTaskLink.isLoading ||
+          updateTaskPriority.isLoading ||
+          updateTaskTitle.isLoading ||
+          deleteTask.isLoading
+        ) {
           e.stopPropagation();
         } else {
-          setTaskDetailsModal(false)
+          setTaskDetailsModal(false);
         }
-      }
-      } // Close when clicking backdrop
+      }} // Close when clicking backdrop
     >
       <div
-        className="bg-[#464646] rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
+        className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <div className="flex justify-between items-center w-full gap-4">
           <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
-            <h1 className="shrink-0 text-lg">
-              [{task.projectTaskId}]
-            </h1>
+            <h1 className="shrink-0 text-lg">[{task.projectTaskId}]</h1>
             {editMode ? (
               <input
                 type="text"
@@ -207,17 +210,14 @@ const TaskModal = ({
                 className="w-full text-lg"
               />
             ) : (
-              <h1
-                className="truncate w-full text-lg"
-                title={task.title}
-              >
+              <h1 className="truncate w-full text-lg" title={task.title}>
                 {task.title}
               </h1>
             )}
           </div>
           <button
             onClick={() => setTaskDetailsModal(false)}
-            className="bg-white/20 text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
+            className="bg-faintWhite text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
           >
             Close
           </button>
@@ -247,15 +247,15 @@ const TaskModal = ({
           >
             Link:
           </h3>
-          {
-            editMode ? (
-              <input
-                placeholder="https://"
-                className="w-full text-sm md:text-base"
-                value={taskLink}
-                onChange={(e) => setTaskLink(e.target.value)}
-              />
-            ) : task?.link && (
+          {editMode ? (
+            <input
+              placeholder="https://"
+              className="w-full text-sm md:text-base"
+              value={taskLink}
+              onChange={(e) => setTaskLink(e.target.value)}
+            />
+          ) : (
+            task?.link && (
               <a
                 href={task.link}
                 target="_blank"
@@ -264,8 +264,8 @@ const TaskModal = ({
               >
                 {task?.link ?? ""}
               </a>
-            ) 
-          }
+            )
+          )}
           {taskLinkError !== "" && (
             <h4 className={`font-semibold text-xs text-red-400`}>
               {taskLinkError}
@@ -280,16 +280,24 @@ const TaskModal = ({
           </h3>
           {editMode ? (
             <div className="flex w-full gap-x-2">
-              {priorityLevels.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setTaskPriority(p)}
-                  type="button"
-                  className={`${taskPriority === p ? "bg-white/40" : "bg-white/20"} text-sm md:text-base flex-1 rounded-md py-1 hover:bg-white/40 cursor-pointer`}
-                >
-                  {p}
-                </button>
-              ))}
+              {editMode && (
+                <div className="flex w-full gap-x-2 mt-4">
+                  {priorityLevels.map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setTaskPriority(p)}
+                      type="button"
+                      className={`${
+                        taskPriority === p
+                          ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
+                          : "bg-lmBackground/60"
+                      } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <span className="flex items-center pl-4 gap-x-2">
@@ -300,11 +308,13 @@ const TaskModal = ({
         </div>
         <div>
           <div className="flex justify-between items-center">
-            {!editMode && <h3
-              className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
-            >
-              Assigned To:
-            </h3>}
+            {!editMode && (
+              <h3
+                className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
+              >
+                Assigned To:
+              </h3>
+            )}
             {username && !editMode && !task.assignedTo.includes(username) && (
               <button
                 onClick={handleAssignToMe}
@@ -333,7 +343,12 @@ const TaskModal = ({
             )}
           </div>
           {editMode ? (
-            <SelectAssignee setTaskAssignedTo={setTaskAssignedTo} taskAssignedTo={taskAssignedTo} username={username ?? ""} usersInProject={usersInProject ?? []} />
+            <SelectAssignee
+              setTaskAssignedTo={setTaskAssignedTo}
+              taskAssignedTo={taskAssignedTo}
+              username={username ?? ""}
+              usersInProject={usersInProject ?? []}
+            />
           ) : (
             task.assignedTo.map((at) => (
               <h3 key={at} className="pl-4 text-sm md:text-base">
@@ -352,9 +367,19 @@ const TaskModal = ({
             <button
               onClick={handleSaveTask}
               className="bg-green-400 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
-              disabled={updateAssignedTo.isLoading || updateTaskDescription.isLoading || updateTaskLink.isLoading || updateTaskPriority.isLoading || updateTaskTitle.isLoading}
+              disabled={
+                updateAssignedTo.isLoading ||
+                updateTaskDescription.isLoading ||
+                updateTaskLink.isLoading ||
+                updateTaskPriority.isLoading ||
+                updateTaskTitle.isLoading
+              }
             >
-              {(!updateAssignedTo.isLoading && !updateTaskDescription.isLoading && !updateTaskLink.isLoading && !updateTaskPriority.isLoading && !updateTaskTitle.isLoading) ? (
+              {!updateAssignedTo.isLoading &&
+              !updateTaskDescription.isLoading &&
+              !updateTaskLink.isLoading &&
+              !updateTaskPriority.isLoading &&
+              !updateTaskTitle.isLoading ? (
                 "Save"
               ) : (
                 <svg
@@ -376,7 +401,7 @@ const TaskModal = ({
           ) : (
             <button
               onClick={() => setEditMode(true)}
-              className="bg-white/20 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer"
+              className="w-full text-midBlack dark:text-white dark:hover:bg-midWhite bg-lmBackground hover:bg-lmMidBackground dark:bg-faintWhite text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer transition-colors"
             >
               Edit
             </button>

@@ -7,9 +7,9 @@ import { trpc } from "../utils/trpc";
 import { useGuestId } from "../contexts/UserContext";
 import { Project } from "../../../server/src/shared/types";
 import ManageProjectModal from "../components/ManageProjectModal";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Home = () => {
-
   const userContext = useGuestId();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [editProject, setEditProject] = useState({
@@ -19,6 +19,7 @@ const Home = () => {
   const [editProjectModal, setEditProjectModal] = useState(false);
   const [manageProjectModal, setManageProjectModal] = useState(false);
   const [deleteProjectModal, setDeleteProjectModal] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -44,25 +45,32 @@ const Home = () => {
     };
   }, []);
 
-
   const { data: projects, isLoading: projectsIsLoading } =
     trpc.getUserProjects.useQuery({ guestId: userContext.guestId ?? "" });
 
   // need loading screen
-  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
-    return <>
-      Loading Guest ID...
-    </>
+  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId) {
+    return <>Loading Guest ID...</>;
   }
 
   return (
     <div className="my-6">
-      <div className="text-center ">
-        <h1 className="text-2xl pt-4">
-          Your <span className="text-green-400 font-semibold">TasKan</span>{" "}
-          Boards
-        </h1>
-        <p className="text-xs pt-2 opacity-50">Guest ID: {userContext.guestId ?? "Loading..."}</p>
+      <div className="text-center">
+        <div className="flex justify-center items-center gap-4">
+          <h1 className="text-2xl pt-4">
+            Your <span className="text-green-400 font-semibold">TasKan</span> Boards
+          </h1>
+          <button
+            onClick={toggleTheme}
+            className="mt-4 p-2 rounded-lg bg-gray-200 dark:bg-backgroundDark hover:bg-gray-300 dark:hover:bg-light transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? "🌞" : "🌙"}
+          </button>
+        </div>
+        <p className="text-xs pt-2 opacity-50">
+          Guest ID: {userContext.guestId ?? "Loading..."}
+        </p>
       </div>
 
       {!projects && projectsIsLoading ? (

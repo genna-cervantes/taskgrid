@@ -52,7 +52,7 @@ const SelectAssignee = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="lucide lucide-chevron-up text-white/90"
+            className="lucide lucide-chevron-up text-fadedWhite"
           >
             <path d="m18 15-6-6-6 6" />
           </svg>
@@ -67,7 +67,7 @@ const SelectAssignee = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="lucide lucide-chevron-down text-white/90"
+            className="lucide lucide-chevron-down text-fadedWhite"
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
@@ -80,7 +80,7 @@ const SelectAssignee = ({
             return (
               <label
                 key={u}
-                className="inline-flex items-center space-x-2 cursor-pointer rounded px-2 py-1 hover:bg-white/5 focus-within:bg-white/10"
+                className="inline-flex items-center space-x-2 cursor-pointer rounded px-2 py-1 hover:bg-faintWhite focus-within:bg-faintWhite"
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -97,12 +97,12 @@ const SelectAssignee = ({
                 />
                 <div
                   className={`w-4 h-4 rounded border border-gray-400 flex items-center justify-center ${
-                    isChecked ? "bg-white/40 border-white/40" : ""
+                    isChecked ? "bg-lmMidBackground border-lmMidBackground" : ""
                   }`}
                 >
                   {isChecked && (
                     <svg
-                      className="w-3 h-3"
+                      className="w-3 h-3 "
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"

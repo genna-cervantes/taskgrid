@@ -65,7 +65,7 @@ const Project = () => {
             key={col}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(col)}
-            className="flex-1 px-4 py-3 bg-[#282828] rounded-md group"
+            className="flex-1 px-4 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md group"
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-x-2">

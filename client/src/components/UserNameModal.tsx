@@ -133,7 +133,7 @@ const UserNameModal = ({
       {/* provide guest id modal */}
       {guestIdModal && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
         <div
-          className="bg-[#464646] rounded-lg shadow-xl p-8 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
+          className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-8 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
           onClick={(e) => e.stopPropagation()} // Prevent close on modal click
         >
           <div className="flex justify-between items-center">
@@ -142,7 +142,7 @@ const UserNameModal = ({
             </h1>
             <button
               onClick={() => setGuestIdModal(false)}
-              className="px-4 py-1 text-white text-xs md:text-sm font-semibold rounded-md bg-white/20 cursor-pointer"
+              className="px-4 py-1 text-white text-xs md:text-sm font-semibold rounded-md bg-faintWhite cursor-pointer"
             >
               Cancel
             </button>
@@ -178,7 +178,7 @@ const UserNameModal = ({
         }} // Close when clicking backdrop
       >
         <div
-          className="bg-[#464646] rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
+          className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-6 w-[90%] md:w-full max-w-xl flex flex-col gap-y-4"
           onClick={(e) => e.stopPropagation()} // Prevent close on modal click
         >
           <div>
@@ -189,7 +189,7 @@ const UserNameModal = ({
               {fromHome && (
                 <button
                 onClick={() => setUsernameModal(false)}
-                className="px-4 py-1 text-white text-sm font-semibold rounded-md bg-white/20 cursor-pointer"
+                className="px-4 py-1 text-white text-sm font-semibold rounded-md bg-faintWhite cursor-pointer"
                 >
                   Close
                 </button>
