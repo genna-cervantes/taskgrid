@@ -15,7 +15,8 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT']
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // ⬅️ increase from default 100kb
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // set headers
 app.use((req, res, next) => {

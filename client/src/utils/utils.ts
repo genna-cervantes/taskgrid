@@ -1,5 +1,5 @@
-import { clsx } from 'clsx';
-import { ColumnKey, Columns, Task } from '../../../server/src/shared/types';
+import { clsx } from "clsx";
+import { ColumnKey, Columns, Task } from "../../../server/src/shared/types";
 
 export function cn(...inputs: Parameters<typeof clsx>) {
   return clsx(...inputs);
@@ -20,3 +20,11 @@ export const groupTasksByColumn = (taskList: Task[]) => {
 
   return grouped;
 };
+
+export const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });

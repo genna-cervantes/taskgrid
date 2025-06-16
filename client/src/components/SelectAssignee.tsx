@@ -38,7 +38,7 @@ const SelectAssignee = ({
         onClick={() => setShowDropdown(!showDropdown)}
         className="flex justify-between items-center text-base w-full"
       >
-        <label htmlFor="assignTo" className="font-semibold">
+        <label htmlFor="assignTo" className="text-xs font-semibold">
           Assign To:
         </label>
         {showDropdown ? (
