@@ -2,6 +2,7 @@
 import { router, publicProcedure } from "./trpc.js";
 import { z } from "zod";
 import { Pool } from "pg";
+import { randomUUID } from 'crypto';
 import {
   addProject,
   addUserProjectLink,
@@ -35,6 +36,7 @@ import {
 import { config } from "dotenv";
 import { rateLimitMiddleware } from "./middleware.js";
 import { Task, TaskSchema } from "../shared/types.js";
+import s3 from "../aws/s3.js";
 
 config();
 
@@ -206,6 +208,34 @@ export const appRouter = router({
       );
       if (taskCount && taskCount > 0) return true;
       return false;
+    }),
+  updateTaskImages: publicProcedure
+    .input(z.object({projectId: z.string(), taskId: z.string(), files: z.array(z.object({
+      name: z.string(),
+      type: z.string()
+    }))}))
+    .mutation(async ({ input }) => {
+      
+      const uploads = await Promise.all(
+        input.files.map(async ({ name, type }) => {
+          const key = `${input.projectId}/${input.taskId}/${randomUUID()}-${name}`;
+
+          const url = s3.getSignedUrl('putObject', {
+            Bucket: process.env.S3_BUCKET!,
+            Key: key,
+            ACL: 'private',
+            Expires: 60,
+          });
+
+          return {
+            name,
+            key,
+            url
+          };
+        })
+      );
+      
+      return { success: true, files: uploads };
     }),
   deleteTaskById: publicProcedure
     .use(rateLimitMiddleware)
