@@ -2,7 +2,7 @@
 import { router, publicProcedure } from "./trpc.js";
 import { z } from "zod";
 import { Pool } from "pg";
-import { randomUUID } from 'crypto';
+import { randomUUID } from "crypto";
 import {
   addProject,
   addUserProjectLink,
@@ -210,31 +210,39 @@ export const appRouter = router({
       return false;
     }),
   updateTaskImages: publicProcedure
-    .input(z.object({projectId: z.string(), taskId: z.string(), files: z.array(z.object({
-      name: z.string(),
-      type: z.string()
-    }))}))
+    .input(
+      z.object({
+        projectId: z.string(),
+        taskId: z.string(),
+        files: z.array(
+          z.object({
+            name: z.string(),
+            type: z.string(),
+          })
+        ),
+      })
+    )
     .mutation(async ({ input }) => {
-      
       const uploads = await Promise.all(
         input.files.map(async ({ name, type }) => {
           const key = `${input.projectId}/${input.taskId}/${randomUUID()}-${name}`;
 
-          const url = s3.getSignedUrl('putObject', {
+          const url = s3.getSignedUrl("putObject", {
             Bucket: process.env.S3_BUCKET!,
             Key: key,
-            ACL: 'private',
+            ContentType: type,
+            ACL: "private",
             Expires: 60,
           });
 
           return {
             name,
             key,
-            url
+            url,
           };
         })
       );
-      
+
       return { success: true, files: uploads };
     }),
   deleteTaskById: publicProcedure

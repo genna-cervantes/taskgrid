@@ -64,13 +64,14 @@ const AddTaskForm = ({
   const insertTask = trpc.insertTask.useMutation({
     onSuccess: async (data: Task) => {
       console.log("Task created:", data);
+      
+      await handleUpload(data.id);
 
       recentTaskContext?.setTasks([data as Task]); // keep track of this task for removal later if undone
       actionContext?.setAction("added");
       setAddModal(false);
 
       // files
-      await handleUpload(data.id);
 
       utils.getTasks.invalidate({ id: projectId });
     },
@@ -87,7 +88,7 @@ const AddTaskForm = ({
       projectId,
       taskId,
       files: files.map((file) => ({
-        name: file.name,
+        name: file.name.split('.')[0],
         type: file.type,
       })),
     });
@@ -117,7 +118,6 @@ const AddTaskForm = ({
   };
 
   const onSubmit = async (data: TaskFormData) => {
-    console.log("inserting");
     insertTask.mutate({ id: projectId, task: { ...data, progress: col } });
   };
 
