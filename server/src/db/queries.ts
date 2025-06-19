@@ -10,7 +10,7 @@ export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 }
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
-    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files FROM tasks WHERE project_id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [id]);
 
     const tasks: Task[] = res.rows.map((task) => ({
@@ -141,6 +141,17 @@ export const updateTaskLink = async (pool: Pool, taskId: string, link?: string) 
 export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
     const query = 'UPDATE tasks SET priority = $1 WHERE id = $2 AND is_active = TRUE';
     const res = await pool.query(query, [priority, taskId]);
+
+    return res.rowCount;
+}
+
+export const updateTaskFiles = async (pool: Pool, taskId: string, projectId: string, keys: string[]) => {
+    if (keys.length > 3){
+        throw new Error("too many task files")
+    }
+
+    const query = 'UPDATE tasks SET files = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
+    const res = await pool.query(query, [keys, taskId, projectId]);
 
     return res.rowCount;
 }

@@ -38,7 +38,7 @@ const ProjectBlock = ({
 
   return (
     <Link
-      className="dark:bg-backgroundDark bg-lmMidBackground rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
+      className="dark:bg-backgroundDark bg-lmMidBackground border-[1px] dark:border-faintWhite/5 border-faintBlack/5 rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
       to={`/projects/${p.id}`}
       state={{ from: "home" }}
     >

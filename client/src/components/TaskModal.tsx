@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
-import TaskPriority from "./TaskPriority";
 import { trpc } from "../utils/trpc";
 import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
@@ -34,6 +33,7 @@ const TaskModal = ({
   const [taskLink, setTaskLink] = useState(task.link);
 
   const [taskLinkError, setTaskLinkError] = useState("");
+  const [taskMediaError, setTaskMediaError] = useState("");
   const [taskAsssignedToError, setTaskAssignedToError] = useState("");
 
   const actionContext = useContext(ActionContext);
@@ -117,6 +117,8 @@ const TaskModal = ({
   };
 
   const handleSaveTask = () => {
+    // check if may changes para wag n mag toast if wala naman
+
     // validation
     if (taskLink && task.link !== taskLink) {
       const isLink = linkSchema.safeParse(taskLink);
@@ -177,6 +179,16 @@ const TaskModal = ({
     }
   };
 
+  console.log("task", task);
+
+  const { data: taskImageUrls, isLoading: taskImageUrlsIsLoading } =
+    trpc.getTaskImages.useQuery(
+      { taskId: task.id, projectId, keys: task.files },
+      { enabled: !!task }
+    );
+
+  const remainingSlots = 3 - (taskImageUrls?.length ?? 3);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -228,18 +240,12 @@ const TaskModal = ({
           >
             Description:
           </h3>
-          {editMode ? (
-            <textarea
-              placeholder="What's this about?"
-              className="w-full text-sm md:text-base"
-              value={taskDescription}
-              onChange={(e) => setTaskDescription(e.target.value)}
-            />
-          ) : (
-            <h3 className="pl-4 text-sm md:text-base">
-              {task?.description ?? ""}
-            </h3>
-          )}
+          <textarea
+            placeholder="What's this about?"
+            className="w-full text-sm md:text-base"
+            value={taskDescription}
+            onChange={(e) => setTaskDescription(e.target.value)}
+          />
         </div>
         <div>
           <h3
@@ -247,25 +253,14 @@ const TaskModal = ({
           >
             Link:
           </h3>
-          {editMode ? (
-            <input
-              placeholder="https://"
-              className="w-full text-sm md:text-base"
-              value={taskLink}
-              onChange={(e) => setTaskLink(e.target.value)}
-            />
-          ) : (
-            task?.link && (
-              <a
-                href={task.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline text-sm md:text-base pl-4"
-              >
-                {task?.link ?? ""}
-              </a>
-            )
-          )}
+
+          <input
+            placeholder="https://"
+            className="w-full text-sm md:text-base"
+            value={taskLink}
+            onChange={(e) => setTaskLink(e.target.value)}
+          />
+
           {taskLinkError !== "" && (
             <h4 className={`font-semibold text-xs text-red-400`}>
               {taskLinkError}
@@ -274,47 +269,116 @@ const TaskModal = ({
         </div>
         <div>
           <h3
-            className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
+            className={`font-semibold text-sm transition-all duration-100 ${
+              editMode ? "text-xs pb-1" : ""
+            }`}
           >
+            Media:
+          </h3>
+
+          <div className="flex w-full gap-x-2 h-16 mt-1">
+            {(taskImageUrlsIsLoading || taskImageUrls == undefined) ? (
+              <p>Loading...</p>
+            ) : (
+              taskImageUrls?.map((url) => (
+                <div
+                  key={url}
+                  className="group/image relative w-1/3 rounded-md overflow-hidden"
+                >
+                  <button className="hidden group-hover/image:flex absolute inset-0 items-center justify-center bg-black/50 text-white text-sm z-10 cursor-pointer">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-circle-minus-icon lucide-circle-minus opacity-50"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                      </svg>
+                  </button>
+                  <img
+                    src={url}
+                    alt="Task image"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))
+            )}
+            {taskImageUrls != undefined && taskImageUrls.length < 3 ? (
+              <button
+                type="button"
+                // onClick={handleClickUpload}
+                className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
+                  remainingSlots === 2
+                    ? "w-2/3"
+                    : remainingSlots === 1
+                      ? "w-1/3"
+                      : "w-full"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-upload-icon lucide-upload text-midWhite"
+                >
+                  <path d="M12 3v12" />
+                  <path d="m17 8-5-5-5 5" />
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                </svg>
+              </button>
+            ) : (
+              <></>
+            )}
+          </div>
+
+          {taskMediaError !== "" && (
+            <h4 className="font-semibold text-xs text-red-400">
+              {taskMediaError}
+            </h4>
+          )}
+        </div>
+
+        <div>
+          <h3 className={`font-semibold text-sm transition-all duration-100`}>
             Priority:
           </h3>
-          {editMode ? (
-            <div className="flex w-full gap-x-2">
-              {editMode && (
-                <div className="flex w-full gap-x-2 mt-4">
-                  {priorityLevels.map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setTaskPriority(p)}
-                      type="button"
-                      className={`${
-                        taskPriority === p
-                          ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
-                          : "bg-lmBackground/60"
-                      } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              )}
+          <div className="flex w-full gap-x-2">
+            <div className="flex w-full gap-x-2 mt-1">
+              {priorityLevels.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTaskPriority(p)}
+                  type="button"
+                  className={`${
+                    taskPriority === p
+                      ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
+                      : "bg-lmBackground/60"
+                  } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
-          ) : (
-            <span className="flex items-center pl-4 gap-x-2">
-              <TaskPriority priority={task.priority} />
-              <h3 className="text-sm md:text-base">{task.priority}</h3>
-            </span>
-          )}
+          </div>
         </div>
         <div>
           <div className="flex justify-between items-center">
-            {!editMode && (
-              <h3
-                className={`font-semibold text-sm transition-all duration-100 ${editMode ? "text-xs pb-1" : ""}`}
-              >
-                Assigned To:
-              </h3>
-            )}
+            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+              Assign to:
+            </h3>
             {username && !editMode && !task.assignedTo.includes(username) && (
               <button
                 onClick={handleAssignToMe}
@@ -342,20 +406,12 @@ const TaskModal = ({
               </button>
             )}
           </div>
-          {editMode ? (
-            <SelectAssignee
-              setTaskAssignedTo={setTaskAssignedTo}
-              taskAssignedTo={taskAssignedTo}
-              username={username ?? ""}
-              usersInProject={usersInProject ?? []}
-            />
-          ) : (
-            task.assignedTo.map((at) => (
-              <h3 key={at} className="pl-4 text-sm md:text-base">
-                {at} {at === username ? "(You)" : ""}
-              </h3>
-            ))
-          )}
+          <SelectAssignee
+            setTaskAssignedTo={setTaskAssignedTo}
+            taskAssignedTo={taskAssignedTo}
+            username={username ?? ""}
+            usersInProject={usersInProject ?? []}
+          />
           {taskAsssignedToError !== "" && (
             <h4 className={`font-semibold text-xs text-red-400 mt-1`}>
               {taskAsssignedToError}
@@ -363,53 +419,45 @@ const TaskModal = ({
           )}
         </div>
         <div className="flex flex-col gap-y-2">
-          {editMode ? (
-            <button
-              onClick={handleSaveTask}
-              className="bg-green-400 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
-              disabled={
-                updateAssignedTo.isLoading ||
-                updateTaskDescription.isLoading ||
-                updateTaskLink.isLoading ||
-                updateTaskPriority.isLoading ||
-                updateTaskTitle.isLoading
-              }
-            >
-              {!updateAssignedTo.isLoading &&
-              !updateTaskDescription.isLoading &&
-              !updateTaskLink.isLoading &&
-              !updateTaskPriority.isLoading &&
-              !updateTaskTitle.isLoading ? (
-                "Save"
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                >
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={() => setEditMode(true)}
-              className="w-full text-midBlack dark:text-white dark:hover:bg-midWhite bg-lmBackground hover:bg-lmMidBackground dark:bg-faintWhite text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer transition-colors"
-            >
-              Edit
-            </button>
-          )}
+          <button
+            onClick={handleSaveTask}
+            className="bg-green-400 w-full text-white text-sm font-semibold py-1 rounded-md cursor-pointer disabled:cursor-not-allowed"
+            disabled={
+              updateAssignedTo.isLoading ||
+              updateTaskDescription.isLoading ||
+              updateTaskLink.isLoading ||
+              updateTaskPriority.isLoading ||
+              updateTaskTitle.isLoading
+            }
+          >
+            {!updateAssignedTo.isLoading &&
+            !updateTaskDescription.isLoading &&
+            !updateTaskLink.isLoading &&
+            !updateTaskPriority.isLoading &&
+            !updateTaskTitle.isLoading ? (
+              "Save"
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+              >
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            )}
+          </button>
+
           {!editMode && (
             <button
               onClick={handleDeleteTask}
-              className="bg-red-400 w-full text-white text-sm md:text-base font-semibold py-2 rounded-md cursor-pointer disabled:cursor-not-allowed"
+              className="bg-red-400 w-full text-white text-sm py-1 font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={deleteTask.isLoading}
             >
               {!deleteTask.isLoading ? (

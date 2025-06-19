@@ -28,6 +28,7 @@ import {
   undoDeleteTask,
   updateAssignedTo,
   updateTaskDescription,
+  updateTaskFiles,
   updateTaskLink,
   updateTaskPriority,
   updateTaskProgress,
@@ -209,6 +210,17 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true;
       return false;
     }),
+  getTaskImages: publicProcedure
+    .input(z.object({taskId: z.string(), projectId: z.string(), keys: z.array(z.string())}))
+    .query(({input}) => {
+      const urls = input.keys.map((k) => (s3.getSignedUrl("getObject", {
+        Bucket: process.env.S3_BUCKET,
+        Key: k,
+        Expires: 60
+      })))
+
+      return urls as string[];
+    }),
   updateTaskImages: publicProcedure
     .input(
       z.object({
@@ -242,6 +254,9 @@ export const appRouter = router({
           };
         })
       );
+
+      const keys = uploads.map((u) => u.key);
+      await updateTaskFiles(pool, input.taskId, input.projectId, keys)
 
       return { success: true, files: uploads };
     }),

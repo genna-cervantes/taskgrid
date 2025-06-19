@@ -17,6 +17,7 @@ export const TaskSchema = z.object({
   assignedTo: z.array(z.string()),
   progress: z.string(),
   link: z.string().optional(),
+  files: z.array(z.string()),
   projectTaskId: z.number(),
 });
 
