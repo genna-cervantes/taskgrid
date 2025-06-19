@@ -7,7 +7,6 @@ import { trpc } from "../utils/trpc";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import SelectAssignee from "./SelectAssignee";
-import { toBase64 } from "../utils/utils";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -118,7 +117,7 @@ const AddTaskForm = ({
   };
 
   const onSubmit = async (data: TaskFormData) => {
-    insertTask.mutate({ id: projectId, task: { ...data, progress: col } });
+    insertTask.mutate({ id: projectId, task: { ...data, progress: col, files: [] } }); // empty files array first
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,7 +253,7 @@ const AddTaskForm = ({
                   <button
                     type="button"
                     onClick={handleClickUpload}
-                    className={`border-2 border-midWhite px-4 py-2 rounded-lg flex justify-center items-center ${
+                    className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
                       remainingSlots === 2
                         ? "w-2/3"
                         : remainingSlots === 1

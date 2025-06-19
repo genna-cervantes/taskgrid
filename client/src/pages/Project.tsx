@@ -65,7 +65,7 @@ const Project = () => {
             key={col}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(col)}
-            className="flex-1 px-4 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md group"
+            className="flex-1 px-4 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md border-[1px] dark:border-faintWhite/5 border-faintBlack/5 group"
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-x-2">
@@ -73,7 +73,7 @@ const Project = () => {
                   {col}
                 </h2>
                 <div className="px-2 flex justify-center items-center font-semibold text-xs capitalize py-1 text-center font-noto rounded-full bg-gray-500/20">
-                  {columns[col].length} 
+                  {columns[col].length}
                 </div>
               </div>
               <div className="flex items-center gap-x-1">
@@ -84,24 +84,31 @@ const Project = () => {
                   className="hidden group-hover:block"
                   username={username}
                 />
-                <ClearTask tasks={columns[col] as Task[]} projectId={projectId} col={col} className="hidden group-hover:block" />
+                <ClearTask
+                  tasks={columns[col] as Task[]}
+                  projectId={projectId}
+                  col={col}
+                  className="hidden group-hover:block"
+                />
               </div>
-
             </div>
-        
+
             <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
-              {columns[col].map((task) => (
-                <React.Fragment key={task.id}>
-                  <TaskBLock
-                    projectId={projectId}
-                    col={col}
-                    task={task}
-                    handleDragStart={handleDragStart}
-                    setUsernameModal={setUsernameModal}
-                    username={username}
-                  />
-                </React.Fragment>
-              ))}
+              {columns[col].map((task) => {
+                console.log(task);
+                return (
+                  <React.Fragment key={task.id}>
+                    <TaskBLock
+                      projectId={projectId}
+                      col={col}
+                      task={task}
+                      handleDragStart={handleDragStart}
+                      setUsernameModal={setUsernameModal}
+                      username={username}
+                    />
+                  </React.Fragment>
+                );
+              })}
             </div>
             <AddTask
               type="block"

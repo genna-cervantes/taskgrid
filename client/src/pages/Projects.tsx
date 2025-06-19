@@ -186,7 +186,7 @@ const Projects = () => {
 
             {/* Center filter - Now properly centered */}
             <div className="hidden md:flex justify-center">
-              <div className="dark:bg-backgroundDark bg-lmMidBackground px-3 py-[0.4rem] rounded-md flex items-center gap-x-3 text-xs">
+              <div className="dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5 border-faintBlack/5 bg-lmMidBackground px-3 py-[0.4rem] rounded-md flex items-center gap-x-3 text-xs">
                 <h1 className="text-xs whitespace-nowrap">Filter by:</h1>
                 <div className="flex gap-x-2">
                   <select
@@ -284,7 +284,7 @@ const Projects = () => {
           </h1>
         </div>
         <div className="w-full flex justify-center">
-          <div className="flex flex-wrap dark:bg-backgroundDark bg-lmMidBackground px-3 my-3 py-2 rounded-md md:hidden items-center gap-x-2 gap-y-2 text-xs">
+          <div className="flex flex-wrap dark:bg-backgroundDark bg-lmMidBackground border-[1px] dark:border-faintWhite/5 border-faintBlack/5 px-3 my-3 py-2 rounded-md md:hidden items-center gap-x-2 gap-y-2 text-xs">
             <h1 className="text-xs mr-1">Filter by:</h1>
 
             {/* Priority filter - with fixed width */}
