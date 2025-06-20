@@ -211,21 +211,31 @@ export const appRouter = router({
       return false;
     }),
   getTaskImages: publicProcedure
-    .input(z.object({taskId: z.string(), projectId: z.string(), keys: z.array(z.string())}))
-    .query(({input}) => {
-      const urls = input.keys.map((k) => (s3.getSignedUrl("getObject", {
-        Bucket: process.env.S3_BUCKET,
-        Key: k,
-        Expires: 60
-      })))
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        keys: z.array(z.string()),
+      })
+    )
+    .query(({ input }) => {
+      const urls = input.keys.map((k) => ({
+        url: s3.getSignedUrl("getObject", {
+          Bucket: process.env.S3_BUCKET,
+          Key: k,
+          Expires: 60,
+        }),
+        key: k,
+      }));
 
-      return urls as string[];
+      return urls;
     }),
-  updateTaskImages: publicProcedure
+  uploadTaskImages: publicProcedure
     .input(
       z.object({
         projectId: z.string(),
         taskId: z.string(),
+        previousKeys: z.array(z.string()),
         files: z.array(
           z.object({
             name: z.string(),
@@ -256,7 +266,13 @@ export const appRouter = router({
       );
 
       const keys = uploads.map((u) => u.key);
-      await updateTaskFiles(pool, input.taskId, input.projectId, keys)
+      await updateTaskFiles(
+        pool,
+        input.taskId,
+        input.projectId,
+        keys,
+        input.previousKeys
+      );
 
       return { success: true, files: uploads };
     }),
