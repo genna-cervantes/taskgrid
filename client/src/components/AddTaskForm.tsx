@@ -79,13 +79,14 @@ const AddTaskForm = ({
     },
   });
 
-  const getUploadUrls = trpc.updateTaskImages.useMutation();
+  const getUploadUrls = trpc.uploadTaskImages.useMutation();
 
   const handleUpload = async (taskId: string) => {
     
     const response = await getUploadUrls.mutateAsync({
       projectId,
       taskId,
+      previousKeys: [],
       files: files.map((file) => ({
         name: file.name.split('.')[0],
         type: file.type,

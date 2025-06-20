@@ -145,13 +145,13 @@ export const updateTaskPriority = async (pool: Pool, taskId: string, priority: s
     return res.rowCount;
 }
 
-export const updateTaskFiles = async (pool: Pool, taskId: string, projectId: string, keys: string[]) => {
-    if (keys.length > 3){
+export const updateTaskFiles = async (pool: Pool, taskId: string, projectId: string, keys: string[], previousKeys: string[]) => {
+    if ((keys.length + previousKeys.length) > 3){
         throw new Error("too many task files")
     }
 
     const query = 'UPDATE tasks SET files = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [keys, taskId, projectId]);
+    const res = await pool.query(query, [[...keys, ...previousKeys], taskId, projectId]);
 
     return res.rowCount;
 }
