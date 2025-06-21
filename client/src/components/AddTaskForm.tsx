@@ -64,7 +64,11 @@ const AddTaskForm = ({
     onSuccess: async (data: Task) => {
       console.log("Task created:", data);
       
-      await handleUpload(data.id);
+      try{
+        await handleUpload(data.id);
+      }catch(err){
+        console.log(err)
+      }
 
       recentTaskContext?.setTasks([data as Task]); // keep track of this task for removal later if undone
       actionContext?.setAction("added");
@@ -98,6 +102,7 @@ const AddTaskForm = ({
         const file = files[index];
 
         // Upload file to S3 using the signed URL
+        console.log(url)
         const res = await fetch(url, {
           method: "PUT",
           headers: {

@@ -245,6 +245,8 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+
+      console.log(process.env.S3_BUCKET);
       const uploads = await Promise.all(
         input.files.map(async ({ name, type }) => {
           const key = `${input.projectId}/${input.taskId}/${randomUUID()}-${name}`;
@@ -264,6 +266,8 @@ export const appRouter = router({
           };
         })
       );
+
+      console.log('uploads', uploads);
 
       const keys = uploads.map((u) => u.key);
       await updateTaskFiles(
