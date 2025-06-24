@@ -5,6 +5,7 @@ import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
 import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 import ClearTask from "../components/ClearTask";
+import { Ellipsis } from "lucide-react";
 
 const Project = () => {
   const { projectId } = useParams();
@@ -77,6 +78,7 @@ const Project = () => {
                 </div>
               </div>
               <div className="flex items-center gap-x-1">
+                <Ellipsis className="text-faintWhite h-4 hover:text-fadedWhite hover:cursor-pointer" />
                 <AddTask
                   type=""
                   projectId={projectId}
@@ -84,12 +86,12 @@ const Project = () => {
                   className="hidden group-hover:block"
                   username={username}
                 />
-                <ClearTask
+                {/* <ClearTask
                   tasks={columns[col] as Task[]}
                   projectId={projectId}
                   col={col}
                   className="hidden group-hover:block"
-                />
+                /> */}
               </div>
             </div>
 

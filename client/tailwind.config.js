@@ -15,7 +15,7 @@ export default {
         jetbrains: ['"JetBrains Mono"', 'sans-serif']
       },
       fontSize: {
-        xxs: '0.5rem',
+        xxs: '0.65rem',
       },
       colors: {
         light: "#464646",

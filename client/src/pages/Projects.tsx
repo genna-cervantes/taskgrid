@@ -184,7 +184,7 @@ const Projects = () => {
       <div className="h-full flex">
         {/* sidebar */}
         <Sidebar />
-        <div className="ml-14 h-full flex flex-col overflow-y-hidden">
+        <div className="ml-[3.25rem] h-full flex flex-col overflow-y-hidden">
           <div className="relative flex items-center pt-4 md:py-3 px-6">
             {/* Three-column layout with grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 w-full items-center">
