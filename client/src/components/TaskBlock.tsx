@@ -30,12 +30,12 @@ const TaskBlock = ({
         onClick={() => setTaskDetailsModal(true)}
         className="px-3 py-3 mb-2 dark:bg-light bg-lmLightBackground rounded-md border-[1px] dark:border-faintWhite/5 cursor-move border-faintBlack/15 shadow-sm"
       >
-        <h1 className="text-sm line-clamp-2" title={task.title}>{task.title}</h1>
+        <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}>{task.title}</h1>
         <div className="mt-2">
           <TaskPriority priority={task.priority} />
           <div className="flex justify-between text-xs">
             <p className="font-semibold">[{task.projectTaskId}]</p>
-            <div className="text-xs" title={task.assignedTo.join(" ")}>
+            <div title={task.assignedTo.join(" ")}>
               {(() => {
                 const formatted = task.assignedTo
                   .map((at) => `${at}${at === username ? ' (You)' : ''}`)

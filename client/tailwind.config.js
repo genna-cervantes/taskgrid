@@ -12,6 +12,7 @@ export default {
       fontFamily: {
         noto: ['"Noto Sans"', 'sans-serif'],
         rubik: ['"Rubik"', 'sans-serif'],
+        jetbrains: ['"JetBrains Mono"', 'sans-serif']
       },
       fontSize: {
         xxs: '0.5rem',
