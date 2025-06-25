@@ -30,7 +30,13 @@ const SelectAssignee = ({
   };
 
   return (
-    <div className="flex flex-col mt-1" role="group" aria-label="Assign users">
+    <div
+      className={`flex flex-col mt-1 ${
+        usersInProject.length > 4 ? "max-h-28 overflow-y-auto scrollbar-none" : ""
+      }`}
+      role="group"
+      aria-label="Assign users"
+    >
       {usersInProject.map((u) => {
         const isChecked = taskAssignedTo.includes(u);
         return (
@@ -66,7 +72,7 @@ const SelectAssignee = ({
                 ></svg>
               )}
             </div>
-            <span className="text-sm">
+            <span className={`text-sm ${isChecked ? "" : "text-midWhite"}`}>
               {u} {u === username && "(You)"}
             </span>
           </label>

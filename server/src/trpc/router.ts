@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Pool } from "pg";
 import { randomUUID } from "crypto";
 import {
+  addComment,
   addProject,
   addUserProjectLink,
   archiveTasksInColumn,
@@ -13,6 +14,7 @@ import {
   deleteTaskById,
   deleteUserProjectLink,
   editProjectName,
+  getCommentsByTask,
   getFilteredTasks,
   getProjectNameByKey,
   getProjectOwner,
@@ -125,9 +127,13 @@ export const appRouter = router({
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      let userCount = await checkGuestId(pool, input.guestId);
-      if (userCount && userCount === 1) return true;
-      return false;
+      try{
+        let userCount = await checkGuestId(pool, input.guestId);
+        if (userCount && userCount === 1) return true;
+        return false;
+      }catch(err){
+        console.log(err)
+      }
     }),
   getUsername: publicProcedure
     .use(rateLimitMiddleware)
@@ -411,6 +417,26 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true;
       return false;
     }),
+  addComment: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), comment: z.string(), commentBy: z.string()}))
+    .mutation(async ({input}) => {
+      let insertCount = await addComment(pool, input.taskId, input.comment, input.commentBy)
+      if (insertCount && insertCount > 0) return true;
+      return false;
+    }),
+  getCommentsByTask: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string()}))
+    .query(async ({input}) => {
+      try{
+        let comments = await getCommentsByTask(pool, input.taskId);
+        return comments;
+      }catch(err){
+        console.log(err)
+      }
+    }),
+  
   sample: publicProcedure.use(rateLimitMiddleware).query(() => {
     return "hello";
   }),

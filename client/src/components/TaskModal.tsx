@@ -7,6 +7,8 @@ import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import { z } from "zod";
 import SelectAssignee from "./SelectAssignee";
 import TaskImageModal from "./TaskImageModal";
+import { ChevronsRight, Minus } from "lucide-react";
+import TaskDiscussionBoard from "./TaskDiscussionBoard";
 
 const linkSchema = z.string().url();
 
@@ -45,8 +47,12 @@ const TaskModal = ({
   const [taskMediaError, setTaskMediaError] = useState("");
   const [taskAsssignedToError, setTaskAssignedToError] = useState("");
 
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]); // empty at first talaga
+
+  const [openDiscussion, setOpenDiscussion] = useState(false);
 
   const [imageModalState, setImageModalState] = useState<{
     visible: boolean;
@@ -362,326 +368,358 @@ const TaskModal = ({
         />
       )}
       <div
-        className="dark:bg-light dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full md:max-w-xl flex flex-col gap-y-4"
+        className={`dark:bg-light dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
-        <div className="flex justify-between items-center w-full gap-4">
-          <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
-            <h1 className="shrink-0 text-lg">[{task.projectTaskId}]</h1>
-            <input
-              type="text"
-              value={taskTitle}
-              onChange={(e) => setTaskTitle(e.target.value)}
-              className="w-full text-lg"
-            />
-          </div>
-          <button
-            onClick={() => setTaskDetailsModal(false)}
-            className="bg-faintWhite text-white text-sm font-semibold px-4 py-1 rounded-md cursor-pointer shrink-0"
-          >
-            Close
-          </button>
-        </div>
-        <div>
-          <h3 className={`font-semibold text-sm transition-all duration-100 `}>
-            Description:
-          </h3>
-          <textarea
-            placeholder="What's this about?"
-            className="w-full text-sm md:text-base"
-            value={taskDescription}
-            onChange={(e) => setTaskDescription(e.target.value)}
-          />
-        </div>
-        <div>
-          <h3 className={`font-semibold text-sm transition-all duration-100`}>
-            Link:
-          </h3>
-
-          <input
-            placeholder="https://"
-            className="w-full text-sm md:text-base"
-            value={taskLink}
-            onChange={(e) => setTaskLink(e.target.value)}
-          />
-
-          {taskLinkError !== "" && (
-            <h4 className={`font-semibold text-xs text-red-400`}>
-              {taskLinkError}
-            </h4>
-          )}
-        </div>
-        <div>
-          <h3 className={`font-semibold text-sm transition-all duration-100`}>
-            Media:
-          </h3>
-
-          <div className="flex w-full gap-x-2 h-12 mt-1">
-            {taskImageUrlsIsLoading || taskImageUrls == undefined ? (
-              <p>Loading...</p>
-            ) : (
-              <>
-                {/* loop thru media images from s3 */}
-                {taskImageUrls?.map((url) => (
+        <div
+          className={`flex flex-col gap-y-4 ${openDiscussion ? "w-1/2" : "w-full"}`}
+        >
+          <div className="flex justify-between items-center w-full gap-4">
+            <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
+              <h1 className="shrink-0 text-lg">[{task.projectTaskId}]</h1>
+              <div className="w-full text-lg">
+                {isEditingTitle ? (
+                  <textarea
+                    autoFocus
+                    value={taskTitle}
+                    onBlur={() => setIsEditingTitle(false)}
+                    onChange={(e) => setTaskTitle(e.target.value)}
+                    className="w-full h-18 resize-none scrollbar-none"
+                  />
+                ) : (
                   <div
-                    key={url.url}
-                    className="group/image relative w-1/3 rounded-md overflow-hidden"
+                    onClick={() => setIsEditingTitle(true)}
+                    className="cursor-text w-full line-clamp-2 overflow-hidden"
                   >
-                    <button
-                      className="hidden group-hover/image:flex absolute inset-0 items-center justify-center bg-black/50 text-white text-sm z-10 cursor-pointer"
-                      // onClick={() => removeTaskImage(url.url)}
-                      onClick={() => showImage(url.url, 0, removeTaskImage)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-scan-eye-icon lucide-scan-eye text-midWhite/50"
-                      >
-                        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                        <circle cx="12" cy="12" r="1" />
-                        <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0" />
-                      </svg>
-                    </button>
-                    <img
-                      src={url.url}
-                      alt="Task image"
-                      className="w-full h-full object-cover"
-                    />
+                    {taskTitle}
                   </div>
-                ))}
-                {/* // loop thru previewUrls */}
-                {previewUrls.map((url, idx) => (
-                  <div
-                    key={idx}
-                    className="group/upload relative h-12 w-1/3 overflow-hidden rounded shadow"
-                  >
-                    <img
-                      src={url}
-                      alt={`Preview ${idx}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => showImage(url, idx, removePreview)}
-                      // onClick={() => removePreview(url, idx)}
-                      className="hidden group-hover/upload:flex absolute top-0 left-0 w-full h-full bg-black/50 text-fadedWhite justify-center items-center text-xs px-1 rounded-bl"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-scan-eye-icon lucide-scan-eye text-midWhite/50"
-                      >
-                        <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                        <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                        <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                        <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                        <circle cx="12" cy="12" r="1" />
-                        <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-            {taskImageUrls != undefined &&
-            !taskImageUrlsIsLoading &&
-            previewUrls.length + taskImageUrls.length < 3 ? ( // combined preview and s3
-              <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  ref={inputFileRef}
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <button
-                  type="button"
-                  onClick={handleClickUpload}
-                  className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
-                    remainingSlots === 2
-                      ? "w-2/3"
-                      : remainingSlots === 1
-                        ? "w-1/3"
-                        : "w-full"
-                  }`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-upload-icon lucide-upload text-midWhite"
-                  >
-                    <path d="M12 3v12" />
-                    <path d="m17 8-5-5-5 5" />
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  </svg>
-                </button>
-              </>
-            ) : (
-              <></>
-            )}
-          </div>
-
-          {taskMediaError !== "" && (
-            <h4 className="font-semibold text-xs text-red-400">
-              {taskMediaError}
-            </h4>
-          )}
-        </div>
-
-        <div>
-          <h3 className={`font-semibold text-sm transition-all duration-100`}>
-            Priority:
-          </h3>
-          <div className="flex w-full gap-x-2">
-            <div className="flex w-full gap-x-2 mt-1">
-              {priorityLevels.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setTaskPriority(p)}
-                  type="button"
-                  className={`${
-                    taskPriority === p
-                      ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
-                      : "bg-lmBackground/60"
-                  } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
-                >
-                  {p}
-                </button>
-              ))}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        <div>
-          <div className="flex justify-between items-center">
-            <h3 className={`font-semibold text-sm transition-all duration-100`}>
-              Assign to:
+          <div>
+            <h3
+              className={`font-semibold text-sm transition-all duration-100 `}
+            >
+              Description:
             </h3>
-            {username && !task.assignedTo.includes(username) && (
-              <button
-                onClick={handleAssignToMe}
-                className="font-semibold underline text-xs md:text-sm cursor-pointer disabled:cursor-not-allowed"
-                disabled={updateAssignedTo.isLoading}
-              >
-                {!updateAssignedTo.isLoading ? (
-                  "Assign To Me"
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-                  >
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                )}
-              </button>
+            <textarea
+              placeholder="What's this about?"
+              className="w-full text-sm"
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)}
+            />
+          </div>
+          <div>
+            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+              Link:
+            </h3>
+
+            <input
+              placeholder="https://"
+              className="w-full text-sm"
+              value={taskLink}
+              onChange={(e) => setTaskLink(e.target.value)}
+            />
+
+            {taskLinkError !== "" && (
+              <h4 className={`font-semibold text-xs text-red-400`}>
+                {taskLinkError}
+              </h4>
             )}
           </div>
-          <SelectAssignee
-            setTaskAssignedTo={setTaskAssignedTo}
-            taskAssignedTo={taskAssignedTo}
-            username={username ?? ""}
-            usersInProject={usersInProject ?? []}
-          />
-          {taskAsssignedToError !== "" && (
-            <h4 className={`font-semibold text-xs text-red-400 mt-1`}>
-              {taskAsssignedToError}
-            </h4>
-          )}
-        </div>
-        <div className="flex flex-col gap-y-2">
-          <button
-            onClick={handleSaveTask}
-            className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
-            disabled={
-              updateAssignedTo.isLoading ||
-              updateTaskDescription.isLoading ||
-              updateTaskLink.isLoading ||
-              updateTaskPriority.isLoading ||
-              updateTaskTitle.isLoading ||
-              uploadTaskImagesIsLoading
-            }
-          >
-            {!updateAssignedTo.isLoading &&
-            !updateTaskDescription.isLoading &&
-            !updateTaskLink.isLoading &&
-            !updateTaskPriority.isLoading &&
-            !updateTaskTitle.isLoading &&
-            !uploadTaskImagesIsLoading ? (
-              "Save"
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
-            )}
-          </button>
+          <div>
+            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+              Media:
+            </h3>
 
-          <button
-            onClick={handleDeleteTask}
-            className="bg-red-400 w-full text-white text-sm py-[0.35rem] font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
-            disabled={deleteTask.isLoading}
-          >
-            {!deleteTask.isLoading ? (
-              "Delete"
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
-              >
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-              </svg>
+            <div className="flex w-full gap-x-2 h-12 mt-1">
+              {taskImageUrlsIsLoading || taskImageUrls == undefined ? (
+                <p>Loading...</p>
+              ) : (
+                <>
+                  {/* loop thru media images from s3 */}
+                  {taskImageUrls?.map((url) => (
+                    <div
+                      key={url.url}
+                      className="group/image relative w-1/3 rounded-md overflow-hidden"
+                    >
+                      <button
+                        className="hidden group-hover/image:flex absolute inset-0 items-center justify-center bg-black/50 text-white text-sm z-10 cursor-pointer"
+                        // onClick={() => removeTaskImage(url.url)}
+                        onClick={() => showImage(url.url, 0, removeTaskImage)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-scan-eye-icon lucide-scan-eye text-midWhite/50"
+                        >
+                          <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                          <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                          <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                          <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                          <circle cx="12" cy="12" r="1" />
+                          <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0" />
+                        </svg>
+                      </button>
+                      <img
+                        src={url.url}
+                        alt="Task image"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                  {/* // loop thru previewUrls */}
+                  {previewUrls.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className="group/upload relative h-12 w-1/3 overflow-hidden rounded shadow"
+                    >
+                      <img
+                        src={url}
+                        alt={`Preview ${idx}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => showImage(url, idx, removePreview)}
+                        // onClick={() => removePreview(url, idx)}
+                        className="hidden group-hover/upload:flex absolute top-0 left-0 w-full h-full bg-black/50 text-fadedWhite justify-center items-center text-xs px-1 rounded-bl"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-scan-eye-icon lucide-scan-eye text-midWhite/50"
+                        >
+                          <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                          <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                          <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                          <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                          <circle cx="12" cy="12" r="1" />
+                          <path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </>
+              )}
+              {taskImageUrls != undefined &&
+              !taskImageUrlsIsLoading &&
+              previewUrls.length + taskImageUrls.length < 3 ? ( // combined preview and s3
+                <>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    ref={inputFileRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleClickUpload}
+                    className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
+                      remainingSlots === 2
+                        ? "w-2/3"
+                        : remainingSlots === 1
+                          ? "w-1/3"
+                          : "w-full"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-upload-icon lucide-upload text-midWhite"
+                    >
+                      <path d="M12 3v12" />
+                      <path d="m17 8-5-5-5 5" />
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <></>
+              )}
+            </div>
+
+            {taskMediaError !== "" && (
+              <h4 className="font-semibold text-xs text-red-400">
+                {taskMediaError}
+              </h4>
             )}
-          </button>
+          </div>
+
+          <div>
+            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+              Priority:
+            </h3>
+            <div className="flex w-full gap-x-2">
+              <div className="flex w-full gap-x-2 mt-1">
+                {priorityLevels.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setTaskPriority(p)}
+                    type="button"
+                    className={`${
+                      taskPriority === p
+                        ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
+                        : "bg-lmBackground/60"
+                    } text-sm  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between items-center">
+              <h3
+                className={`font-semibold text-sm transition-all duration-100`}
+              >
+                Assign to:
+              </h3>
+              {username && !task.assignedTo.includes(username) && (
+                <button
+                  onClick={handleAssignToMe}
+                  className="font-semibold underline text-xs md:text-sm cursor-pointer disabled:cursor-not-allowed"
+                  disabled={updateAssignedTo.isLoading}
+                >
+                  {!updateAssignedTo.isLoading ? (
+                    "Assign To Me"
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                  )}
+                </button>
+              )}
+            </div>
+            <SelectAssignee
+              setTaskAssignedTo={setTaskAssignedTo}
+              taskAssignedTo={taskAssignedTo}
+              username={username ?? ""}
+              usersInProject={usersInProject ?? []}
+            />
+            {taskAsssignedToError !== "" && (
+              <h4 className={`font-semibold text-xs text-red-400 mt-1`}>
+                {taskAsssignedToError}
+              </h4>
+            )}
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <button
+              onClick={handleSaveTask}
+              className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
+              disabled={
+                updateAssignedTo.isLoading ||
+                updateTaskDescription.isLoading ||
+                updateTaskLink.isLoading ||
+                updateTaskPriority.isLoading ||
+                updateTaskTitle.isLoading ||
+                uploadTaskImagesIsLoading
+              }
+            >
+              {!updateAssignedTo.isLoading &&
+              !updateTaskDescription.isLoading &&
+              !updateTaskLink.isLoading &&
+              !updateTaskPriority.isLoading &&
+              !updateTaskTitle.isLoading &&
+              !uploadTaskImagesIsLoading ? (
+                "Save"
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={handleDeleteTask}
+              className="bg-red-400 w-full text-white text-sm py-[0.35rem] font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
+              disabled={deleteTask.isLoading}
+            >
+              {!deleteTask.isLoading ? (
+                "Delete"
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
+        {!openDiscussion && (
+          <div
+            className={`items-center flex ml-4 relative w-fit justify-start  cursor-pointer group/expand-toggle`}
+            title="open discussion"
+            onClick={() => setOpenDiscussion(!openDiscussion)}
+          >
+            <button type="button" className="text-midWhite">
+              <Minus className="h-8 rotate-90 transition-all duration-300 ease-in-out opacity-100 group-hover/expand-toggle:opacity-0 group-hover/expand-toggle:scale-95 absolute" />
+              <ChevronsRight className="h-8 transition-all duration-300 ease-in-out opacity-0 group-hover/expand-toggle:opacity-100 group-hover/expand-toggle:scale-105 transform translate-x-0 group-hover/expand-toggle:translate-x-1" />
+            </button>
+          </div>
+        )}
+        {openDiscussion && (
+          <>
+            <div className="w-px bg-faintWhite/5 mx-6"></div>
+            <TaskDiscussionBoard taskId={task.id} user={username ?? ""} />
+          </>
+        )}
       </div>
     </div>
   );

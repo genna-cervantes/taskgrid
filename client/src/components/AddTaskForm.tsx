@@ -219,7 +219,7 @@ const AddTaskForm = ({
             <label htmlFor="description" className="text-xs font-semibold mb-2">
               Task Media:
             </label>
-            <span className="flex w-full justify-start">
+            <span className="flex w-full justify-start h-12">
               <div className="flex gap-x-2 w-full">
                 {/* Render image previews */}
                 {previewUrls.map((url, idx) => (

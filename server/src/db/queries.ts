@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { InsertableTask, Project, Task } from "../shared/types.js";
+import { Comment, InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 
@@ -251,4 +251,19 @@ export const archiveTasksInColumn = async (pool: Pool, id: string, column: strin
     const res = await pool.query(query, [id, column]);
 
     return res.rowCount;
+}
+
+// comments
+export const addComment = async (pool: Pool, taskId: string, comment: string, commentBy: string) => {
+    const query = "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
+    const res = await pool.query(query, [taskId, comment, commentBy])
+    
+    return res.rowCount;
+}
+
+export const getCommentsByTask = async (pool: Pool, taskId: string) => {
+    const query = 'SELECT comment_id AS "commentId", comment, comment_by AS "commentBy", created_at AS "createdAt" FROM task_comments_link WHERE task_id = $1 AND is_active = TRUE;';
+    const res = await pool.query(query, [taskId]);
+
+    return res.rows as Comment[];
 }

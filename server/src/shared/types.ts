@@ -21,7 +21,15 @@ export const TaskSchema = z.object({
   projectTaskId: z.number(),
 });
 
+export const CommentSchema = z.object({
+  commentId: z.string(),
+  comment: z.string(),
+  commentBy: z.string(),
+  createdAt: z.date(),
+})
+
 export type Task = z.infer<typeof TaskSchema>;
+export type Comment = z.infer<typeof CommentSchema>;
 
 export type InsertableTask = Omit<Task, "id" | "projectTaskId">;
 
