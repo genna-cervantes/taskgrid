@@ -32,7 +32,7 @@ const SelectAssignee = ({
   return (
     <div
       className={`flex flex-col mt-1 ${
-        usersInProject.length > 4 ? "max-h-28 overflow-y-auto scrollbar-none" : ""
+        usersInProject.length > 4 ? "max-h-20 overflow-y-auto scrollbar-none" : ""
       }`}
       role="group"
       aria-label="Assign users"

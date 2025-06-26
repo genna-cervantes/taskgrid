@@ -66,10 +66,10 @@ const TaskDiscussionBoard = ({
   console.log(comments);
 
   return (
-    <div className="w-1/2 flex flex-col flex-1 min-h-0 max-h-full">
+    <div className="w-1/2 flex flex-col h-full max-h-full">
       <h1 className="text-sm">Discussion:</h1>
-      <div className="flex flex-col flex-1 min-h-0 max-h-full justify-between">
-        <div className="flex-1 overflow-y-auto max-h-[29rem] mt-2 min-h-0 scrollbar-none">
+      <div className="flex flex-col flex-1 h-full min-h-0 justify-between gap-y-6">
+        <div className="flex-1 overflow-y-auto min-h-0 max-h-full mt-2 scrollbar-none">
           {commentsIsLoading && (
             <p className="text-sm text-midWhite">Comments are loading...</p>
           )}

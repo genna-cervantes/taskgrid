@@ -9,6 +9,7 @@ import SelectAssignee from "./SelectAssignee";
 import TaskImageModal from "./TaskImageModal";
 import { ChevronsRight, Minus } from "lucide-react";
 import TaskDiscussionBoard from "./TaskDiscussionBoard";
+import TargetDatePicker from "./TargetDatePicker";
 
 const linkSchema = z.string().url();
 
@@ -34,6 +35,9 @@ const TaskModal = ({
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
   const [taskLink, setTaskLink] = useState(task.link);
+  const [taskTargetStartDate, setTaskTargetStartDate] = useState<Date>()
+  const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date>()
+
 
   const [taskImagesHasInitialized, setTaskImagesHasInitialized] =
     useState(false);
@@ -368,11 +372,11 @@ const TaskModal = ({
         />
       )}
       <div
-        className={`dark:bg-light dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
+        className={`h-[87%] dark:bg-light dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <div
-          className={`flex flex-col gap-y-4 ${openDiscussion ? "w-1/2" : "w-full"}`}
+          className={`flex h-full justify-between flex-col gap-y-4 ${openDiscussion ? "w-1/2" : "w-full"}`}
         >
           <div className="flex justify-between items-center w-full gap-4">
             <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
@@ -384,7 +388,7 @@ const TaskModal = ({
                     value={taskTitle}
                     onBlur={() => setIsEditingTitle(false)}
                     onChange={(e) => setTaskTitle(e.target.value)}
-                    className="w-full h-18 resize-none scrollbar-none"
+                    className="w-full h-18 resize-none scrollbar-none focus:outline-none focus:ring-0 focus:border-transparent"
                   />
                 ) : (
                   <div
@@ -399,25 +403,48 @@ const TaskModal = ({
           </div>
           <div>
             <h3
-              className={`font-semibold text-sm transition-all duration-100 `}
+              className={`font-semibold text-xs ${taskDescription?.length ?? 0 > 0 ? 'text-midWhite' : 'text-white'} transition-all duration-100 `}
             >
               Description:
             </h3>
             <textarea
               placeholder="What's this about?"
-              className="w-full text-sm"
+              className="w-full text-sm focus:outline-none focus:ring-0 focus:border-transparent"
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           </div>
+          <div className="flex w-full gap-x-6">
+            <div className="md:w-1/2">
+              <h3 className={`font-semibold text-xs ${taskTargetStartDate ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
+                Target Start:
+              </h3>
+
+              <TargetDatePicker date={taskTargetStartDate} setDate={setTaskTargetStartDate} />
+
+            </div>
+            <div className="md:w-1/2">
+              <h3 className={`font-semibold text-xs ${taskTargetEndDate ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
+                Target End:
+              </h3>
+
+              <TargetDatePicker date={taskTargetEndDate} setDate={setTaskTargetEndDate} />
+
+            </div>
+            {taskLinkError !== "" && (
+                <h4 className={`font-semibold text-xs text-red-400`}>
+                  {taskLinkError}
+                </h4>
+              )}
+          </div>
           <div>
-            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+            <h3 className={`font-semibold text-xs ${taskLink?.length ?? 0 > 0 ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
               Link:
             </h3>
 
             <input
               placeholder="https://"
-              className="w-full text-sm"
+              className="w-full text-sm focus:outline-none focus:ring-0 focus:border-transparent"
               value={taskLink}
               onChange={(e) => setTaskLink(e.target.value)}
             />
@@ -429,7 +456,7 @@ const TaskModal = ({
             )}
           </div>
           <div>
-            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+            <h3 className={`font-semibold text-xs transition-all duration-100`}>
               Media:
             </h3>
 
@@ -570,7 +597,7 @@ const TaskModal = ({
           </div>
 
           <div>
-            <h3 className={`font-semibold text-sm transition-all duration-100`}>
+            <h3 className={`font-semibold text-xs transition-all duration-100`}>
               Priority:
             </h3>
             <div className="flex w-full gap-x-2">
@@ -595,14 +622,14 @@ const TaskModal = ({
           <div>
             <div className="flex justify-between items-center">
               <h3
-                className={`font-semibold text-sm transition-all duration-100`}
+                className={`font-semibold text-xs transition-all duration-100`}
               >
                 Assign to:
               </h3>
               {username && !task.assignedTo.includes(username) && (
                 <button
                   onClick={handleAssignToMe}
-                  className="font-semibold underline text-xs md:text-sm cursor-pointer disabled:cursor-not-allowed"
+                  className="font-semibold underline text-xs cursor-pointer disabled:cursor-not-allowed"
                   disabled={updateAssignedTo.isLoading}
                 >
                   {!updateAssignedTo.isLoading ? (
@@ -716,7 +743,7 @@ const TaskModal = ({
         )}
         {openDiscussion && (
           <>
-            <div className="w-px bg-faintWhite/5 mx-6"></div>
+            <div className="w-px bg-faintWhite/5 mx-6 h-full"></div>
             <TaskDiscussionBoard taskId={task.id} user={username ?? ""} />
           </>
         )}
