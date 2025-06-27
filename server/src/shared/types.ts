@@ -19,6 +19,9 @@ export const TaskSchema = z.object({
   link: z.string().optional(),
   files: z.array(z.string()),
   projectTaskId: z.number(),
+  commentCount: z.number(),
+  targetStartDate: z.date().optional(),
+  targetEndDate: z.date().optional(),
 });
 
 export const CommentSchema = z.object({

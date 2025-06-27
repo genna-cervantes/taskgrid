@@ -17,6 +17,7 @@ import { useGuestId } from "../contexts/UserContext";
 import useDeviceDetect from "../hooks/useDeviceDetect";
 import LoadingModal from "../components/LoadingModal";
 import Sidebar from "../components/Sidebar";
+import { Task } from "../../../server/src/shared/types";
 
 const Projects = () => {
   // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
@@ -60,8 +61,10 @@ const Projects = () => {
 
   const isFilterEnabled = priority !== "" || assignedTo !== "";
 
-  const { data, isLoading } = trpc.getTasks.useQuery({ id: projectId });
-  const { data: filteredTasks, isLoading: filteredTasksIsLoading } =
+  const { data: rawData, isLoading } = trpc.getTasks.useQuery({
+    id: projectId,
+  });
+  const { data: rawFilteredTasks, isLoading: filteredTasksIsLoading } =
     trpc.filterTask.useQuery(
       {
         id: projectId,
@@ -72,6 +75,27 @@ const Projects = () => {
         enabled: isFilterEnabled,
       }
     );
+
+  const data: Task[] | undefined = (rawData as Task[] | undefined)?.map(
+    (rd) => {
+      console.log('rd', rd)
+      return ({
+      ...rd,
+      targetStartDate: rd.targetStartDate
+        ? new Date(rd.targetStartDate)
+        : undefined,
+      targetEndDate: rd.targetEndDate ? new Date(rd.targetEndDate) : undefined,
+    })}
+  );
+  const filteredTasks: Task[] | undefined = (
+    rawFilteredTasks as Task[] | undefined
+  )?.map((rd) => ({
+    ...rd,
+    targetStartDate: rd.targetStartDate
+      ? new Date(rd.targetStartDate)
+      : undefined,
+    targetEndDate: rd.targetEndDate ? new Date(rd.targetEndDate) : undefined,
+  }));
 
   const columns = isFilterEnabled
     ? filteredTasks && !filteredTasksIsLoading

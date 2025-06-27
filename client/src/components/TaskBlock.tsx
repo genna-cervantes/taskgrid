@@ -22,8 +22,6 @@ const TaskBlock = ({
 }) => {
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
 
-  const commentCount = Math.floor(Math.random() * 15)
-
   return (
     <>
       {taskDetailsModal && <TaskModal username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
@@ -32,16 +30,16 @@ const TaskBlock = ({
         draggable
         onDragStart={() => handleDragStart(col, task)}
         onClick={() => setTaskDetailsModal(true)}
-        className="px-3 py-3 mb-2 dark:bg-light bg-lmLightBackground rounded-md border-[1px] dark:border-faintWhite/5 cursor-move border-faintBlack/15 shadow-sm"
+        className="px-3 pt-3 pb-2 mb-2 dark:bg-light bg-lmLightBackground rounded-md border-[1px] dark:border-faintWhite/5 cursor-move border-faintBlack/15 shadow-sm"
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}><span className="font-semibold text-midWhite">[{task.projectTaskId}]</span> {task.title}</h1>
         <div className="mt-4">
           <div className="flex gap-x-1">
             <TaskPriority priority={task.priority} />
             {task.files.length > 1 && <TaskMediaCount mediaCount={task.files.length} />}
-            {commentCount > 5 && <TaskCommentCount commentCount={commentCount} />}
+            {task.commentCount > 0 && <TaskCommentCount commentCount={task.commentCount} />}
           </div>
-          <div className="flex justify-between text-xs mt-1">
+          <div className="flex justify-between text-xxs mt-2">
             <div title={task.assignedTo.join(" ")}>
               {(() => {
                 const formatted = task.assignedTo

@@ -35,9 +35,8 @@ const TaskModal = ({
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
   const [taskLink, setTaskLink] = useState(task.link);
-  const [taskTargetStartDate, setTaskTargetStartDate] = useState<Date>()
-  const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date>()
-
+  const [taskTargetStartDate, setTaskTargetStartDate] = useState<Date|undefined>(task.targetStartDate);
+  const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date|undefined>(task.targetEndDate);
 
   const [taskImagesHasInitialized, setTaskImagesHasInitialized] =
     useState(false);
@@ -50,6 +49,7 @@ const TaskModal = ({
   const [taskLinkError, setTaskLinkError] = useState("");
   const [taskMediaError, setTaskMediaError] = useState("");
   const [taskAsssignedToError, setTaskAssignedToError] = useState("");
+  const [taskTargetDateError, setTaskTargetDateError] = useState("");
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -151,6 +151,26 @@ const TaskModal = ({
     },
   });
 
+  const updateTaskTargetStartDate = trpc.updateTaskTargetStartDate.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
+
+  const updateTaskTargetEndDate = trpc.updateTaskTargetEndDate.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
+
   // HANDLE METHODS
 
   const handleDeleteTask = () => {
@@ -183,7 +203,15 @@ const TaskModal = ({
       setTaskMediaError(
         "Upload limit of 3 has been exceeded, please remove a file or refresh the page"
       );
+      return;
     }
+
+    if (taskTargetStartDate && taskTargetEndDate && taskTargetStartDate > taskTargetEndDate) {
+      setTaskTargetDateError("Target start date cannot be later than target end date")
+      return;
+    }
+
+    // end validation
 
     recentTaskContext?.setTasks([task]); // keep track of this task for rollback later if undone
 
@@ -211,6 +239,14 @@ const TaskModal = ({
 
     if (task.assignedTo !== taskAssignedTo) {
       updateAssignedTo.mutate({ assignTo: taskAssignedTo, taskId: task.id });
+    }
+
+    if (taskTargetStartDate && task.targetStartDate !== taskTargetStartDate){
+      updateTaskTargetStartDate.mutate({taskId: task.id, projectId, targetStartDate: taskTargetStartDate.toString() })
+    }
+
+    if (taskTargetEndDate && task.targetEndDate !== taskTargetEndDate){
+      updateTaskTargetEndDate.mutate({taskId: task.id, projectId, targetEndDate: taskTargetEndDate.toString() })
     }
 
     // for media - add checker if something actually changed tho
@@ -381,19 +417,19 @@ const TaskModal = ({
           <div className="flex justify-between items-center w-full gap-4">
             <div className="flex gap-x-2 text-2xl font-bold flex-1 min-w-0">
               <h1 className="shrink-0 text-lg">[{task.projectTaskId}]</h1>
-              <div className="w-full text-lg">
+              <div className="w-full text-lg min-h-14">
                 {isEditingTitle ? (
                   <textarea
                     autoFocus
                     value={taskTitle}
                     onBlur={() => setIsEditingTitle(false)}
                     onChange={(e) => setTaskTitle(e.target.value)}
-                    className="w-full h-18 resize-none scrollbar-none focus:outline-none focus:ring-0 focus:border-transparent"
+                    className="w-full h-12 resize-none scrollbar-none focus:border-midWhite/50"
                   />
                 ) : (
                   <div
                     onClick={() => setIsEditingTitle(true)}
-                    className="cursor-text w-full line-clamp-2 overflow-hidden"
+                    className="cursor-text w-full h-14 line-clamp-2 overflow-hidden"
                   >
                     {taskTitle}
                   </div>
@@ -403,7 +439,7 @@ const TaskModal = ({
           </div>
           <div>
             <h3
-              className={`font-semibold text-xs ${taskDescription?.length ?? 0 > 0 ? 'text-midWhite' : 'text-white'} transition-all duration-100 `}
+              className={`font-semibold text-xs ${taskDescription?.length ?? 0 > 0 ? "text-midWhite" : "text-white"} transition-all duration-100 `}
             >
               Description:
             </h3>
@@ -414,31 +450,43 @@ const TaskModal = ({
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           </div>
-          <div className="flex w-full gap-x-6">
-            <div className="md:w-1/2">
-              <h3 className={`font-semibold text-xs ${taskTargetStartDate ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
-                Target Start:
-              </h3>
+          <div className="flex flex-col gap-y-1 w-full">
+            <div className="flex w-full gap-x-6">
+              <div className="md:w-1/2">
+                <h3
+                  className={`font-semibold text-xs ${taskTargetStartDate ? "text-midWhite" : "text-white"} transition-all duration-100`}
+                >
+                  Target Start:
+                </h3>
 
-              <TargetDatePicker date={taskTargetStartDate} setDate={setTaskTargetStartDate} />
+                <TargetDatePicker
+                  date={taskTargetStartDate}
+                  setDate={setTaskTargetStartDate}
+                />
+              </div>
+              <div className="md:w-1/2">
+                <h3
+                  className={`font-semibold text-xs ${taskTargetEndDate ? "text-midWhite" : "text-white"} transition-all duration-100`}
+                >
+                  Target End:
+                </h3>
 
+                <TargetDatePicker
+                  date={taskTargetEndDate}
+                  setDate={setTaskTargetEndDate}
+                />
+              </div>
             </div>
-            <div className="md:w-1/2">
-              <h3 className={`font-semibold text-xs ${taskTargetEndDate ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
-                Target End:
-              </h3>
-
-              <TargetDatePicker date={taskTargetEndDate} setDate={setTaskTargetEndDate} />
-
-            </div>
-            {taskLinkError !== "" && (
-                <h4 className={`font-semibold text-xs text-red-400`}>
-                  {taskLinkError}
-                </h4>
-              )}
+            {taskTargetDateError !== "" && (
+              <h4 className={`font-semibold text-xs text-red-400`}>
+                {taskTargetDateError}
+              </h4>
+            )}
           </div>
           <div>
-            <h3 className={`font-semibold text-xs ${taskLink?.length ?? 0 > 0 ? 'text-midWhite' : 'text-white'} transition-all duration-100`}>
+            <h3
+              className={`font-semibold text-xs ${taskLink?.length ?? 0 > 0 ? "text-midWhite" : "text-white"} transition-all duration-100`}
+            >
               Link:
             </h3>
 

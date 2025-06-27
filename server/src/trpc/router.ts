@@ -34,6 +34,8 @@ import {
   updateTaskLink,
   updateTaskPriority,
   updateTaskProgress,
+  updateTaskTargetEndDate,
+  updateTaskTargetStartDate,
   updateTaskTitle,
 } from "../db/queries.js";
 import { config } from "dotenv";
@@ -285,6 +287,28 @@ export const appRouter = router({
       );
 
       return { success: true, files: uploads };
+    }),
+  updateTaskTargetStartDate: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), targetStartDate: z.string()}))
+    .mutation(async({input}) => {
+      const updateCount = await updateTaskTargetStartDate(pool, input.taskId, input.projectId, new Date(input.targetStartDate));
+
+      if (updateCount !== 1){
+        return false;
+      }
+      return true;
+    }),
+  updateTaskTargetEndDate: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), targetEndDate: z.string()}))
+    .mutation(async({input}) => {
+      const updateCount = await updateTaskTargetEndDate(pool, input.taskId, input.projectId, new Date(input.targetEndDate));
+
+      if (updateCount !== 1){
+        return false;
+      }
+      return true;
     }),
   deleteTaskById: publicProcedure
     .use(rateLimitMiddleware)

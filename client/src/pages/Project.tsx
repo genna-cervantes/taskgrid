@@ -66,7 +66,7 @@ const Project = () => {
             key={col}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(col)}
-            className="flex-1 px-3 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md border-[1px] dark:border-faintWhite/5 border-faintBlack/5 group"
+            className="flex-1 px-3 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md border-[1px] dark:border-faintWhite/5 border-faintBlack/5 group/column"
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-x-2">
@@ -83,7 +83,7 @@ const Project = () => {
                   type=""
                   projectId={projectId}
                   col={col}
-                  className="hidden group-hover:block"
+                  className="hidden group-hover/column:block"
                   username={username}
                 />
                 {/* <ClearTask
@@ -116,7 +116,7 @@ const Project = () => {
               type="block"
               projectId={projectId}
               col={col}
-              className="hidden group-hover:block"
+              className="hidden group-hover/column:block"
               username={username}
             />
           </div>
