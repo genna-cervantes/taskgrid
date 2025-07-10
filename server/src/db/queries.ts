@@ -10,7 +10,7 @@ export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 }
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
-    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate" FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE project_id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [id]);
 
     const tasks: Task[] = res.rows.map((task) => ({
@@ -181,6 +181,13 @@ export const updateTaskTargetEndDate = async (pool: Pool, taskId: string, projec
     return res.rowCount;
 }
 
+export const updateTaskCategory = async (pool: Pool, taskId: string, projectId: string, category: string) => {
+    const query = 'UPDATE tasks SET category = $1 WHERE id = $2 AND project_id = $3;';
+    const res = await pool.query(query, [category, taskId, projectId]);
+
+    return res.rowCount;
+}
+
 export const deleteTaskById = async (pool: Pool, taskId: string) => {
     const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1 AND is_active = TRUE';
     const res = await pool.query(query, [taskId])
@@ -250,16 +257,16 @@ export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo:
     let res;
 
     if (priority !== "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate" FROM tasks WHERE priority = $1 AND $2 = ANY(assign_to) AND project_id = $3 AND is_active = TRUE';
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE priority = $1 AND $2 = ANY(assign_to) AND project_id = $3 AND is_active = TRUE';
         res = await pool.query(query, [priority, assignedTo, projectId]);
     }else if (priority !== "" && assignedTo == ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate" FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [priority, projectId])
     }else if (priority == "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate" FROM tasks WHERE $1 = ANY(assign_to) AND project_id = $2 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE $1 = ANY(assign_to) AND project_id = $2 AND is_active = TRUE'
         res = await pool.query(query, [assignedTo, projectId]);
     }else{
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate" FROM tasks WHERE project_id = $1 AND is_active = TRUE'
+        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE project_id = $1 AND is_active = TRUE'
         res = await pool.query(query, [projectId])
     }
 

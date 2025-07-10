@@ -61,7 +61,7 @@ const AddTaskForm = ({
   });
 
   const insertTask = trpc.insertTask.useMutation({
-    onSuccess: async (data: Task) => {
+    onSuccess: async (data) => {
       console.log("Task created:", data);
       
       try{
@@ -123,7 +123,7 @@ const AddTaskForm = ({
   };
 
   const onSubmit = async (data: TaskFormData) => {
-    insertTask.mutate({ id: projectId, task: { ...data, progress: col, files: [] } }); // empty files array first
+    insertTask.mutate({ id: projectId, task: { ...data, progress: col, commentCount: 0, files: [] } }); // empty files array first
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

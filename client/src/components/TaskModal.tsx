@@ -10,6 +10,7 @@ import TaskImageModal from "./TaskImageModal";
 import { ChevronsRight, Minus } from "lucide-react";
 import TaskDiscussionBoard from "./TaskDiscussionBoard";
 import TargetDatePicker from "./TargetDatePicker";
+import TaskSelectCategory from "./TaskSelectCategory";
 
 const linkSchema = z.string().url();
 
@@ -35,8 +36,13 @@ const TaskModal = ({
   const [taskPriority, setTaskPriority] = useState(task.priority);
   const [taskAssignedTo, setTaskAssignedTo] = useState(task.assignedTo);
   const [taskLink, setTaskLink] = useState(task.link);
-  const [taskTargetStartDate, setTaskTargetStartDate] = useState<Date|undefined>(task.targetStartDate);
-  const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date|undefined>(task.targetEndDate);
+  const [taskTargetStartDate, setTaskTargetStartDate] = useState<
+    Date | undefined
+  >(task.targetStartDate);
+  const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date | undefined>(
+    task.targetEndDate
+  );
+  const [taskCategory, setTaskCategory] = useState(task.category);
 
   const [taskImagesHasInitialized, setTaskImagesHasInitialized] =
     useState(false);
@@ -159,7 +165,7 @@ const TaskModal = ({
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
-  })
+  });
 
   const updateTaskTargetEndDate = trpc.updateTaskTargetEndDate.useMutation({
     onSuccess: (data) => {
@@ -169,7 +175,7 @@ const TaskModal = ({
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
-  })
+  });
 
   // HANDLE METHODS
 
@@ -206,8 +212,14 @@ const TaskModal = ({
       return;
     }
 
-    if (taskTargetStartDate && taskTargetEndDate && taskTargetStartDate > taskTargetEndDate) {
-      setTaskTargetDateError("Target start date cannot be later than target end date")
+    if (
+      taskTargetStartDate &&
+      taskTargetEndDate &&
+      taskTargetStartDate > taskTargetEndDate
+    ) {
+      setTaskTargetDateError(
+        "Target start date cannot be later than target end date"
+      );
       return;
     }
 
@@ -241,12 +253,20 @@ const TaskModal = ({
       updateAssignedTo.mutate({ assignTo: taskAssignedTo, taskId: task.id });
     }
 
-    if (taskTargetStartDate && task.targetStartDate !== taskTargetStartDate){
-      updateTaskTargetStartDate.mutate({taskId: task.id, projectId, targetStartDate: taskTargetStartDate.toString() })
+    if (taskTargetStartDate && task.targetStartDate !== taskTargetStartDate) {
+      updateTaskTargetStartDate.mutate({
+        taskId: task.id,
+        projectId,
+        targetStartDate: taskTargetStartDate.toString(),
+      });
     }
 
-    if (taskTargetEndDate && task.targetEndDate !== taskTargetEndDate){
-      updateTaskTargetEndDate.mutate({taskId: task.id, projectId, targetEndDate: taskTargetEndDate.toString() })
+    if (taskTargetEndDate && task.targetEndDate !== taskTargetEndDate) {
+      updateTaskTargetEndDate.mutate({
+        taskId: task.id,
+        projectId,
+        targetEndDate: taskTargetEndDate.toString(),
+      });
     }
 
     // for media - add checker if something actually changed tho
@@ -439,22 +459,23 @@ const TaskModal = ({
           </div>
           <div>
             <h3
-              className={`font-semibold text-xs ${taskDescription?.length ?? 0 > 0 ? "text-midWhite" : "text-white"} transition-all duration-100 `}
+              className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
             >
               Description:
             </h3>
             <textarea
               placeholder="What's this about?"
-              className="w-full text-sm focus:outline-none focus:ring-0 focus:border-transparent"
+              className="w-full text-sm placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent"
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
             />
           </div>
+          <TaskSelectCategory taskCategoryOptions={[]} taskCategory={taskCategory} setTaskCategory={setTaskCategory} />
           <div className="flex flex-col gap-y-1 w-full">
             <div className="flex w-full gap-x-6">
               <div className="md:w-1/2">
                 <h3
-                  className={`font-semibold text-xs ${taskTargetStartDate ? "text-midWhite" : "text-white"} transition-all duration-100`}
+                  className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
                 >
                   Target Start:
                 </h3>
@@ -466,7 +487,7 @@ const TaskModal = ({
               </div>
               <div className="md:w-1/2">
                 <h3
-                  className={`font-semibold text-xs ${taskTargetEndDate ? "text-midWhite" : "text-white"} transition-all duration-100`}
+                  className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
                 >
                   Target End:
                 </h3>
@@ -485,14 +506,14 @@ const TaskModal = ({
           </div>
           <div>
             <h3
-              className={`font-semibold text-xs ${taskLink?.length ?? 0 > 0 ? "text-midWhite" : "text-white"} transition-all duration-100`}
+              className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
             >
               Link:
             </h3>
 
             <input
               placeholder="https://"
-              className="w-full text-sm focus:outline-none focus:ring-0 focus:border-transparent"
+              className="w-full shadow-bottom-grey pb-2 placeholder:text-faintWhite text-sm focus:outline-none focus:ring-0 focus:border-transparent"
               value={taskLink}
               onChange={(e) => setTaskLink(e.target.value)}
             />
@@ -504,7 +525,7 @@ const TaskModal = ({
             )}
           </div>
           <div>
-            <h3 className={`font-semibold text-xs transition-all duration-100`}>
+            <h3 className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}>
               Media:
             </h3>
 
@@ -606,7 +627,7 @@ const TaskModal = ({
                   <button
                     type="button"
                     onClick={handleClickUpload}
-                    className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
+                    className={`border-2 border-faintWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
                       remainingSlots === 2
                         ? "w-2/3"
                         : remainingSlots === 1
@@ -624,7 +645,7 @@ const TaskModal = ({
                       strokeWidth="3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="lucide lucide-upload-icon lucide-upload text-midWhite"
+                      className="lucide lucide-upload-icon lucide-upload text-faintWhite"
                     >
                       <path d="M12 3v12" />
                       <path d="m17 8-5-5-5 5" />
@@ -645,7 +666,7 @@ const TaskModal = ({
           </div>
 
           <div>
-            <h3 className={`font-semibold text-xs transition-all duration-100`}>
+            <h3 className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}>
               Priority:
             </h3>
             <div className="flex w-full gap-x-2">
@@ -658,8 +679,8 @@ const TaskModal = ({
                     className={`${
                       taskPriority === p
                         ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
-                        : "bg-lmBackground/60"
-                    } text-sm  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
+                        : "bg-faintWhite dark:text-midWhite"
+                    } text-sm  dark:bg-faintWhite dark:hover:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
                   >
                     {p}
                   </button>
@@ -670,7 +691,7 @@ const TaskModal = ({
           <div>
             <div className="flex justify-between items-center">
               <h3
-                className={`font-semibold text-xs transition-all duration-100`}
+                className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
               >
                 Assign to:
               </h3>
@@ -713,7 +734,7 @@ const TaskModal = ({
               </h4>
             )}
           </div>
-          <div className="flex flex-col gap-y-2">
+          <div className="flex flex-col md:flex-row gap-y-2 md:gap-x-4">
             <button
               onClick={handleSaveTask}
               className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"

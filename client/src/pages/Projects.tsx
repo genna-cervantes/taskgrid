@@ -18,6 +18,7 @@ import useDeviceDetect from "../hooks/useDeviceDetect";
 import LoadingModal from "../components/LoadingModal";
 import Sidebar from "../components/Sidebar";
 import { Task } from "../../../server/src/shared/types";
+import { Kanban, KanbanSquare } from "lucide-react";
 
 const Projects = () => {
   // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
@@ -209,11 +210,13 @@ const Projects = () => {
         {/* sidebar */}
         <Sidebar />
         <div className="ml-[3.25rem] h-full flex flex-col overflow-y-hidden">
-          <div className="relative flex items-center pt-4 md:py-3 px-6">
+          <div className="relative flex items-center pt-4 md:py-3 px-4">
             {/* Three-column layout with grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 w-full items-center">
               {/* Left side */}
-              <div className="max-w-[300px] truncate font-noto">
+              <div className="max-w-[300px] flex items-center gap-x-2 truncate font-noto">
+                {/* based on URL */}
+                <KanbanSquare className="text-fadedWhite h-5"/>
                 <h1 className="truncate text-ellipsis overflow-hidden hidden md:flex font-bold whitespace-nowrap">
                   {projectName}
                 </h1>

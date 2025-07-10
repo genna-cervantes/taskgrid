@@ -18,9 +18,9 @@ const TargetDatePicker = ({date, setDate}: {date: Date|undefined, setDate: React
         <Button
           variant="outline"
           data-empty={!date}
-          className="flex justify-between gap-x-1 w-full text-left font-normal bg-lmBackground dark:bg-light text-sm border-faintWhite/30 border-none text-light dark:text-white px-0 py-1 min-h-0 h-9"
+          className="flex justify-between shadow-bottom-grey gap-x-1 w-full text-left font-normal bg-lmBackground dark:bg-light text-sm border-faintWhite/30 border-none text-light dark:text-white px-0 py-1 min-h-0 h-9"
         >
-          {date ? format(date, "PPP") : <span className="text-midWhite">Pick a date</span>}
+          {date ? format(date, "PPP") : <span className="text-faintWhite">Pick a date</span>}
           <ChevronDown />
         </Button>
       </PopoverTrigger>

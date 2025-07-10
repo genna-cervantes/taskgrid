@@ -1,23 +1,21 @@
 const TaskPriority = ({priority}: {priority: string}) => {
 
-  let bgColor = ''
-  switch (priority) {
-    case 'high': 
-      bgColor = 'bg-red-500/30'
-      break;
-    case 'medium':
-      bgColor = 'bg-orange-500/30'
-      break;
-    case 'low':
-      bgColor = 'bg-green-500/30'
-      break;
-    default:
-      bgColor = 'bg-midWhite/50'
+  if (priority === 'low'){
+    return <div className={`bg-green-400 h-2 w-[0.15rem] `} />
+  }else if (priority === 'medium'){
+    return <div className="flex gap-x-[0.15rem]">
+      <div className={`bg-orange-400 h-2 w-[0.15rem]`} />
+      <div className={`bg-orange-400 h-2 w-[0.15rem]`} />
+    </div>
+  }else if (priority === 'high'){
+    return (<div className="flex gap-x-[0.2rem]">
+      <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+      <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+      <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+    </div>)
+  }else{
+    return <></>
   }
-
-   return (
-    <span className={`${bgColor} text-xxs px-2 rounded-md`}>{priority}</span>
-   )
 }
 
 export default TaskPriority

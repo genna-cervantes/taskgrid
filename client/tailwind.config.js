@@ -7,6 +7,13 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'bg-red-400',
+    'bg-blue-400',
+    'bg-purple-400',
+    'bg-orange-400',
+	'bg-gray-400'
+  ],
   theme: {
   	extend: {
   		fontFamily: {
@@ -15,7 +22,7 @@ export default {
   				'sans-serif'
   			],
   			rubik: [
-  				'Rubik"',
+  				'"Rubik"',
   				'sans-serif'
   			],
   			jetbrains: [
@@ -83,7 +90,10 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		boxShadow: {
+			'bottom-grey': '0 4px 4px -2px rgba(40, 40, 40, 0.15)',
+		},
   	}
   },
   plugins: [scrollbar(), require("tailwindcss-animate")],

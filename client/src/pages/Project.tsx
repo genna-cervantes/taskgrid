@@ -97,9 +97,8 @@ const Project = () => {
 
             <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
               {columns[col].map((task) => {
-                console.log(task);
                 return (
-                  <React.Fragment key={task.id}>
+                  <div key={task.id}>
                     <TaskBLock
                       projectId={projectId}
                       col={col}
@@ -108,7 +107,7 @@ const Project = () => {
                       setUsernameModal={setUsernameModal}
                       username={username}
                     />
-                  </React.Fragment>
+                  </div>
                 );
               })}
             </div>
