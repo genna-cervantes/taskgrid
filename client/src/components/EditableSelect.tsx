@@ -5,11 +5,11 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 
-import { Trash2, Pen } from "lucide-react";
+import { Trash2, Pen, ChevronDown } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
-export function EditableDropdown() {
+export function EditableDropdown({isPage}: {isPage: boolean}) {
   const [options, setOptions] = useState([
     { id: "1", label: "Design" },
     { id: "2", label: "Development" },
@@ -50,16 +50,17 @@ export function EditableDropdown() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-[200px] justify-start">
+        <Button className={`${isPage ? "text-base" : "text-sm"} border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${options.find((o) => o.id === selected) ? 'text-white' : 'text-faintWhite' }`}>
           {selected
             ? options.find((o) => o.id === selected)?.label
             : "Select option"}
+          <ChevronDown className="text-white" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px]">
-        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+      <PopoverContent className="px-2 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-backgroundDark font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
+        <div className="flex flex-col gap-y-2 max-h-60 overflow-y-auto w-full">
           {options.map((opt) => (
-            <div key={opt.id} className="flex items-center gap-2">
+            <div key={opt.id} className="flex items-center gap-x-2 w-full">
               {editingId === opt.id ? (
                 <Input
                   ref={(el) => (inputRefs.current[opt.id] = el)}
@@ -69,33 +70,36 @@ export function EditableDropdown() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") setEditingId(null);
                   }}
+                  className={`px-1 !text-fadedWhite text-xs`}
                 />
               ) : (
                 <button
-                  className="text-left w-full"
+                  className={`text-left w-full py-2 px-1 rounded-sm text-xs hover:bg-faintWhite/10`}
                   onClick={() => setSelected(opt.id)}
                 >
                   {opt.label}
                 </button>
               )}
-              <Pen
-                className="w-4 h-4 cursor-pointer text-muted-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(opt.id);
-                }}
-              />
-              <Trash2
-                className="w-4 h-4 cursor-pointer text-red-500"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(opt.id);
-                }}
-              />
+              
+                <Pen
+                  className={`w-5 h-5 cursor-pointer hover:text-fadedWhite ${editingId === opt.id ? 'text-fadedWhite' : 'text-faintWhite'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(opt.id);
+                  }}
+                />
+                <Trash2
+                  className="w-5 h-5 cursor-pointer text-faintWhite hover:text-fadedWhite"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(opt.id);
+                  }}
+                />  
+              
             </div>
           ))}
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-x-2 items-center">
             <Input
               value={newOption}
               onChange={(e) => setNewOption(e.target.value)}
@@ -103,8 +107,10 @@ export function EditableDropdown() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAdd();
               }}
+              className={`text-xs py-2 placeholder:text-midWhite bg-faintWhite/10 px-2 text-white !focus:outline-none !focus:ring-0 !focus:border-transparent border-none`}
+              
             />
-            <Button size="sm" onClick={handleAdd}>
+            <Button size="sm" className="bg-faintWhite hover:bg-midWhite text-midWhite hover:text-fadedWhite" onClick={handleAdd}>
               Add
             </Button>
           </div>

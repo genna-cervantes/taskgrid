@@ -1,6 +1,7 @@
-import { SendHorizonal } from "lucide-react";
+import { Expand, Maximize2, SendHorizonal, SquareArrowOutUpRight, SquareArrowUpRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "../utils/trpc";
+import { Link } from "react-router-dom";
 
 const Comment = ({ comment }: { comment: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -50,7 +51,6 @@ const TaskDiscussionBoard = ({
   const { data, isLoading: commentsIsLoading } =
     trpc.getCommentsByTask.useQuery({ taskId });
 
-  console.log(data);
 
   const comments = data?.map((c) => ({
     ...c,
@@ -67,7 +67,12 @@ const TaskDiscussionBoard = ({
 
   return (
     <div className="w-1/2 flex flex-col min-h-0">
-      <h1 className="text-sm mb-2">Discussion:</h1>
+      <div className="flex justify-between w-full">
+        <h1 className="text-sm mb-2">Discussion:</h1>
+        <Link to={`tasks/${taskId}`}>
+          <SquareArrowOutUpRight className="h-5 w-5 hover:cursor-pointer text-midWhite hover:text-fadedWhite"><title>Expand Task</title></SquareArrowOutUpRight>
+        </Link>
+      </div>
       <div className="flex flex-col flex-1 min-h-0 justify-between gap-y-6">
         <div className="flex-1 overflow-y-auto min-h-0 max-h-[31.8rem] scrollbar-none">
           {commentsIsLoading && (
@@ -103,7 +108,7 @@ const TaskDiscussionBoard = ({
             <textarea
               value={insertComment}
               onChange={(e) => setInsertComment(e.target.value)}
-              className="w-full h-12 px-2 py-1 border border-midWhite rounded-md text-sm"
+              className="w-full h-14 px-2 py-1 border border-faintWhite rounded-lg text-sm placeholder:text-faintWhite focus:outline-none focus:ring-0"
               placeholder="Join the discussion"
             />
             <button

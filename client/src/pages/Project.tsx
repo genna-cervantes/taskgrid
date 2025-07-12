@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
+import { Outlet, useMatch, useOutletContext, useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
@@ -9,6 +9,7 @@ import { Ellipsis } from "lucide-react";
 
 const Project = () => {
   const { projectId } = useParams();
+  const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
   const utils = trpc.useUtils();
 
   const { setUsernameModal, username, columns } = useOutletContext<{
@@ -56,6 +57,10 @@ const Project = () => {
   // should redirect to not found
   if (!projectId) {
     return <div>missing project id</div>;
+  }
+
+  if (isTaskRoute){
+    return <Outlet />
   }
 
   return (

@@ -1,14 +1,17 @@
 import React from "react";
 import { UseFormSetValue } from "react-hook-form";
 import { TaskFormData } from "./AddTaskForm";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 const SelectAssignee = ({
+  isPage=false,
   setTaskAssignedTo,
   setValue,
   taskAssignedTo,
   username,
   usersInProject,
 }: {
+  isPage?: boolean
   setTaskAssignedTo: React.Dispatch<React.SetStateAction<string[]>>;
   setValue?: UseFormSetValue<TaskFormData>;
   taskAssignedTo: string[];
@@ -28,6 +31,25 @@ const SelectAssignee = ({
       setValue("assignedTo", updatedAssignees, { shouldValidate: true });
     }
   };
+
+  return (
+    <Select>
+      <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
+        <p className={`${isPage ? "text-base" : "text-sm"} text-faintWhite`} >Select Assignee</p>
+      </SelectTrigger>
+      <SelectContent className="bg-backgroundDark">
+        <SelectGroup className={`${isPage ? "text-base" : "text-sm"}`}>
+          <SelectItem value="apple" className="hover:cursor-pointer">Apple</SelectItem>
+          <SelectItem value="banana" >Banana</SelectItem>
+          <SelectItem value="blueberry" >Blueberry</SelectItem>
+          <SelectItem value="grapes" >Grapes</SelectItem>
+          <SelectItem value="pineapple" >Pineapple</SelectItem>
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+
+
 
   return (
     <div

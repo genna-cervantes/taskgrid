@@ -6,6 +6,8 @@ import Projects from "./pages/Projects";
 import Contact from "./pages/Contact";
 import NoPage from "./pages/NoPage";
 import Project from "./pages/Project";
+import TaskLayout from "./pages/TaskLayout";
+import TaskPage from "./pages/TaskPage";
 
 const App = () => {
   return (
@@ -15,7 +17,11 @@ const App = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="projects" element={<Projects />}>
-              <Route path=":projectId" element={<Project />} />
+              <Route path=":projectId" element={<Project />}>
+                <Route path="tasks" element={<TaskLayout />}>
+                  <Route path=":taskId" element={<TaskPage />} />
+                </Route>
+              </Route>
             </Route>
             <Route path="contact" element={<Contact />} />
             <Route path="*" element={<NoPage />} />

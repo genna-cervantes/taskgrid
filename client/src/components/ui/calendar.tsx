@@ -51,12 +51,12 @@ function Calendar({
         ),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "h-[--cell-size] w-[--cell-size] select-none p-0 aria-disabled:opacity-50 bg-lmBackground dark:bg-backgroundDark text-light dark:text-fadedWhite border border-faintWhite/30 dark:border-faintWhite/10",
+          "h-[--cell-size] w-[--cell-size] border-none bg-faintWhite text-midWhite dark:hover:bg-midWhite dark:hover:text-fadedWhite select-none p-0 aria-disabled:opacity-50 ",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "h-[--cell-size] w-[--cell-size] select-none p-0 aria-disabled:opacity-50 bg-lmBackground dark:bg-backgroundDark text-light dark:text-fadedWhite border border-faintWhite/30 dark:border-faintWhite/10",
+          "h-[--cell-size] w-[--cell-size] select-none border-none bg-faintWhite text-midWhite dark:hover:bg-midWhite dark:hover:text-fadedWhite p-0 aria-disabled:opacity-50 ",
           defaultClassNames.button_next
         ),
         month_caption: cn(

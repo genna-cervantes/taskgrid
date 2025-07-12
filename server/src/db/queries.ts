@@ -32,6 +32,27 @@ export const getTasksFromProjectId = async (pool: Pool, id: string) => {
     return tasksWithComments as Task[];
 }
 
+export const getTaskById = async (pool: Pool, projectId: string, taskId: string) => {
+    
+    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
+    const res = await pool.query(query, [projectId, taskId]);
+    
+    const task: Task = {
+        ...res.rows[0],
+        id: res.rows[0].id.toString(),
+    };
+    
+    const commentQuery = 'SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;';
+    const commentRes = await pool.query(commentQuery, [task.id]);
+
+    const tasksWithComments =  {
+        ...task,
+        commentCount: parseInt(commentRes.rows[0].count, 10)
+    };
+    
+    return tasksWithComments as Task;
+}
+
 export const insertTask = async (pool: Pool, task: InsertableTask, id: string) => {
     const query = 'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
     const res = await pool.query(query, [id, task.title, task.link, task.description, task.priority, task.progress, task.assignedTo]);

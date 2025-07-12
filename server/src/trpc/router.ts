@@ -19,6 +19,7 @@ import {
   getProjectNameByKey,
   getProjectOwner,
   getProjectsFromGuestId,
+  getTaskById,
   getTasksFromProjectId,
   getUsername,
   getUsernamesInProject,
@@ -67,6 +68,13 @@ export const appRouter = router({
     .query(async ({ input }) => {
       let tasks = await getTasksFromProjectId(pool, input.id);
       return tasks;
+    }),
+  getTaskById: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({projectId: z.string(), taskId: z.string()}))
+    .query(async({input}) => {
+      let task = await getTaskById(pool, input.projectId, input.taskId)
+      return task;
     }),
   insertTask: publicProcedure
     .use(rateLimitMiddleware)

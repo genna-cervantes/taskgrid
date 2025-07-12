@@ -1,0 +1,38 @@
+import React from "react";
+
+const TaskLink = ({
+  taskLink,
+  setTaskLink,
+  taskLinkError,
+  isPage = false,
+}: {
+  isPage?: boolean;
+  taskLink: string | undefined;
+  setTaskLink: React.Dispatch<React.SetStateAction<string | undefined>>;
+  taskLinkError: string;
+}) => {
+  return (
+    <div>
+      <h3
+        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+      >
+        Link:
+      </h3>
+
+      <input
+        placeholder="https://"
+        className={`w-full shadow-bottom-grey pb-2 placeholder:text-faintWhite ${isPage ? "text-base" : "text-sm"} focus:outline-none focus:ring-0 focus:border-transparent`}
+        value={taskLink}
+        onChange={(e) => setTaskLink(e.target.value)}
+      />
+
+      {taskLinkError !== "" && (
+        <h4 className={`font-semibold text-xs text-red-400`}>
+          {taskLinkError}
+        </h4>
+      )}
+    </div>
+  );
+};
+
+export default TaskLink;
