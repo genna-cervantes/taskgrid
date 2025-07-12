@@ -34,7 +34,7 @@ const TaskBlock = ({
         draggable
         onDragStart={() => handleDragStart(col, task)}
         onClick={() => setTaskDetailsModal(true)}
-        className={`relative px-3 pt-3 pb-2 mb-2 dark:bg-light bg-lmLightBackground rounded-md border-[1px] dark:border-faintWhite/5 cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        className={`relative px-3 pt-3 pb-2 mb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md border dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}><span className="font-semibold text-midWhite">[{task.projectTaskId}]</span> {task.title}</h1>
         <div className="mt-4">

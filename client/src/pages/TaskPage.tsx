@@ -3,7 +3,7 @@ import TaskDescription from "@/components/TaskDescription";
 import TaskSelectCategory from "@/components/TaskSelectCategory";
 import TaskSelectPriority from "@/components/TaskSelectPriority";
 import { trpc } from "@/utils/trpc";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { priorityLevels } from "@/components/AddTaskForm";
 import TaskTargetDates from "@/components/TaskTargetDates";
@@ -13,6 +13,9 @@ import { useGuestId } from "@/contexts/UserContext";
 import TaskSelectMedia from "@/components/TaskSelectMedia";
 import TaskImageModal from "@/components/TaskImageModal";
 import TaskLink from "@/components/TaskLink";
+import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const TaskPage = () => {
   const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
@@ -117,99 +120,169 @@ const TaskPage = () => {
     setUploadTaskImagesIsLoading(false);
   };
 
+  useEffect(() => {
+    if (task) {
+      setTaskTitle(task.title);
+      setTaskDescription(task.description);
+      setTaskCategory(task.category);
+      setTaskPriority(task.priority);
+      setTaskAssignedTo(task.assignedTo ?? []);
+      setTaskLink(task.link);
+      setTaskTargetStartDate(task.targetStartDate);
+      setTaskTargetEndDate(task.targetEndDate);
+    }
+  }, [task]); // get rid of this and just create state on the inputs
+
   if (task == null && !taskDataIsLoading) {
     return <Navigate to="/404" replace />;
   }
 
-  if (taskDataIsLoading) {
+  if (taskDataIsLoading || task == undefined) {
+    console.log("loading");
     return <LoadingModal />;
   }
 
   return (
-    <div className="w-[60%] px-4 flex flex-col gap-y-4">
-      <div>
-        <h3
-          className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-        >
-          Title:
-        </h3>
-        <textarea
-          placeholder="What's this about?"
-          className={`w-full text-base h-8 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
-          value={taskTitle}
-          onChange={(e) => setTaskTitle(e.target.value)}
-        />
+    <div className="w-full h-screen flex">
+      <div className="scrollbar-group w-[60%] h-full">
+        <div className="group-hover-scrollbar w-full px-4 flex flex-col gap-y-4 max-h-screen overflow-y-scroll super-thin-scrollbar">
+          <div>
+            <h3
+              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+            >
+              Title:
+            </h3>
+            <textarea
+              placeholder="What's this about?"
+              className={`w-full text-base h-12 super-thin-scrollbar placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+            />
+          </div>
+          <TaskDescription
+            isPage={true}
+            taskDescription={taskDescription}
+            setTaskDescription={setTaskDescription}
+          />
+          <TaskSelectCategory
+            isPage={true}
+            taskCategoryOptions={[]}
+            taskCategory={taskCategory}
+            setTaskCategory={setTaskCategory}
+          />
+          <TaskSelectPriority
+            isPage={true}
+            priorityLevels={priorityLevels}
+            taskPriority={taskPriority}
+            setTaskPriority={setTaskPriority}
+          />
+          <TaskTargetDates
+            isPage={true}
+            taskTargetStartDate={taskTargetStartDate}
+            taskTargetEndDate={taskTargetEndDate}
+            setTaskTargetStartDate={setTaskTargetStartDate}
+            setTaskTargetEndDate={setTaskTargetEndDate}
+            taskTargetDateError={taskTargetDateError}
+          />
+          <TaskAssignee
+            isPage={true}
+            projectId={projectId}
+            username={username}
+            taskAssignedTo={taskAssignedTo}
+            setTaskAssignedTo={setTaskAssignedTo}
+            taskAssignedToError={taskAssignedToError}
+          />
+          {task && (
+            <TaskSelectMedia
+              isPage={true}
+              task={task}
+              projectId={projectId}
+              taskMediaError={taskMediaError}
+              setTaskMediaError={setTaskMediaError}
+              previewUrls={previewUrls}
+              setPreviewUrls={setPreviewUrls}
+              taskImageUrls={taskImageUrls}
+              setTaskImagesUrls={setTaskImagesUrls}
+              setFiles={setFiles}
+              setImageModalState={setImageModalState}
+            />
+          )}
+          {imageModalState?.visible && (
+            <TaskImageModal
+              url={imageModalState.url}
+              index={imageModalState.index}
+              setDisplayImage={(s: boolean) => {
+                setImageModalState((prev) => {
+                  if (!prev) return null; // or whatever makes sense if modal is closed
+                  return { ...prev, visible: s };
+                });
+              }}
+              handleDelete={imageModalState.deleteFunction}
+            />
+          )}
+          <TaskLink
+            isPage={true}
+            taskLink={taskLink}
+            setTaskLink={setTaskLink}
+            taskLinkError={taskLinkError}
+          />
+          <div className="flex items-center gap-x-4">
+            <hr className="flex-grow border-t border-faintWhite" />
+            <p className="text-xs text-center text-faintWhite whitespace-nowrap">
+              Advanced Task Details
+            </p>
+            <hr className="flex-grow border-t border-faintWhite" />
+          </div>
+          <div>
+            <h3
+              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+            >
+              Depends On:
+            </h3>
+            <Select>
+            <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
+                <p className={`text-base text-faintWhite`} >Select Task</p>
+            </SelectTrigger>
+            <SelectContent className="bg-backgroundDark">
+                <SelectGroup className={`text-base`}>
+                <SelectItem value="apple" className="hover:cursor-pointer">Apple</SelectItem>
+                <SelectItem value="banana" >Banana</SelectItem>
+                <SelectItem value="blueberry" >Blueberry</SelectItem>
+                <SelectItem value="grapes" >Grapes</SelectItem>
+                <SelectItem value="pineapple" >Pineapple</SelectItem>
+                </SelectGroup>
+            </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <h3
+              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+            >
+              Sub Tasks:
+            </h3>
+            <div className="flex my-1 gap-x-2 items-center">
+                <Checkbox className="bg-inherit h-5 w-5 border border-faintWhite" />
+                <input type='text' placeholder="Subtask 1" className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full focus:outline-none focus:ring-0 focus:border-transparent" />
+            </div>
+          </div>
+          <div className="mb-16">
+            <h3
+              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+            >
+              Personal Notes:
+            </h3>
+            <textarea
+              placeholder="Notes only you need to see"
+              className={`w-full text-base h-24 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
+              value=""
+              onChange={(e) => setTaskTitle(e.target.value)}
+            />
+          </div>
+        </div>
       </div>
-      <TaskDescription
-        isPage={true}
-        taskDescription={taskDescription}
-        setTaskDescription={setTaskDescription}
-      />
-      <TaskSelectCategory
-        isPage={true}
-        taskCategoryOptions={[]}
-        taskCategory={taskCategory}
-        setTaskCategory={setTaskCategory}
-      />
-      <TaskSelectPriority
-        isPage={true}
-        priorityLevels={priorityLevels}
-        taskPriority={taskPriority}
-        setTaskPriority={setTaskPriority}
-      />
-      <TaskTargetDates
-        isPage={true}
-        taskTargetStartDate={taskTargetStartDate}
-        taskTargetEndDate={taskTargetEndDate}
-        setTaskTargetStartDate={setTaskTargetStartDate}
-        setTaskTargetEndDate={setTaskTargetEndDate}
-        taskTargetDateError={taskTargetDateError}
-      />
-      <TaskAssignee
-        isPage={true}
-        projectId={projectId}
-        username={username}
-        taskAssignedTo={taskAssignedTo}
-        setTaskAssignedTo={setTaskAssignedTo}
-        taskAssignedToError={taskAssignedToError}
-      />
-      {task && (
-        <TaskSelectMedia
-          isPage={true}
-          task={task}
-          projectId={projectId}
-          taskMediaError={taskMediaError}
-          setTaskMediaError={setTaskMediaError}
-          previewUrls={previewUrls}
-          setPreviewUrls={setPreviewUrls}
-          taskImageUrls={taskImageUrls}
-          setTaskImagesUrls={setTaskImagesUrls}
-          setFiles={setFiles}
-          setImageModalState={setImageModalState}
-        />
-      )}
-      {imageModalState?.visible && (
-        <TaskImageModal
-          url={imageModalState.url}
-          index={imageModalState.index}
-          setDisplayImage={(s: boolean) => {
-            setImageModalState((prev) => {
-              if (!prev) return null; // or whatever makes sense if modal is closed
-              return { ...prev, visible: s };
-            });
-          }}
-          handleDelete={imageModalState.deleteFunction}
-        />
-      )}
-      <TaskLink isPage={true} taskLink={taskLink} setTaskLink={setTaskLink} taskLinkError={taskLinkError} />
-      <div className="flex items-center gap-x-4">
-        <hr className="flex-grow border-t border-faintWhite" />
-        <p className="text-xs text-center text-faintWhite whitespace-nowrap">
-            Advanced Task Details
-        </p>
-        <hr className="flex-grow border-t border-faintWhite" />
+      <div className="w-[40%] px-6 h-screen">
+        <TaskDiscussionBoard isPage={true} user={username} taskId={task.id} />
       </div>
-
     </div>
   );
 };

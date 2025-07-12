@@ -12,7 +12,7 @@ const AddTask = ({type, username, projectId, col, className = ""}: {type: string
 
   if (type === 'block'){
     return (
-      <button onClick={() => setAddModal(true)} className={cn("border-2 dark:hover:border-fadedWhite dark:hover:text-fadedWhite dark:border-light hover:border-lmLightBackground text-xs hover:text-lmLightBackground text-faintBlack dark:text-light text-center rounded-md w-full py-2 font-bold cursor-pointer border-faintBlack", className)}>
+      <button onClick={() => setAddModal(true)} className={cn("border dark:hover:border-fadedWhite dark:hover:text-fadedWhite dark:border-light hover:border-lmLightBackground text-xs hover:text-lmLightBackground text-faintBlack dark:text-light text-center rounded-md w-full py-2 font-bold cursor-pointer border-faintBlack", className)}>
         Add Task
       </button>
     );

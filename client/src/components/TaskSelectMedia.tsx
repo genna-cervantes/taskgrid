@@ -130,7 +130,7 @@ const TaskSelectMedia = ({
   return (
     <div>
       <h3
-        className={`text-xxs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Media:
       </h3>

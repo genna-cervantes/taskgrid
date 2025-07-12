@@ -40,9 +40,11 @@ const Comment = ({ comment }: { comment: string }) => {
 const TaskDiscussionBoard = ({
   taskId,
   user,
+  isPage=false
 }: {
   taskId: string;
   user: string;
+  isPage?: boolean
 }) => {
   const utils = trpc.useUtils();
 
@@ -63,18 +65,16 @@ const TaskDiscussionBoard = ({
     },
   });
 
-  console.log(comments);
-
   return (
-    <div className="w-1/2 flex flex-col min-h-0">
+    <div className={`${isPage ? "w-full" : "w-1/2"} flex flex-col min-h-0`}>
       <div className="flex justify-between w-full">
         <h1 className="text-sm mb-2">Discussion:</h1>
-        <Link to={`tasks/${taskId}`}>
+        {!isPage && <Link to={`tasks/${taskId}`}>
           <SquareArrowOutUpRight className="h-5 w-5 hover:cursor-pointer text-midWhite hover:text-fadedWhite"><title>Expand Task</title></SquareArrowOutUpRight>
-        </Link>
+        </Link>}
       </div>
       <div className="flex flex-col flex-1 min-h-0 justify-between gap-y-6">
-        <div className="flex-1 overflow-y-auto min-h-0 max-h-[31.8rem] scrollbar-none">
+        <div className={`flex-1 overflow-y-auto ${isPage ? "min-h-[37rem] max-h-[37rem]" : "max-h-[32.5rem] min-h-[32.5rem]"} scrollbar-none`}>
           {commentsIsLoading && (
             <p className="text-sm text-midWhite">Comments are loading...</p>
           )}
@@ -108,12 +108,12 @@ const TaskDiscussionBoard = ({
             <textarea
               value={insertComment}
               onChange={(e) => setInsertComment(e.target.value)}
-              className="w-full h-14 px-2 py-1 border border-faintWhite rounded-lg text-sm placeholder:text-faintWhite focus:outline-none focus:ring-0"
+              className="w-full h-14 px-2 py-1 border hover:border-midWhite border-faintWhite rounded-lg text-sm placeholder:text-faintWhite focus:outline-none focus:ring-0"
               placeholder="Join the discussion"
             />
             <button
               type="button"
-              className="text-midWhite hover:text-white"
+              className="text-midWhite hover:text-white disabled:hover:text-midWhite disabled:hover:cursor-not-allowed"
               onClick={() => {
                 if (insertComment.trim().length > 0) {
                   addComment.mutate({

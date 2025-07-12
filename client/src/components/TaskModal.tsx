@@ -16,6 +16,7 @@ import TaskSelectPriority from "./TaskSelectPriority";
 import TaskTargetDates from "./TaskTargetDates";
 import TaskAssignee from "./TaskAssignee";
 import TaskSelectMedia from "./TaskSelectMedia";
+import TaskLink from "./TaskLink";
 
 const linkSchema = z.string().url();
 
@@ -349,7 +350,7 @@ const TaskModal = ({
         />
       )}
       <div
-        className={`h-[87%] dark:bg-light dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
+        className={`h-[87%] dark:bg-backgroundDark dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <div

@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* styles/globals.css or index.css */
+.super-thin-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.super-thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.super-thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+
 @layer base {
   html {
     @apply bg-white text-gray-900 transition-colors;
@@ -113,8 +126,6 @@
 
     --chart-5: 340 75% 55%}
 }
-
-
 
 @layer base {
   * {
