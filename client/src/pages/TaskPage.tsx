@@ -3,7 +3,7 @@ import TaskDescription from "@/components/TaskDescription";
 import TaskSelectCategory from "@/components/TaskSelectCategory";
 import TaskSelectPriority from "@/components/TaskSelectPriority";
 import { trpc } from "@/utils/trpc";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import { priorityLevels } from "@/components/AddTaskForm";
 import TaskTargetDates from "@/components/TaskTargetDates";
@@ -16,6 +16,7 @@ import TaskLink from "@/components/TaskLink";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import Mousetrap from "mousetrap";
 
 const TaskPage = () => {
   const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
@@ -132,6 +133,21 @@ const TaskPage = () => {
       setTaskTargetEndDate(task.targetEndDate);
     }
   }, [task]); // get rid of this and just create state on the inputs
+
+  const joinDiscussionRef = useRef<HTMLTextAreaElement>(null)
+  
+  useEffect(() => {  
+      Mousetrap.bind('ctrl+j', function(e) {
+        e.preventDefault();
+        joinDiscussionRef.current?.focus()
+      });
+      
+      return () => {
+        Mousetrap.unbind('ctrl+s');
+        Mousetrap.unbind('g h');
+      };
+    }, []);
+  
 
   if (task == null && !taskDataIsLoading) {
     return <Navigate to="/404" replace />;
@@ -281,7 +297,7 @@ const TaskPage = () => {
         </div>
       </div>
       <div className="w-[40%] px-6 h-screen">
-        <TaskDiscussionBoard isPage={true} user={username} taskId={task.id} />
+        <TaskDiscussionBoard ref={joinDiscussionRef} isPage={true} user={username} taskId={task.id} />
       </div>
     </div>
   );

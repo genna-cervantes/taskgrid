@@ -12,6 +12,7 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@tailwindcss/postcss": "^4.1.5",
+    "@types/mousetrap": "^1.6.15",
     "@types/node": "^24.0.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
@@ -47,6 +48,7 @@
     "date-fns": "^4.1.0",
     "idb": "^8.0.2",
     "lucide-react": "^0.523.0",
+    "mousetrap": "^1.6.5",
     "react": "^18.2.0",
     "react-day-picker": "^9.7.0",
     "react-dom": "^18.2.0",

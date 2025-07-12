@@ -1,15 +1,13 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import { trpc } from "../utils/trpc";
 import { priorityLevels } from "./AddTaskForm";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import { z } from "zod";
-import SelectAssignee from "./SelectAssignee";
 import TaskImageModal from "./TaskImageModal";
 import { ChevronsRight, Minus } from "lucide-react";
 import TaskDiscussionBoard from "./TaskDiscussionBoard";
-import TargetDatePicker from "./TargetDatePicker";
 import TaskSelectCategory from "./TaskSelectCategory";
 import TaskDescription from "./TaskDescription";
 import TaskSelectPriority from "./TaskSelectPriority";
@@ -17,6 +15,8 @@ import TaskTargetDates from "./TaskTargetDates";
 import TaskAssignee from "./TaskAssignee";
 import TaskSelectMedia from "./TaskSelectMedia";
 import TaskLink from "./TaskLink";
+import Mousetrap from 'mousetrap';
+import { useNavigate } from "react-router-dom";
 
 const linkSchema = z.string().url();
 
@@ -317,6 +317,34 @@ const TaskModal = ({
 
     setUploadTaskImagesIsLoading(false);
   };
+
+  const navigate = useNavigate()
+  const joinDiscussionRef = useRef<HTMLTextAreaElement>(null);
+
+  // keyboard shortcuts
+  useEffect(() => {
+    Mousetrap.bind('ctrl+d', function(e) {
+      e.preventDefault();
+      setOpenDiscussion(!openDiscussion)
+    });
+    
+    Mousetrap.bind('ctrl+o', function(e) {
+      e.preventDefault();
+      navigate(`tasks/${task.id}`)
+    });
+
+    Mousetrap.bind('ctrl+j', function(e) {
+      e.preventDefault();
+      setOpenDiscussion(!openDiscussion)
+      joinDiscussionRef.current?.focus()
+    });
+    
+    return () => {
+      Mousetrap.unbind('ctrl+s');
+      Mousetrap.unbind('g h');
+    };
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -465,7 +493,7 @@ const TaskModal = ({
         {openDiscussion && (
           <>
             <div className="w-px bg-faintWhite/5 mx-6 h-full"></div>
-            <TaskDiscussionBoard taskId={task.id} user={username ?? ""} />
+            <TaskDiscussionBoard ref={joinDiscussionRef} taskId={task.id} user={username ?? ""} />
           </>
         )}
       </div>

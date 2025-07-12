@@ -31,10 +31,18 @@ const TaskBlock = ({
     <>
       {taskDetailsModal && <TaskModal username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
       <div
+        tabIndex={0}
+        role="button"
         draggable
         onDragStart={() => handleDragStart(col, task)}
         onClick={() => setTaskDetailsModal(true)}
-        className={`relative px-3 pt-3 pb-2 mb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md border dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            setTaskDetailsModal(true)
+            e.currentTarget.blur(); 
+          }
+        }}
+        className={`relative border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 mb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}><span className="font-semibold text-midWhite">[{task.projectTaskId}]</span> {task.title}</h1>
         <div className="mt-4">
