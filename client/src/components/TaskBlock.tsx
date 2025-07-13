@@ -10,6 +10,7 @@ const TaskBlock = ({
   col,
   task,
   projectId,
+  taskCategoryOptions,
   handleDragStart,
   setUsernameModal,
   username
@@ -17,6 +18,10 @@ const TaskBlock = ({
   col: ColumnKey;
   task: Task;
   projectId: string,
+  taskCategoryOptions: {
+    category: string;
+    color: string;
+}[] | undefined;
   handleDragStart: (fromColumn: ColumnKey, task: Task) => void;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>
   username: string|undefined
@@ -29,7 +34,7 @@ const TaskBlock = ({
 
   return (
     <>
-      {taskDetailsModal && <TaskModal username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
+      {taskDetailsModal && <TaskModal taskCategoryOptionsProp={taskCategoryOptions} username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
       <div
         tabIndex={0}
         role="button"

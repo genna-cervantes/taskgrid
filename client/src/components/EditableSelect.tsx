@@ -8,94 +8,144 @@ import {
 import { Trash2, Pen, ChevronDown } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { pickRandomColor } from "@/lib/utils";
 
-export function EditableDropdown({isPage}: {isPage: boolean}) {
-  const [options, setOptions] = useState([
-    { id: "1", label: "Design" },
-    { id: "2", label: "Development" },
-  ]);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+export function EditableDropdown({
+  isPage,
+  taskCategory,
+  setTaskCategory,
+  taskCategoryOptions,
+  setTaskCategoryOptions,
+}: {
+  isPage: boolean;
+  taskCategory: string|undefined;
+  setTaskCategory: React.Dispatch<React.SetStateAction<string | undefined>>;
+  taskCategoryOptions: {
+    color: string;
+    category: string;
+  }[];
+  setTaskCategoryOptions: React.Dispatch<
+    React.SetStateAction<
+      {
+        color: string;
+        category: string;
+      }[]
+    >
+  >;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newOption, setNewOption] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
-    if (editingId) {
-      inputRefs.current[editingId]?.focus();
+    if (editingCategory) {
+      inputRefs.current[editingCategory]?.focus();
     }
-  }, [editingId]);
+  }, [editingCategory]);
 
   const handleEdit = (id: string) => {
-    setEditingId(id);
+    setEditingCategory(id);
   };
 
   const handleDelete = (id: string) => {
-    setOptions((prev) => prev.filter((o) => o.id !== id));
-    if (selected === id) setSelected(null);
+    setTaskCategoryOptions((prev) => prev.filter((o) => o.category !== id));
+    if (taskCategory === id) setTaskCategory(undefined);
   };
 
-  const handleChange = (id: string, value: string) => {
-    setOptions((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, label: value } : o))
+  const handleChange = (color: string, value: string) => {
+    setTaskCategoryOptions((prev) =>
+      prev.map((o) => (o.color === color ? { ...o, category: value } : o))
     );
   };
 
   const handleAdd = () => {
-    if (!newOption.trim()) return;
-    const newId = Date.now().toString();
-    setOptions((prev) => [...prev, { id: newId, label: newOption }]);
+    if (taskCategoryOptions.some((c) => c.category === newOption)) return;
+    if (newOption === "") return;
+    if (taskCategoryOptions.length >= 10) return;
+
+    const randomColor = pickRandomColor(taskCategoryOptions);
+
+    setTaskCategoryOptions((prev) => [
+      ...prev,
+      { category: newOption, color: randomColor },
+    ]);
+
     setNewOption("");
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button className={`${isPage ? "text-base" : "text-sm"} border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${options.find((o) => o.id === selected) ? 'text-white' : 'text-faintWhite' }`}>
-          {selected
-            ? options.find((o) => o.id === selected)?.label
-            : "Select option"}
+        <Button
+          className={`${isPage ? "text-base" : "text-sm"} border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${taskCategoryOptions.find((o) => o.category === taskCategory) ? "text-white" : "text-faintWhite"}`}
+        >
+          <span className="flex w-full items-center gap-x-4">
+            <span
+              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-400`}
+            ></span>
+            {taskCategory !== ""
+              ? taskCategoryOptions.find((o) => o.category === taskCategory)
+                  ?.category
+              : "Select option"}
+          </span>
           <ChevronDown className="text-white" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="px-2 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-backgroundDark font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
+      <PopoverContent className="px-2 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
         <div className="flex flex-col gap-y-2 max-h-60 overflow-y-auto w-full">
-          {options.map((opt) => (
-            <div key={opt.id} className="flex items-center gap-x-2 w-full">
-              {editingId === opt.id ? (
-                <Input
-                  ref={(el) => (inputRefs.current[opt.id] = el)}
-                  value={opt.label}
-                  onChange={(e) => handleChange(opt.id, e.target.value)}
-                  onBlur={() => setEditingId(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") setEditingId(null);
-                  }}
-                  className={`px-1 !text-fadedWhite text-xs`}
-                />
+          {taskCategoryOptions.map((opt) => (
+            <div
+              key={opt.category}
+              className="flex items-center gap-x-2 w-full"
+            >
+              {editingCategory === opt.category ? (
+                <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1">
+                  <span
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-400`}
+                  ></span>
+                  <Input
+                    ref={(el) => (inputRefs.current[opt.category] = el)}
+                    value={opt.category}
+                    onChange={(e) => handleChange(opt.color, e.target.value)}
+                    onBlur={() => setEditingCategory(null)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setEditingCategory(null);
+                    }}
+                    className={`px-0 py-2 !text-xs`}
+                  />
+                </div>
               ) : (
-                <button
-                  className={`text-left w-full py-2 px-1 rounded-sm text-xs hover:bg-faintWhite/10`}
-                  onClick={() => setSelected(opt.id)}
-                >
-                  {opt.label}
-                </button>
+                <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1 py-2 hover:cursor-pointer">
+                  <span
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-400`}
+                  ></span>
+                  <button
+                    className={`text-left w-full text-xs `}
+                    onClick={() => {
+                      setTaskCategory(opt.category);
+                      setOpen(false);
+                    }}
+                  >
+                    {opt.category}
+                  </button>
+                </div>
               )}
-              
-                <Pen
-                  className={`w-5 h-5 cursor-pointer hover:text-fadedWhite ${editingId === opt.id ? 'text-fadedWhite' : 'text-faintWhite'}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEdit(opt.id);
-                  }}
-                />
-                <Trash2
-                  className="w-5 h-5 cursor-pointer text-faintWhite hover:text-fadedWhite"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(opt.id);
-                  }}
-                />  
-              
+
+              <Pen
+                className={`w-5 h-5 cursor-pointer hover:text-fadedWhite ${editingCategory === opt.category ? "text-fadedWhite" : "text-faintWhite"}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(opt.category);
+                }}
+              />
+              <Trash2
+                className="w-5 h-5 cursor-pointer text-faintWhite hover:text-fadedWhite"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(opt.category);
+                }}
+              />
             </div>
           ))}
 
@@ -107,12 +157,17 @@ export function EditableDropdown({isPage}: {isPage: boolean}) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAdd();
               }}
-              className={`text-xs py-2 placeholder:text-midWhite bg-faintWhite/10 px-2 text-white !focus:outline-none !focus:ring-0 !focus:border-transparent border-none`}
-              
+              className={`!text-xs py-2 placeholder:text-midWhite bg-faintWhite/10 px-2 text-white focus:outline-none focus:ring-0 focus:border-transparent border-none`}
             />
-            <Button size="sm" className="bg-faintWhite hover:bg-midWhite text-midWhite hover:text-fadedWhite" onClick={handleAdd}>
+            <button
+              disabled={
+                newOption.length < 1 || taskCategoryOptions.length >= 10
+              }
+              className={`px-3 rounded-md py-2 focus:outline-none focus:ring-0 focus:border-transparent focus:bg-midWhite focus:text-fadedWhite border-none bg-faintWhite disabled:bg-faintWhite ${newOption.length < 1 ? "hover:bg-faintWhite cursor-not-allowed" : "hover:bg-midWhite hover:text-fadedWhite"} disabled:cursor-not-allowed  text-midWhite`}
+              onClick={handleAdd}
+            >
               Add
-            </Button>
+            </button>
           </div>
         </div>
       </PopoverContent>

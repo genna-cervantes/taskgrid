@@ -27,7 +27,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-backgroundDark rounded-xl group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+        "dark:bg-[#1A1A1A] rounded-xl group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
@@ -95,7 +95,7 @@ function Calendar({
           defaultClassNames.week_number
         ),
         day: cn(
-          "group/day relative aspect-square h-full w-full select-none p-0 text-center rounded-md overflow-hidden bg-lmBackground dark:bg-backgroundDark text-light dark:text-fadedWhite border-0 hover:bg-lmMidBackground dark:hover:bg-light hover:text-white dark:hover:text-white focus:bg-lmMidBackground dark:focus:bg-light focus:text-white dark:focus:text-white focus-visible:bg-lmMidBackground dark:focus-visible:bg-light focus-visible:text-white dark:focus-visible:text-white focus:ring-0 focus-visible:ring-0 focus:outline-none focus-visible:outline-none [&>span]:hover:text-white dark:[&>span]:hover:text-white [&>span]:text-white dark:[&>span]:text-white",
+          "group/day relative aspect-square h-full w-full select-none p-0 text-center rounded-md overflow-hidden bg-lmBackground dark:bg-[#1A1A1A] text-light dark:text-fadedWhite border-0 hover:bg-lmMidBackground dark:hover:bg-light hover:text-white dark:hover:text-white focus:bg-lmMidBackground dark:focus:bg-light focus:text-white dark:focus:text-white focus-visible:bg-lmMidBackground dark:focus-visible:bg-light focus-visible:text-white dark:focus-visible:text-white focus:ring-0 focus-visible:ring-0 focus:outline-none focus-visible:outline-none [&>span]:hover:text-white dark:[&>span]:hover:text-white [&>span]:text-white dark:[&>span]:text-white",
           defaultClassNames.day
         ),
         range_start: cn(

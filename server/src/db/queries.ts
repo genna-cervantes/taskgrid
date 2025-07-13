@@ -331,3 +331,19 @@ export const getCommentsByTask = async (pool: Pool, taskId: string) => {
 
     return res.rows as Comment[];
 }
+
+export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
+    const query = 'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = TRUE LIMIT 1;';
+    const res = await pool.query(query, [projectId]);
+
+    return res.rows[0].taskCategoryOptions as {category: string, color: string}[];
+}
+
+export const updateTaskCategoryOptions = async (pool: Pool, projectId: string, taskCategoryOptions: {category: string, color: string}[]) => {
+    const query = 'UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;';
+    const res = await pool.query(query, [JSON.stringify(taskCategoryOptions), projectId]);
+
+    // remove all removed categories from category column as well
+
+    return res.rowCount
+}

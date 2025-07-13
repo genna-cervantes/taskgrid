@@ -17,18 +17,24 @@ import TaskSelectMedia from "./TaskSelectMedia";
 import TaskLink from "./TaskLink";
 import Mousetrap from 'mousetrap';
 import { useNavigate } from "react-router-dom";
+import { taskCategoryOptionsAreEqual } from "@/lib/utils";
 
 const linkSchema = z.string().url();
 
 const TaskModal = ({
   task,
   projectId,
+  taskCategoryOptionsProp,
   setTaskDetailsModal,
   setUsernameModal,
   username,
 }: {
   task: Task;
   projectId: string;
+  taskCategoryOptionsProp: {
+    category: string;
+    color: string;
+}[] | undefined;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | undefined;
@@ -47,6 +53,7 @@ const TaskModal = ({
     task.targetEndDate
   );
   const [taskCategory, setTaskCategory] = useState(task.category);
+  const [taskCategoryOptions, setTaskCategoryOptions] = useState(taskCategoryOptionsProp ?? [])
 
   const [uploadTaskImagesIsLoading, setUploadTaskImagesIsLoading] =
     useState(false);
@@ -164,6 +171,26 @@ const TaskModal = ({
       console.error("Failed to create task:", error.message);
     },
   });
+  
+  const updateTaskCategory = trpc.updateTaskCategory.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
+  
+  const updateTaskCategoryOptions = trpc.updateTaskCategoryOptions.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskCategoryOptions.invalidate({ projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
 
   // HANDLE METHODS
 
@@ -256,6 +283,21 @@ const TaskModal = ({
         targetEndDate: taskTargetEndDate.toString(),
       });
     }
+    
+    if (taskCategory && task.category !== taskCategory) {
+      updateTaskCategory.mutate({
+        taskId: task.id,
+        projectId,
+        category: taskCategory,
+      });
+    }
+
+    if (!taskCategoryOptionsAreEqual(taskCategoryOptionsProp, taskCategoryOptions)) {
+      updateTaskCategoryOptions.mutate({
+        projectId,
+        taskCategoryOptions
+      })
+    }
 
     // for media - add checker if something actually changed tho
     await handleUpload(task.id);
@@ -338,16 +380,22 @@ const TaskModal = ({
       setOpenDiscussion(!openDiscussion)
       joinDiscussionRef.current?.focus()
     });
+
+    Mousetrap.bind('esc', function(e) {
+      e.preventDefault();
+      setTaskDetailsModal(false);
+    });
     
     return () => {
       Mousetrap.unbind('ctrl+s');
-      Mousetrap.unbind('g h');
+      Mousetrap.unbind('ctrl+o');
+      Mousetrap.unbind('esc');
     };
   }, []);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed top-0 inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => {
         if (
           updateAssignedTo.isLoading ||
@@ -408,7 +456,7 @@ const TaskModal = ({
             </div>
           </div>
           <TaskDescription taskDescription={taskDescription} setTaskDescription={setTaskDescription} />
-          <TaskSelectCategory taskCategoryOptions={[]} taskCategory={taskCategory} setTaskCategory={setTaskCategory} />
+          <TaskSelectCategory taskCategoryOptions={taskCategoryOptions} setTaskCategoryOptions={setTaskCategoryOptions} taskCategory={taskCategory} setTaskCategory={setTaskCategory} />
           <TaskTargetDates taskTargetStartDate={taskTargetStartDate} taskTargetEndDate={taskTargetEndDate} setTaskTargetStartDate={setTaskTargetStartDate} setTaskTargetEndDate={setTaskTargetEndDate} taskTargetDateError={taskTargetDateError} />
           <TaskLink taskLink={taskLink} setTaskLink={setTaskLink} taskLinkError={taskLinkError} />
           <TaskSelectMedia task={task} projectId={projectId} taskMediaError={taskMediaError} setTaskMediaError={setTaskMediaError} previewUrls={previewUrls} setPreviewUrls={setPreviewUrls} taskImageUrls={taskImageUrls} setTaskImagesUrls={setTaskImagesUrls} setFiles={setFiles} setImageModalState={setImageModalState} />

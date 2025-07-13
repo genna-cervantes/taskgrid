@@ -127,7 +127,7 @@ const TaskDiscussionBoardBase = (
             />
             <button
               type="button"
-              className="text-midWhite hover:text-white disabled:hover:text-midWhite disabled:hover:cursor-not-allowed"
+              className="text-midWhite hover:text-white focus:text-white focus:outline-none focus:ring-0 disabled:hover:text-midWhite disabled:hover:cursor-not-allowed"
               onClick={() => {
                 if (insertComment.trim().length > 0) {
                   addComment.mutate({

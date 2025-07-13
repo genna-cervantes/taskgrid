@@ -4,7 +4,7 @@ import TaskSelectCategory from "@/components/TaskSelectCategory";
 import TaskSelectPriority from "@/components/TaskSelectPriority";
 import { trpc } from "@/utils/trpc";
 import { useEffect, useRef, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { priorityLevels } from "@/components/AddTaskForm";
 import TaskTargetDates from "@/components/TaskTargetDates";
 import { Task } from "../../../server/src/shared/types";
@@ -135,16 +135,23 @@ const TaskPage = () => {
   }, [task]); // get rid of this and just create state on the inputs
 
   const joinDiscussionRef = useRef<HTMLTextAreaElement>(null)
+
+  const navigate = useNavigate()
   
   useEffect(() => {  
       Mousetrap.bind('ctrl+j', function(e) {
         e.preventDefault();
         joinDiscussionRef.current?.focus()
       });
+
+      Mousetrap.bind('esc', function(e) {
+        e.preventDefault();
+        navigate(`/projects/${projectId}`)
+      });
       
       return () => {
         Mousetrap.unbind('ctrl+s');
-        Mousetrap.unbind('g h');
+        Mousetrap.unbind('esc');
       };
     }, []);
   
@@ -182,6 +189,7 @@ const TaskPage = () => {
           />
           <TaskSelectCategory
             isPage={true}
+            projectId={projectId}
             taskCategoryOptions={[]}
             taskCategory={taskCategory}
             setTaskCategory={setTaskCategory}
@@ -288,7 +296,7 @@ const TaskPage = () => {
               Personal Notes:
             </h3>
             <textarea
-              placeholder="Notes only you need to see"
+              placeholder="Notes only you can see"
               className={`w-full text-base h-24 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
               value=""
               onChange={(e) => setTaskTitle(e.target.value)}

@@ -20,6 +20,7 @@ import {
   getProjectOwner,
   getProjectsFromGuestId,
   getTaskById,
+  getTaskCategoryOptions,
   getTasksFromProjectId,
   getUsername,
   getUsernamesInProject,
@@ -30,6 +31,8 @@ import {
   setUsername,
   undoDeleteTask,
   updateAssignedTo,
+  updateTaskCategory,
+  updateTaskCategoryOptions,
   updateTaskDescription,
   updateTaskFiles,
   updateTaskLink,
@@ -318,6 +321,17 @@ export const appRouter = router({
       }
       return true;
     }),
+  updateTaskCategory: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), category: z.string()}))
+    .mutation(async({input}) => {
+      const updateCount = await updateTaskCategory(pool, input.taskId, input.projectId, input.category);
+  
+      if (updateCount !== 1){
+        return false;
+      }
+      return true;
+    }),
   deleteTaskById: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string() }))
@@ -467,6 +481,23 @@ export const appRouter = router({
       }catch(err){
         console.log(err)
       }
+    }),
+  getTaskCategoryOptions: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({projectId: z.string()}))
+    .query(async ({input}) => {
+      let taskCategoryOptions = await getTaskCategoryOptions(pool, input.projectId);
+      return taskCategoryOptions
+    }),
+  updateTaskCategoryOptions: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({projectId: z.string(), taskCategoryOptions: z.array(z.object({category: z.string(), color: z.string()}))}))
+    .mutation(async ({input}) => {
+      console.log('updating task category options,', input.taskCategoryOptions)
+      let updateCount = await updateTaskCategoryOptions(pool, input.projectId, input.taskCategoryOptions)
+
+      if (updateCount && updateCount > 0) return true;
+      return false;
     }),
   
   sample: publicProcedure.use(rateLimitMiddleware).query(() => {

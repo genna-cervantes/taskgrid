@@ -1,7 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { UseFormSetValue } from "react-hook-form";
 import { TaskFormData } from "./AddTaskForm";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Button } from "./ui/button";
+import { ChevronDown } from "lucide-react";
+import { Checkbox } from "./ui/checkbox";
+import { cn } from "@/lib/utils";
 
 const SelectAssignee = ({
   isPage=false,
@@ -18,90 +23,69 @@ const SelectAssignee = ({
   username: string;
   usersInProject: string[];
 }) => {
-  const handleUserToggle = (user: string) => {
-    const updatedAssignees = taskAssignedTo.includes(user)
-      ? taskAssignedTo.filter((pu) => pu !== user)
-      : [...taskAssignedTo, user];
 
-    // Update local state
-    setTaskAssignedTo(updatedAssignees);
+  const [open, setOpen] = useState(false);
 
-    // Update react-hook-form
+  const handleToggle = (u: string) => {
+    const updated =
+      taskAssignedTo.includes(u)
+        ? taskAssignedTo.filter((tau) => tau !== u)
+        : [...taskAssignedTo, u];
+
+    setTaskAssignedTo(updated);
     if (setValue) {
-      setValue("assignedTo", updatedAssignees, { shouldValidate: true });
+      setValue("assignedTo", updated, { shouldValidate: true });
     }
   };
 
   return (
-    <Select>
-      <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
-        <p className={`${isPage ? "text-base" : "text-sm"} text-faintWhite`} >Select Assignee</p>
-      </SelectTrigger>
-      <SelectContent className="bg-backgroundDark">
-        <SelectGroup className={`${isPage ? "text-base" : "text-sm"}`}>
-          <SelectItem value="apple" className="hover:cursor-pointer">Apple</SelectItem>
-          <SelectItem value="banana" >Banana</SelectItem>
-          <SelectItem value="blueberry" >Blueberry</SelectItem>
-          <SelectItem value="grapes" >Grapes</SelectItem>
-          <SelectItem value="pineapple" >Pineapple</SelectItem>
-        </SelectGroup>
-      </SelectContent>
-    </Select>
-  )
-
-
-
-  return (
-    <div
-      className={`flex flex-col mt-1 ${
-        usersInProject.length > 4 ? "max-h-20 overflow-y-auto scrollbar-none" : ""
-      }`}
-      role="group"
-      aria-label="Assign users"
-    >
-      {usersInProject.map((u) => {
-        const isChecked = taskAssignedTo.includes(u);
-        return (
-          <label
-            key={u}
-            className="inline-flex items-center space-x-2 cursor-pointer rounded px-2 py-1 hover:bg-faintWhite focus-within:bg-faintWhite"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleUserToggle(u);
-              }
-            }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          className="w-full border-none bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
+        >
+          <span
+            className={cn(
+              isPage ? "text-base" : "text-sm",
+              taskAssignedTo.length === 0 ? "text-faintWhite" : "text-white"
+            )}
           >
-            <input
-              type="checkbox"
-              checked={isChecked}
-              onChange={() => handleUserToggle(u)}
-              className="sr-only peer"
-            />
+            {taskAssignedTo.length === 0
+              ? "Select Assignee"
+              : taskAssignedTo.join(", ")}
+          </span>
+          <ChevronDown className="h-4 w-4 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent className="px-2 flex flex-col gap-y-1 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
+        {usersInProject.map((u) => {
+          const isSelected = taskAssignedTo.includes(u);
+          return (
             <div
-              className={`w-4 h-4 rounded border border-gray-400 flex items-center justify-center ${
-                isChecked ? "bg-lmMidBackground border-lmMidBackground" : ""
-              }`}
-            >
-              {isChecked && (
-                <svg
-                  className="w-3 h-3 "
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                ></svg>
+              key={u}
+              onClick={() => handleToggle(u)}
+              className={cn(
+                "flex items-center px-1 py-2 cursor-pointer rounded-md hover:bg-faintWhite transition-colors duration-200",
+                isSelected && "bg-faintWhite-700 text-white"
               )}
+            >
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => handleToggle(u)}
+                className="mr-2 border-midWhite"
+              />
+              <span className='text-xs'>
+                {u} {u === username && "(You)"}
+              </span>
             </div>
-            <span className={`text-sm ${isChecked ? "" : "text-midWhite"}`}>
-              {u} {u === username && "(You)"}
-            </span>
-          </label>
-        );
-      })}
-    </div>
-  );
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  )
 };
 
 export default SelectAssignee;

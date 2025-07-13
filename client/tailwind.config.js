@@ -12,7 +12,15 @@ export default {
     'bg-blue-400',
     'bg-purple-400',
     'bg-orange-400',
-	'bg-gray-400'
+	'bg-gray-400',
+	'bg-lime-400',
+	'bg-yellow-400', 
+	'bg-green-400', 
+	'bg-teal-400', 
+	'bg-indigo-400', 
+	'bg-pink-400', 
+	'bg-rose-400', 
+	'bg-stone-400'
   ],
   theme: {
   	extend: {
@@ -92,7 +100,7 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
 		boxShadow: {
-			'bottom-grey': '0 4px 4px -2px rgba(40, 40, 40, 0.15)',
+			'bottom-grey': '0 4px 4px -2px rgba(0, 0, 0, 0.05)',
 		},
   	}
   },

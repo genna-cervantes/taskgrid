@@ -12,10 +12,11 @@ const Project = () => {
   const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
   const utils = trpc.useUtils();
 
-  const { setUsernameModal, username, columns } = useOutletContext<{
+  const { setUsernameModal, username, columns, taskCategoryOptions } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
     username: string | undefined;
     columns: Columns;
+    taskCategoryOptions: {category: string, color: string}[]|undefined
   }>();
 
   if (!columns) {
@@ -100,7 +101,7 @@ const Project = () => {
               </div>
             </div>
 
-            <div className="max-w-full overflow-y-auto space-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
+            <div className="max-w-full overflow-y-auto gap-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
               {columns[col].map((task) => {
                 return (
                   <React.Fragment key={task.id}>
@@ -109,6 +110,7 @@ const Project = () => {
                       col={col}
                       task={task}
                       handleDragStart={handleDragStart}
+                      taskCategoryOptions={taskCategoryOptions}
                       setUsernameModal={setUsernameModal}
                       username={username}
                     />

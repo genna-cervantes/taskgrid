@@ -120,6 +120,9 @@ const Projects = () => {
     id: projectId,
   });
 
+  // task category options
+  const {data: taskCategoryOptions} = trpc.getTaskCategoryOptions.useQuery({projectId})
+
   // if guest id is not registered to project
   useEffect(() => {
     if (
@@ -443,7 +446,7 @@ const Projects = () => {
           </div>
 
           {Object.keys(columns).length > 0 ? (
-            <Outlet context={{ setUsernameModal, username, columns }} />
+            <Outlet context={{ setUsernameModal, username, columns, taskCategoryOptions }} />
           ) : (
             <p className="text-sm opacity-50 text-center mt-8">
               Loading your tasks...
