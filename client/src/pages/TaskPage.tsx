@@ -3,7 +3,7 @@ import TaskDescription from "@/components/TaskDescription";
 import TaskSelectCategory from "@/components/TaskSelectCategory";
 import TaskSelectPriority from "@/components/TaskSelectPriority";
 import { trpc } from "@/utils/trpc";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { priorityLevels } from "@/components/AddTaskForm";
 import TaskTargetDates from "@/components/TaskTargetDates";
@@ -14,14 +14,33 @@ import TaskSelectMedia from "@/components/TaskSelectMedia";
 import TaskImageModal from "@/components/TaskImageModal";
 import TaskLink from "@/components/TaskLink";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import Mousetrap from "mousetrap";
+import { ActionContext } from "@/contexts/ActionContext";
+import { RecentTaskContext } from "@/contexts/RecentTaskContext";
+import { taskCategoryOptionsAreEqual } from "@/lib/utils";
+import { linkSchema } from "@/components/TaskModal";
+import TaskTitle from "@/components/TaskTitle";
 
 const TaskPage = () => {
   const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
   const projectId = projectIdParam ?? "";
   const taskId = taskIdParam ?? "";
+
+  const joinDiscussionRef = useRef<HTMLTextAreaElement>(null);
+
+  const navigate = useNavigate();
+  const utils = trpc.useUtils();
+
+  const actionContext = useContext(ActionContext);
+  const recentTaskContext = useContext(RecentTaskContext);
 
   const userContext = useGuestId();
   const { data: username, isLoading: usernameIsLoading } =
@@ -35,6 +54,10 @@ const TaskPage = () => {
     taskId: taskId,
   });
 
+  const { data: taskCategoryOptionsRes } = trpc.getTaskCategoryOptions.useQuery(
+    { projectId }
+  );
+
   const task: Task | undefined = data
     ? {
         ...data,
@@ -47,6 +70,7 @@ const TaskPage = () => {
       }
     : undefined;
 
+  const [isInitialized, setIsInitialized] = useState(false);
   const [taskTitle, setTaskTitle] = useState(task?.title);
   const [taskDescription, setTaskDescription] = useState(task?.description);
   const [taskCategory, setTaskCategory] = useState(task?.category);
@@ -58,6 +82,10 @@ const TaskPage = () => {
   >(task?.targetStartDate);
   const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date | undefined>(
     task?.targetEndDate
+  );
+
+  const [taskCategoryOptions, setTaskCategoryOptions] = useState(
+    taskCategoryOptionsRes ?? []
   );
 
   const [taskTargetDateError, setTaskTargetDateError] = useState("");
@@ -121,8 +149,236 @@ const TaskPage = () => {
     setUploadTaskImagesIsLoading(false);
   };
 
+  // TRPC METHODS
+  const deleteTask = trpc.deleteTask.useMutation({
+    onSuccess: (data) => {
+      console.log("Task deleted:", data);
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateAssignedTo = trpc.updateAssignedTo.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskTitle = trpc.updateTaskTitle.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskDescription = trpc.updateTaskDescription.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskLink = trpc.updateTaskLink.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskPriority = trpc.updateTaskPriority.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskTargetStartDate = trpc.updateTaskTargetStartDate.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskTargetEndDate = trpc.updateTaskTargetEndDate.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskCategory = trpc.updateTaskCategory.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  const updateTaskCategoryOptions = trpc.updateTaskCategoryOptions.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTaskCategoryOptions.invalidate({ projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  });
+
+  // HANDLE METHODS
+
+  const handleDeleteTask = () => {
+    if (task == null) return;
+
+    recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
+
+    deleteTask.mutate({ taskId: task.id });
+    navigate(`/projects/${projectId}`);
+
+    actionContext?.setAction("deleted");
+  };
+
+  const handleSaveTask = async () => {
+    if (task == null) return;
+    // check if may changes para wag n mag toast if wala naman
+
+    // validation
+    if (taskLink && task.link !== taskLink) {
+      const isLink = linkSchema.safeParse(taskLink);
+      if (!isLink.success) {
+        setTaskLinkError("Invalid Link");
+        return;
+      }
+    }
+
+    if (taskAssignedTo.length < 1) {
+      setTaskAssignedToError("At least one assignee is required");
+      return;
+    }
+
+    if (previewUrls.length + taskImageUrls.length > 3) {
+      setTaskMediaError(
+        "Upload limit of 3 has been exceeded, please remove a file or refresh the page"
+      );
+      return;
+    }
+
+    if (
+      taskTargetStartDate &&
+      taskTargetEndDate &&
+      taskTargetStartDate > taskTargetEndDate
+    ) {
+      setTaskTargetDateError(
+        "Target start date cannot be later than target end date"
+      );
+      return;
+    }
+
+    // end validation
+
+    recentTaskContext?.setTasks([task]); // keep track of this task for rollback later if undone
+
+    if (taskTitle && task.title !== taskTitle) {
+      updateTaskTitle.mutate({ title: taskTitle, taskId: task.id });
+    }
+
+    if (task.description !== taskDescription) {
+      updateTaskDescription.mutate({
+        description: taskDescription,
+        taskId: task.id,
+      });
+    }
+
+    if (task.link !== taskLink) {
+      updateTaskLink.mutate({
+        link: taskLink,
+        taskId: task.id,
+      });
+    }
+
+    if (taskPriority && task.priority !== taskPriority) {
+      updateTaskPriority.mutate({ priority: taskPriority, taskId: task.id });
+    }
+
+    if (task.assignedTo !== taskAssignedTo) {
+      updateAssignedTo.mutate({ assignTo: taskAssignedTo, taskId: task.id });
+    }
+
+    if (taskTargetStartDate && task.targetStartDate !== taskTargetStartDate) {
+      updateTaskTargetStartDate.mutate({
+        taskId: task.id,
+        projectId,
+        targetStartDate: taskTargetStartDate.toString(),
+      });
+    }
+
+    if (taskTargetEndDate && task.targetEndDate !== taskTargetEndDate) {
+      updateTaskTargetEndDate.mutate({
+        taskId: task.id,
+        projectId,
+        targetEndDate: taskTargetEndDate.toString(),
+      });
+    }
+
+    if (taskCategory && task.category !== taskCategory) {
+      updateTaskCategory.mutate({
+        taskId: task.id,
+        projectId,
+        category: taskCategory,
+      });
+    }
+
+    updateTaskCategoryOptions.mutate({
+      projectId,
+      taskCategoryOptions,
+    });
+
+    // for media - add checker if something actually changed tho
+    await handleUpload(task.id);
+
+    utils.getTaskById.invalidate();
+    setTaskLinkError("");
+    setTaskAssignedToError("");
+
+    actionContext?.setAction("edited");
+  };
+
   useEffect(() => {
-    if (task) {
+    if (task && !isInitialized) {
       setTaskTitle(task.title);
       setTaskDescription(task.description);
       setTaskCategory(task.category);
@@ -131,30 +387,42 @@ const TaskPage = () => {
       setTaskLink(task.link);
       setTaskTargetStartDate(task.targetStartDate);
       setTaskTargetEndDate(task.targetEndDate);
+      setIsInitialized(true);
     }
-  }, [task]); // get rid of this and just create state on the inputs
+  }, [task, isInitialized]);
 
-  const joinDiscussionRef = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    Mousetrap.prototype.stopCallback = function () {
+      return false; // allow all shortcuts to trigger
+    };
 
-  const navigate = useNavigate()
-  
-  useEffect(() => {  
-      Mousetrap.bind('ctrl+j', function(e) {
-        e.preventDefault();
-        joinDiscussionRef.current?.focus()
-      });
+    Mousetrap.bind("ctrl+j", function (e) {
+      e.preventDefault();
+      joinDiscussionRef.current?.focus();
+    });
 
-      Mousetrap.bind('esc', function(e) {
-        e.preventDefault();
-        navigate(`/projects/${projectId}`)
-      });
-      
-      return () => {
-        Mousetrap.unbind('ctrl+s');
-        Mousetrap.unbind('esc');
-      };
-    }, []);
-  
+    Mousetrap.bind("ctrl+s", function (e) {
+      e.preventDefault();
+      handleSaveTask()
+        .then(() => {
+            console.log("Save successful.");
+        })
+        .catch((err) => {
+            console.error("Save failed", err);
+        });
+    });
+
+    Mousetrap.bind("esc", function (e) {
+      e.preventDefault();
+      navigate(`/projects/${projectId}`);
+    });
+
+    return () => {
+      Mousetrap.unbind("ctrl+s");
+      Mousetrap.unbind("ctrl+j");
+      Mousetrap.unbind("esc");
+    };
+  }, []);
 
   if (task == null && !taskDataIsLoading) {
     return <Navigate to="/404" replace />;
@@ -169,19 +437,11 @@ const TaskPage = () => {
     <div className="w-full h-screen flex">
       <div className="scrollbar-group w-[60%] h-full">
         <div className="group-hover-scrollbar w-full px-4 flex flex-col gap-y-4 max-h-screen overflow-y-scroll super-thin-scrollbar">
-          <div>
-            <h3
-              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-            >
-              Title:
-            </h3>
-            <textarea
-              placeholder="What's this about?"
-              className={`w-full text-base h-12 super-thin-scrollbar placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
-              value={taskTitle}
-              onChange={(e) => setTaskTitle(e.target.value)}
-            />
-          </div>
+          <TaskTitle
+            isPage={true}
+            taskTitle={taskTitle}
+            setTaskTitle={setTaskTitle}
+          />
           <TaskDescription
             isPage={true}
             taskDescription={taskDescription}
@@ -189,8 +449,8 @@ const TaskPage = () => {
           />
           <TaskSelectCategory
             isPage={true}
-            projectId={projectId}
-            taskCategoryOptions={[]}
+            taskCategoryOptions={taskCategoryOptions}
+            setTaskCategoryOptions={setTaskCategoryOptions}
             taskCategory={taskCategory}
             setTaskCategory={setTaskCategory}
           />
@@ -264,18 +524,20 @@ const TaskPage = () => {
               Depends On:
             </h3>
             <Select>
-            <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
-                <p className={`text-base text-faintWhite`} >Select Task</p>
-            </SelectTrigger>
-            <SelectContent className="bg-backgroundDark">
+              <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
+                <p className={`text-base text-faintWhite`}>Select Task</p>
+              </SelectTrigger>
+              <SelectContent className="bg-backgroundDark">
                 <SelectGroup className={`text-base`}>
-                <SelectItem value="apple" className="hover:cursor-pointer">Apple</SelectItem>
-                <SelectItem value="banana" >Banana</SelectItem>
-                <SelectItem value="blueberry" >Blueberry</SelectItem>
-                <SelectItem value="grapes" >Grapes</SelectItem>
-                <SelectItem value="pineapple" >Pineapple</SelectItem>
+                  <SelectItem value="apple" className="hover:cursor-pointer">
+                    Apple
+                  </SelectItem>
+                  <SelectItem value="banana">Banana</SelectItem>
+                  <SelectItem value="blueberry">Blueberry</SelectItem>
+                  <SelectItem value="grapes">Grapes</SelectItem>
+                  <SelectItem value="pineapple">Pineapple</SelectItem>
                 </SelectGroup>
-            </SelectContent>
+              </SelectContent>
             </Select>
           </div>
           <div>
@@ -285,11 +547,15 @@ const TaskPage = () => {
               Sub Tasks:
             </h3>
             <div className="flex my-1 gap-x-2 items-center">
-                <Checkbox className="bg-inherit h-5 w-5 border border-faintWhite" />
-                <input type='text' placeholder="Subtask 1" className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full focus:outline-none focus:ring-0 focus:border-transparent" />
+              <Checkbox className="bg-inherit h-5 w-5 border border-faintWhite" />
+              <input
+                type="text"
+                placeholder="Subtask 1"
+                className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full focus:outline-none focus:ring-0 focus:border-transparent"
+              />
             </div>
           </div>
-          <div className="mb-16">
+          <div className="">
             <h3
               className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
             >
@@ -302,10 +568,78 @@ const TaskPage = () => {
               onChange={(e) => setTaskTitle(e.target.value)}
             />
           </div>
+          <div className="mb-16 flex gap-x-4">
+            <button
+              onClick={handleSaveTask}
+              className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
+              disabled={
+                updateAssignedTo.isLoading ||
+                updateTaskDescription.isLoading ||
+                updateTaskLink.isLoading ||
+                updateTaskPriority.isLoading ||
+                updateTaskTitle.isLoading ||
+                uploadTaskImagesIsLoading
+              }
+            >
+              {!updateAssignedTo.isLoading &&
+              !updateTaskDescription.isLoading &&
+              !updateTaskLink.isLoading &&
+              !updateTaskPriority.isLoading &&
+              !updateTaskTitle.isLoading &&
+              !uploadTaskImagesIsLoading ? (
+                "Save"
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={handleDeleteTask}
+              className="bg-red-400 w-full text-white text-sm py-[0.35rem] font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
+              disabled={deleteTask.isLoading}
+            >
+              {!deleteTask.isLoading ? (
+                "Delete"
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-loader-circle-icon lucide-loader-circle animate-spin"
+                >
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </div>
       <div className="w-[40%] px-6 h-screen">
-        <TaskDiscussionBoard ref={joinDiscussionRef} isPage={true} user={username} taskId={task.id} />
+        <TaskDiscussionBoard
+          ref={joinDiscussionRef}
+          isPage={true}
+          user={username}
+          taskId={task.id}
+        />
       </div>
     </div>
   );

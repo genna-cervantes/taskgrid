@@ -19,7 +19,7 @@ import Mousetrap from 'mousetrap';
 import { useNavigate } from "react-router-dom";
 import { taskCategoryOptionsAreEqual } from "@/lib/utils";
 
-const linkSchema = z.string().url();
+export const linkSchema = z.string().url();
 
 const TaskModal = ({
   task,

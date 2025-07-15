@@ -60,7 +60,7 @@ const SelectAssignee = ({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="px-2 flex flex-col gap-y-1 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
+      <PopoverContent className={`px-2 flex flex-col gap-y-1 py-2 w-[var(--radix-popover-trigger-width)] ${isPage ? "dark:bg-backgroundDark" : "dark:bg-[#1A1A1A]"} font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none`}>
         {usersInProject.map((u) => {
           const isSelected = taskAssignedTo.includes(u);
           return (

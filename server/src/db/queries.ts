@@ -340,10 +340,30 @@ export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
 }
 
 export const updateTaskCategoryOptions = async (pool: Pool, projectId: string, taskCategoryOptions: {category: string, color: string}[]) => {
+
+    const query1 = 'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
+    const res1 = await pool.query(query1, [projectId]);
+
+    const prevTaskCategories = res1.rows[0]?.taskCategoryOptions?.map((c: { category: string }) => c.category) || [];
+    const newTaskCategories = taskCategoryOptions.map((c) => c.category);
+
+    const removedTaskCategories = prevTaskCategories.filter((c: string) => !newTaskCategories.includes(c));
+
+    
+    // remove all removed categories from category column as well
+    if (removedTaskCategories.length > 0) {
+        const query2 = `
+        UPDATE tasks
+        SET category = null
+        WHERE category = ANY($1)
+            AND project_id = $2
+            AND is_active = TRUE;
+        `;
+        await pool.query(query2, [removedTaskCategories, projectId]);
+    }
+
     const query = 'UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;';
     const res = await pool.query(query, [JSON.stringify(taskCategoryOptions), projectId]);
-
-    // remove all removed categories from category column as well
 
     return res.rowCount
 }

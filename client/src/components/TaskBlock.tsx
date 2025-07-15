@@ -28,10 +28,6 @@ const TaskBlock = ({
 }) => {
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
 
-  const categories = ['feature', 'bug', 'refactor', '']
-
-  const category = categories[Math.floor(Math.random() * categories.length)];
-
   return (
     <>
       {taskDetailsModal && <TaskModal taskCategoryOptionsProp={taskCategoryOptions} username={username} setUsernameModal={setUsernameModal} task={task} projectId={projectId} setTaskDetailsModal={setTaskDetailsModal} />}
@@ -47,13 +43,13 @@ const TaskBlock = ({
             e.currentTarget.blur(); 
           }
         }}
-        className={`relative border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 mb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        className={`relative border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}><span className="font-semibold text-midWhite">[{task.projectTaskId}]</span> {task.title}</h1>
         <div className="mt-4">
           <div className="flex gap-x-2 items-center">
             <TaskPriority priority={task.priority} />
-            <TaskCategory category={category} />
+            {task.category && <TaskCategory category={task.category} taskCategoryOptions={taskCategoryOptions} />}
             {task.files.length > 1 && <TaskMediaCount mediaCount={task.files.length} />}
             {task.commentCount > 0 && <TaskCommentCount commentCount={task.commentCount} />}
           </div>

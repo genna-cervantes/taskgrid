@@ -1,12 +1,19 @@
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../utils/trpc";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import SelectAssignee from "./SelectAssignee";
+import TaskTitle from "./TaskTitle";
+import TaskDescription from "./TaskDescription";
+import TaskLink from "./TaskLink";
+import TaskPriority from "./TaskPriority";
+import TaskSelectPriority from "./TaskSelectPriority";
+import TaskAssignee from "./TaskAssignee";
+import Mousetrap from "mousetrap";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -37,6 +44,7 @@ const AddTaskForm = ({
   username: string | undefined;
 }) => {
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -166,9 +174,21 @@ const AddTaskForm = ({
   const remainingSlots = 3 - previewUrls.length;
   const selectedPriority = watch("priority");
 
+  // keyboard shortcuts
+  useEffect(() => {
+    Mousetrap.bind('esc', function(e) {
+      e.preventDefault();
+      setAddModal(false)
+    });
+    
+    return () => {
+      Mousetrap.unbind('esc');
+    };
+  }, []);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/[8%]"
       onClick={(e) => {
         if (insertTask.isLoading) {
           e.stopPropagation();
@@ -178,7 +198,7 @@ const AddTaskForm = ({
       }} // Close when clicking backdrop
     >
       <div
-        className="dark:bg-light bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
+        className="dark:bg-backgroundDark bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form
@@ -186,13 +206,17 @@ const AddTaskForm = ({
           className="flex flex-col gap-y-4"
         >
           <span className="w-full flex flex-col">
-            <label htmlFor="title" className="text-xs font-semibold mb-2">
-              Task Title:
-            </label>
-            <input
-              {...register("title")}
-              placeholder="New Task Title..."
-              className="text-xs md:text-base"
+            <Controller
+              name="title"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <TaskTitle
+                  isPage={true}
+                  taskTitle={field.value}
+                  setTaskTitle={field.onChange}
+                />
+              )}
             />
             {errors.title && (
               <p className="text-red-400 text-xs font-semibold mt-1">
@@ -201,13 +225,17 @@ const AddTaskForm = ({
             )}
           </span>
           <span className="w-full flex flex-col">
-            <label htmlFor="description" className="text-xs font-semibold mb-2">
-              Task Description:
-            </label>
-            <textarea
-              {...register("description")}
-              placeholder="New Task Description..."
-              className="text-xs md:text-base"
+            <Controller
+              name="description"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <TaskDescription
+                  isPage={true}
+                  taskDescription={field.value}
+                  setTaskDescription={field.onChange}
+                />
+              )}
             />
             {errors.description && (
               <p className="text-red-400 text-xs font-semibold mt-1">
@@ -302,13 +330,18 @@ const AddTaskForm = ({
             )}
           </span>
           <span className="w-full flex flex-col">
-            <label htmlFor="description" className="text-xs font-semibold mb-2">
-              Task Link:
-            </label>
-            <input
-              {...register("link")}
-              placeholder="New Task Link..."
-              className="text-xs md:text-base"
+            <Controller
+              name="link"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <TaskLink
+                  isPage={true}
+                  taskLink={field.value}
+                  setTaskLink={field.onChange}
+                  taskLinkError=""
+                />
+              )}
             />
             {errors.link && (
               <p className="text-red-400 text-xs font-semibold mt-1">
@@ -317,27 +350,19 @@ const AddTaskForm = ({
             )}
           </span>
           <span className="w-full flex flex-col">
-            <label htmlFor="priority" className="text-xs font-semibold mb-2">
-              Task Priority:
-            </label>
-            <span className="flex gap-x-2 text-sm">
-              {priorityLevels.map((p) => (
-                <button
-                  key={p}
-                  onClick={() =>
-                    setValue("priority", p, { shouldValidate: true })
-                  }
-                  type="button"
-                  className={`${
-                    selectedPriority === p
-                      ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
-                      : "bg-lmBackground/60"
-                  } text-sm md:text-base  dark:bg-faintWhite dark:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
-                >
-                  {p}
-                </button>
-              ))}
-            </span>
+            <Controller
+              name="priority"
+              control={control}
+              defaultValue="low"
+              render={({ field }) => (
+                <TaskSelectPriority
+                  isPage={true}
+                  priorityLevels={priorityLevels}
+                  taskPriority={field.value}
+                  setTaskPriority={field.onChange}
+                />
+              )}
+            />
             {errors.priority && (
               <p className="text-red-400 text-xs font-semibold mt-1">
                 {errors.priority.message}
@@ -345,22 +370,25 @@ const AddTaskForm = ({
             )}
           </span>
           <span className="w-full flex flex-col">
-            <SelectAssignee
-              setValue={setValue}
-              setTaskAssignedTo={setTaskAssignedTo}
-              taskAssignedTo={taskAssignedTo}
-              username={username ?? ""}
-              usersInProject={usersInProject ?? []}
+            <Controller
+              name="assignedTo"
+              control={control}
+              defaultValue={[]}
+              render={({ field }) => (
+                <TaskAssignee
+                  isPage={true}
+                  projectId={projectId}
+                  username={username}
+                  taskAssignedTo={field.value}
+                  setTaskAssignedTo={field.onChange}
+                  taskAssignedToError=""
+                />
+              )}
             />
-            {errors.assignedTo && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.assignedTo.message}
-              </p>
-            )}
           </span>
           <button
             type="submit"
-            className="w-full flex justify-center text-midBlack dark:text-fadedWhite font-semibold bg-lmBackground hover:bg-lmMidBackground dark:bg-faintWhite rounded-md py-2 cursor-pointer dark:hover:bg-midWhite text-xs md:text-base disabled:cursor-not-allowed disabled:bg-midWhite"
+            className="w-full flex justify-center text-midBlack dark:text-fadedWhite font-semibold bg-lmBackground hover:bg-lmMidBackground dark:bg-green-400 rounded-md py-1 cursor-pointer text-xs md:text-base disabled:cursor-not-allowed disabled:bg-midWhite"
             disabled={insertTask.isLoading}
           >
             {!insertTask.isLoading ? (

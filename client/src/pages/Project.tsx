@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, useMatch, useOutletContext, useParams } from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
@@ -6,11 +6,16 @@ import { trpc } from "../utils/trpc";
 import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 import ClearTask from "../components/ClearTask";
 import { Ellipsis } from "lucide-react";
+import Mousetrap from "mousetrap";
+import Xarrow from "react-xarrows";
+
 
 const Project = () => {
   const { projectId } = useParams();
   const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
   const utils = trpc.useUtils();
+
+  const [addModal, setAddModal] = useState(false);
 
   const { setUsernameModal, username, columns, taskCategoryOptions } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -55,6 +60,19 @@ const Project = () => {
     updateTaskProgress.mutate({ progress: toColumn, taskId: task.id });
   };
 
+  // keyboard shortcuts
+  useEffect(() => {
+    Mousetrap.bind('ctrl+alt+n', function(e) {
+      e.preventDefault();
+      setAddModal(true);
+    });
+    
+    return () => {
+      Mousetrap.unbind('ctrl+alt+n');
+    };
+  }, []);
+  
+
   // should redirect to not found
   if (!projectId) {
     return <div>missing project id</div>;
@@ -87,6 +105,8 @@ const Project = () => {
                 <Ellipsis className="text-faintWhite h-4 hover:text-fadedWhite hover:cursor-pointer" />
                 <AddTask
                   type=""
+                  addModal={addModal}
+                  setAddModal={setAddModal}
                   projectId={projectId}
                   col={col}
                   className="hidden group-hover/column:block"
@@ -101,10 +121,27 @@ const Project = () => {
               </div>
             </div>
 
-            <div className="max-w-full overflow-y-auto gap-y-2 my-2 max-h-[calc(100vh-200px)] scrollbar-none">
-              {columns[col].map((task) => {
+            {/* gap-y-3 if open ung dependencies */}
+            <div className="max-w-full flex flex-col gap-0 overflow-y-auto my-2 gap-y-[0.35rem] max-h-[calc(100vh-200px)] scrollbar-none">
+              {columns[col].map((task, i) => {
+
+                let id = ''
+                if (col === "backlog" && i === 0){
+                  id = 'id1'
+                }else if (col === "in progress" && i === 1){
+                  id = 'id2'
+                }else if (col === 'backlog' && i === 2){
+                  id = 'id3'
+                }else if (col === 'for checking' && i === 1){
+                  id = 'id4'
+                }else if (col === 'for checking' && i === 0){
+                  id = 'id5'
+                }else if (col === 'for checking' && i === 3){
+                  id = 'id6'
+                }
+
                 return (
-                  <React.Fragment key={task.id}>
+                  <div key={task.id} id={id} className="">
                     <TaskBLock
                       projectId={projectId}
                       col={col}
@@ -114,17 +151,44 @@ const Project = () => {
                       setUsernameModal={setUsernameModal}
                       username={username}
                     />
-                  </React.Fragment>
+                    {col === "backlog" && i === 1 &&
+                      <Xarrow
+                      start={'id1'} 
+                      end={'id2'} 
+                      headSize={4}
+                      strokeWidth={2}
+                      color='#BABABA'
+                      animateDrawing={true}
+                  />}
+                    {col === "backlog" && i === 2 && <Xarrow
+                      start={'id3'} 
+                      end={'id4'} 
+                      headSize={4}
+                      strokeWidth={2}
+                      color='#BABABA'
+                      animateDrawing={true}
+                  />}
+                    {col === "for checking" && i === 0 && <div className=""><Xarrow
+                      start={'id5'} 
+                      end={'id6'} 
+                      headSize={4}
+                      strokeWidth={2}
+                      color='#BABABA'
+                      animateDrawing={true}
+                  /></div>}
+                  </div>
                 );
               })}
             </div>
-            <AddTask
-              type="block"
-              projectId={projectId}
-              col={col}
-              className="hidden group-hover/column:block"
-              username={username}
-            />
+              <AddTask
+                type="block"
+                addModal={addModal}
+                setAddModal={setAddModal}
+                projectId={projectId}
+                col={col}
+                className="hidden group-hover/column:block"
+                username={username}
+              />
           </div>
         ))}
       </div>

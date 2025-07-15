@@ -53,6 +53,7 @@
     "react-day-picker": "^9.7.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.56.1",
+    "react-xarrows": "^2.0.2",
     "shadcn-ui": "^0.9.5",
     "superjson": "^2.2.1",
     "tailwind-merge": "^3.3.1",

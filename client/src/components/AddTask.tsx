@@ -3,8 +3,7 @@ import { cn } from "../utils/utils";
 import { ColumnKey } from "../../../server/src/shared/types";
 import AddTaskForm from "./AddTaskForm";
 
-const AddTask = ({type, username, projectId, col, className = ""}: {type: string, username: string|undefined, projectId: string, col: ColumnKey, className?: string}) => {
-  const [addModal, setAddModal] = useState(false);
+const AddTask = ({type, username, projectId, col, addModal, setAddModal, className = ""}: {addModal: boolean, setAddModal: React.Dispatch<React.SetStateAction<boolean>>, type: string, username: string|undefined, projectId: string, col: ColumnKey, className?: string}) => {
 
   if (addModal){
     return <AddTaskForm username={username} projectId={projectId} col={col} setAddModal={setAddModal} />

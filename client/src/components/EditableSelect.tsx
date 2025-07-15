@@ -82,9 +82,9 @@ export function EditableDropdown({
         >
           <span className="flex w-full items-center gap-x-4">
             <span
-              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-400`}
+              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-200`}
             ></span>
-            {taskCategory !== ""
+            {taskCategory
               ? taskCategoryOptions.find((o) => o.category === taskCategory)
                   ?.category
               : "Select option"}
@@ -92,7 +92,7 @@ export function EditableDropdown({
           <ChevronDown className="text-white" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="px-2 py-2 w-[var(--radix-popover-trigger-width)] dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
+      <PopoverContent className={`px-2 py-2 w-[var(--radix-popover-trigger-width)] ${isPage ? "dark:bg-backgroundDark" : "dark:bg-[#1A1A1A]"} font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none`}>
         <div className="flex flex-col gap-y-2 max-h-60 overflow-y-auto w-full">
           {taskCategoryOptions.map((opt) => (
             <div
@@ -102,7 +102,7 @@ export function EditableDropdown({
               {editingCategory === opt.category ? (
                 <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1">
                   <span
-                    className={`h-3 w-3 rounded-full bg-${opt.color}-400`}
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-200`}
                   ></span>
                   <Input
                     ref={(el) => (inputRefs.current[opt.category] = el)}
@@ -118,7 +118,7 @@ export function EditableDropdown({
               ) : (
                 <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1 py-2 hover:cursor-pointer">
                   <span
-                    className={`h-3 w-3 rounded-full bg-${opt.color}-400`}
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-200`}
                   ></span>
                   <button
                     className={`text-left w-full text-xs `}
