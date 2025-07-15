@@ -21,6 +21,7 @@ import {
   getProjectsFromGuestId,
   getTaskById,
   getTaskCategoryOptions,
+  getTaskIds,
   getTasksFromProjectId,
   getUsername,
   getUsernamesInProject,
@@ -33,6 +34,7 @@ import {
   updateAssignedTo,
   updateTaskCategory,
   updateTaskCategoryOptions,
+  updateTaskDependsOn,
   updateTaskDescription,
   updateTaskFiles,
   updateTaskLink,
@@ -71,6 +73,13 @@ export const appRouter = router({
     .query(async ({ input }) => {
       let tasks = await getTasksFromProjectId(pool, input.id);
       return tasks;
+    }),
+  getTaskIds: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({projectId: z.string()}))
+    .query(async ({input}) => {
+      let taskIds = await getTaskIds(pool, input.projectId)
+      return taskIds;
     }),
   getTaskById: publicProcedure
     .use(rateLimitMiddleware)
@@ -301,20 +310,22 @@ export const appRouter = router({
     }),
   updateTaskTargetStartDate: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), targetStartDate: z.string()}))
+    .input(z.object({taskId: z.string(), projectId: z.string(), targetStartDate: z.string().optional()}))
     .mutation(async({input}) => {
-      const updateCount = await updateTaskTargetStartDate(pool, input.taskId, input.projectId, new Date(input.targetStartDate));
-
+      const targetStartDate = input?.targetStartDate ? new Date(input.targetStartDate) : undefined
+      const updateCount = await updateTaskTargetStartDate(pool, input.taskId, input.projectId, targetStartDate);
+      
       if (updateCount !== 1){
         return false;
       }
       return true;
     }),
   updateTaskTargetEndDate: publicProcedure
-    .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), targetEndDate: z.string()}))
+  .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), targetEndDate: z.string().optional()}))
     .mutation(async({input}) => {
-      const updateCount = await updateTaskTargetEndDate(pool, input.taskId, input.projectId, new Date(input.targetEndDate));
+      const targetEndDate = input?.targetEndDate ? new Date(input.targetEndDate) : undefined
+      const updateCount = await updateTaskTargetEndDate(pool, input.taskId, input.projectId, targetEndDate);
 
       if (updateCount !== 1){
         return false;
@@ -323,10 +334,21 @@ export const appRouter = router({
     }),
   updateTaskCategory: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), category: z.string()}))
+    .input(z.object({taskId: z.string(), projectId: z.string(), category: z.string().optional()}))
     .mutation(async({input}) => {
-      const updateCount = await updateTaskCategory(pool, input.taskId, input.projectId, input.category);
+      const updateCount = await updateTaskCategory(pool, input.taskId, input.projectId, input?.category);
   
+      if (updateCount !== 1){
+        return false;
+      }
+      return true;
+    }),
+  updateTaskDependsOn: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), dependsOn: z.array(z.object({id: z.string(), title: z.string()}))}))
+    .mutation(async({input}) => {
+      const updateCount = await updateTaskDependsOn(pool, input.projectId, input.taskId, input.dependsOn);
+      
       if (updateCount !== 1){
         return false;
       }

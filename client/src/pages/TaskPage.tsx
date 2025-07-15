@@ -14,20 +14,13 @@ import TaskSelectMedia from "@/components/TaskSelectMedia";
 import TaskImageModal from "@/components/TaskImageModal";
 import TaskLink from "@/components/TaskLink";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import Mousetrap from "mousetrap";
 import { ActionContext } from "@/contexts/ActionContext";
 import { RecentTaskContext } from "@/contexts/RecentTaskContext";
-import { taskCategoryOptionsAreEqual } from "@/lib/utils";
 import { linkSchema } from "@/components/TaskModal";
 import TaskTitle from "@/components/TaskTitle";
+import TaskDependsOn from "@/components/TaskDependsOn";
 
 const TaskPage = () => {
   const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
@@ -43,7 +36,7 @@ const TaskPage = () => {
   const recentTaskContext = useContext(RecentTaskContext);
 
   const userContext = useGuestId();
-  const { data: username, isLoading: usernameIsLoading } =
+  const { data: username } =
     trpc.getUsername.useQuery({
       id: projectId,
       guestId: userContext.guestId ?? "",
@@ -83,6 +76,7 @@ const TaskPage = () => {
   const [taskTargetEndDate, setTaskTargetEndDate] = useState<Date | undefined>(
     task?.targetEndDate
   );
+  const [taskDependsOn, setTaskDependsOn] = useState(task?.dependsOn ?? []);
 
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
     taskCategoryOptionsRes ?? []
@@ -247,6 +241,17 @@ const TaskPage = () => {
       console.error("Failed to create task:", error.message);
     },
   });
+  
+  const updateTaskDependsOn = trpc.updateTaskDependsOn.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    },
+  })
 
   const updateTaskCategoryOptions = trpc.updateTaskCategoryOptions.useMutation({
     onSuccess: (data) => {
@@ -258,6 +263,7 @@ const TaskPage = () => {
       console.error("Failed to create task:", error.message);
     },
   });
+
 
   // HANDLE METHODS
 
@@ -338,28 +344,36 @@ const TaskPage = () => {
       updateAssignedTo.mutate({ assignTo: taskAssignedTo, taskId: task.id });
     }
 
-    if (taskTargetStartDate && task.targetStartDate !== taskTargetStartDate) {
+    if (task.targetStartDate !== taskTargetStartDate) {
       updateTaskTargetStartDate.mutate({
         taskId: task.id,
         projectId,
-        targetStartDate: taskTargetStartDate.toString(),
+        targetStartDate: taskTargetStartDate?.toString(),
       });
     }
 
-    if (taskTargetEndDate && task.targetEndDate !== taskTargetEndDate) {
+    if (task.targetEndDate !== taskTargetEndDate) {
       updateTaskTargetEndDate.mutate({
         taskId: task.id,
         projectId,
-        targetEndDate: taskTargetEndDate.toString(),
+        targetEndDate: taskTargetEndDate?.toString(),
       });
     }
 
-    if (taskCategory && task.category !== taskCategory) {
+    if (task.category !== taskCategory) {
       updateTaskCategory.mutate({
         taskId: task.id,
         projectId,
         category: taskCategory,
       });
+    }
+
+    if (taskDependsOn !== task.dependsOn){
+      updateTaskDependsOn.mutate({
+        projectId,
+        taskId: task.id,
+        dependsOn: taskDependsOn ?? []
+      })
     }
 
     updateTaskCategoryOptions.mutate({
@@ -387,6 +401,7 @@ const TaskPage = () => {
       setTaskLink(task.link);
       setTaskTargetStartDate(task.targetStartDate);
       setTaskTargetEndDate(task.targetEndDate);
+      setTaskDependsOn(task.dependsOn);
       setIsInitialized(true);
     }
   }, [task, isInitialized]);
@@ -517,29 +532,7 @@ const TaskPage = () => {
             </p>
             <hr className="flex-grow border-t border-faintWhite" />
           </div>
-          <div>
-            <h3
-              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-            >
-              Depends On:
-            </h3>
-            <Select>
-              <SelectTrigger className="w-full border-none shadow-bottom-grey px-0 placeholder:text-faintWhite">
-                <p className={`text-base text-faintWhite`}>Select Task</p>
-              </SelectTrigger>
-              <SelectContent className="bg-backgroundDark">
-                <SelectGroup className={`text-base`}>
-                  <SelectItem value="apple" className="hover:cursor-pointer">
-                    Apple
-                  </SelectItem>
-                  <SelectItem value="banana">Banana</SelectItem>
-                  <SelectItem value="blueberry">Blueberry</SelectItem>
-                  <SelectItem value="grapes">Grapes</SelectItem>
-                  <SelectItem value="pineapple">Pineapple</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+          <TaskDependsOn isPage={true} taskId={task.id} projectId={projectId} taskDependsOn={taskDependsOn} setTaskDependsOn={setTaskDependsOn} />
           <div>
             <h3
               className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
