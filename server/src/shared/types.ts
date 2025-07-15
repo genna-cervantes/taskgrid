@@ -23,7 +23,8 @@ export const TaskSchema = z.object({
   commentCount: z.number(),
   targetStartDate: z.date().optional(),
   targetEndDate: z.date().optional(),
-  dependsOn: z.array(z.object({id: z.string(), title: z.string()}))
+  dependsOn: z.array(z.object({id: z.string(), title: z.string()})),
+  subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()}))
 });
 
 export const CommentSchema = z.object({

@@ -40,6 +40,7 @@ import {
   updateTaskLink,
   updateTaskPriority,
   updateTaskProgress,
+  updateTaskSubTasks,
   updateTaskTargetEndDate,
   updateTaskTargetStartDate,
   updateTaskTitle,
@@ -348,6 +349,20 @@ export const appRouter = router({
     .input(z.object({taskId: z.string(), projectId: z.string(), dependsOn: z.array(z.object({id: z.string(), title: z.string()}))}))
     .mutation(async({input}) => {
       const updateCount = await updateTaskDependsOn(pool, input.projectId, input.taskId, input.dependsOn);
+      
+      if (updateCount !== 1){
+        return false;
+      }
+      return true;
+    }),
+  updateTaskSubtasks: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({taskId: z.string(), projectId: z.string(), subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()}))}))
+    .mutation(async ({input}) => {
+
+      console.log('st', input.subtasks)
+
+      const updateCount = await updateTaskSubTasks(pool, input.projectId, input.taskId, input.subtasks);
       
       if (updateCount !== 1){
         return false;

@@ -14,13 +14,13 @@ import TaskSelectMedia from "@/components/TaskSelectMedia";
 import TaskImageModal from "@/components/TaskImageModal";
 import TaskLink from "@/components/TaskLink";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
-import { Checkbox } from "@/components/ui/checkbox";
 import Mousetrap from "mousetrap";
 import { ActionContext } from "@/contexts/ActionContext";
 import { RecentTaskContext } from "@/contexts/RecentTaskContext";
 import { linkSchema } from "@/components/TaskModal";
 import TaskTitle from "@/components/TaskTitle";
 import TaskDependsOn from "@/components/TaskDependsOn";
+import TaskSubtasks from "@/components/TaskSubtasks";
 
 const TaskPage = () => {
   const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
@@ -77,6 +77,7 @@ const TaskPage = () => {
     task?.targetEndDate
   );
   const [taskDependsOn, setTaskDependsOn] = useState(task?.dependsOn ?? []);
+  const [taskSubtasks, setTaskSubtasks] = useState(task?.subtasks ?? [{ title: '', isDone: false }]);
 
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
     taskCategoryOptionsRes ?? []
@@ -252,6 +253,17 @@ const TaskPage = () => {
       console.error("Failed to create task:", error.message);
     },
   })
+  
+  const updateTaskSubtasks = trpc.updateTaskSubtasks.useMutation({
+    onSuccess: (data) => {
+      console.log("Task updated:", data);
+      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.getTasks.invalidate({ id: projectId });
+    },
+    onError: (error) => {
+      console.error("Failed to create task:", error.message);
+    }    
+  })
 
   const updateTaskCategoryOptions = trpc.updateTaskCategoryOptions.useMutation({
     onSuccess: (data) => {
@@ -368,11 +380,20 @@ const TaskPage = () => {
       });
     }
 
+    // array similarity dapat toh eh
     if (taskDependsOn !== task.dependsOn){
       updateTaskDependsOn.mutate({
         projectId,
         taskId: task.id,
         dependsOn: taskDependsOn ?? []
+      })
+    }
+
+    if (taskSubtasks !== task.subtasks){
+      updateTaskSubtasks.mutate({
+        projectId,
+        taskId: task.id,
+        subtasks: taskSubtasks
       })
     }
 
@@ -402,6 +423,7 @@ const TaskPage = () => {
       setTaskTargetStartDate(task.targetStartDate);
       setTaskTargetEndDate(task.targetEndDate);
       setTaskDependsOn(task.dependsOn);
+      setTaskSubtasks(task.subtasks);
       setIsInitialized(true);
     }
   }, [task, isInitialized]);
@@ -533,21 +555,7 @@ const TaskPage = () => {
             <hr className="flex-grow border-t border-faintWhite" />
           </div>
           <TaskDependsOn isPage={true} taskId={task.id} projectId={projectId} taskDependsOn={taskDependsOn} setTaskDependsOn={setTaskDependsOn} />
-          <div>
-            <h3
-              className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-            >
-              Sub Tasks:
-            </h3>
-            <div className="flex my-1 gap-x-2 items-center">
-              <Checkbox className="bg-inherit h-5 w-5 border border-faintWhite" />
-              <input
-                type="text"
-                placeholder="Subtask 1"
-                className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full focus:outline-none focus:ring-0 focus:border-transparent"
-              />
-            </div>
-          </div>
+          <TaskSubtasks isPage={true} taskSubtasks={taskSubtasks} setTaskSubtasks={setTaskSubtasks} />
           <div className="">
             <h3
               className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
