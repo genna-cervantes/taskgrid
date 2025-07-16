@@ -24,7 +24,7 @@ const TaskDependsOn = ({
   console.log('td', taskDependsOn)
 
   return (
-    <div>
+    <div className="w-full">
       <h3
         className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >

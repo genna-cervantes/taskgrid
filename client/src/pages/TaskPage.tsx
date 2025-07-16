@@ -32,6 +32,8 @@ const TaskPage = () => {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
 
+  const saveBtnRef = useRef<HTMLButtonElement>(null)
+
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
@@ -440,13 +442,8 @@ const TaskPage = () => {
 
     Mousetrap.bind("ctrl+s", function (e) {
       e.preventDefault();
-      handleSaveTask()
-        .then(() => {
-            console.log("Save successful.");
-        })
-        .catch((err) => {
-            console.error("Save failed", err);
-        });
+       saveBtnRef.current?.focus();
+       saveBtnRef.current?.click();
     });
 
     Mousetrap.bind("esc", function (e) {
@@ -555,7 +552,7 @@ const TaskPage = () => {
             <hr className="flex-grow border-t border-faintWhite" />
           </div>
           <TaskDependsOn isPage={true} taskId={task.id} projectId={projectId} taskDependsOn={taskDependsOn} setTaskDependsOn={setTaskDependsOn} />
-          <TaskSubtasks isPage={true} taskSubtasks={taskSubtasks} setTaskSubtasks={setTaskSubtasks} />
+          <TaskSubtasks isPage={true} taskSubtasks={taskSubtasks ?? [{ title: '', isDone: false }]} setTaskSubtasks={setTaskSubtasks} />
           <div className="">
             <h3
               className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
@@ -572,6 +569,7 @@ const TaskPage = () => {
           <div className="mb-16 flex gap-x-4">
             <button
               onClick={handleSaveTask}
+              ref={saveBtnRef}
               className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
               disabled={
                 updateAssignedTo.isLoading ||

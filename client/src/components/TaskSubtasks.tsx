@@ -33,25 +33,30 @@ const TaskSubtasks = ({taskSubtasks, setTaskSubtasks, isPage=false}: {isPage?: b
 
   return (
     <div className="space-y-2">
-      <label className="text-sm text-white">Sub Tasks:</label>
-      {taskSubtasks.map((s, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <Checkbox
-            checked={s.isDone}
-            onCheckedChange={(checked) =>
-              handleCheckboxChange(index, checked === true)
-            }
-            className="bg-inherit h-5 w-5 border border-faintWhite"
-          />
-          <input
-            type="text"
-            value={s.title}
-            onChange={(e) => handleTitleChange(index, e.target.value)}
-            placeholder={`Add Subtask`}
-            className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
-          />
+      <h3
+        className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+      >
+        Sub Tasks:</h3>
+        <div className='flex flex-col gap-y-3'>
+            {taskSubtasks.map((s, index) => (
+                <div key={index} className="flex items-center gap-x-2">
+                <Checkbox
+                    checked={s.isDone}
+                    onCheckedChange={(checked) =>
+                    handleCheckboxChange(index, checked === true)
+                    }
+                    className="bg-inherit h-5 w-5 border border-faintWhite"
+                />
+                <input
+                    type="text"
+                    value={s.title}
+                    onChange={(e) => handleTitleChange(index, e.target.value)}
+                    placeholder={`Add Subtask`}
+                    className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
+                />
+                </div>
+            ))}
         </div>
-      ))}
     </div>
   );
 };

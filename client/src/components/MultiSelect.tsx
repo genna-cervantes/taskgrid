@@ -40,7 +40,7 @@ const MultiSelect = ({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full border-none bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
+          className="w-full border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
         >
           <span
             className={cn(
@@ -50,7 +50,7 @@ const MultiSelect = ({
           >
             {value.length === 0
               ? placeholder
-              : value.map((v) => v.title).join(", ")}
+              : value.map((v) => v.title.length > 20 ? `${v.title.slice(0, 20)}...` : v.title).join(", ")}
           </span>
           <ChevronDown className="h-4 w-4 shrink-0" />
         </Button>

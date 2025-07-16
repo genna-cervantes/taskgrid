@@ -16,6 +16,7 @@ const Project = () => {
   const utils = trpc.useUtils();
 
   const [addModal, setAddModal] = useState(false);
+  const [showDependencies, setShowDependencies] = useState(false);
 
   const { setUsernameModal, username, columns, taskCategoryOptions } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -66,9 +67,15 @@ const Project = () => {
       e.preventDefault();
       setAddModal(true);
     });
+
+    Mousetrap.bind('ctrl+alt+d', function(e) {
+      e.preventDefault();
+      setShowDependencies((prev) => !prev)
+    });
     
     return () => {
       Mousetrap.unbind('ctrl+alt+n');
+      Mousetrap.unbind('ctrl+alt+d');
     };
   }, []);
   
@@ -122,28 +129,14 @@ const Project = () => {
             </div>
 
             {/* gap-y-3 if open ung dependencies */}
-            <div className="max-w-full flex flex-col gap-0 overflow-y-auto my-2 gap-y-[0.35rem] max-h-[calc(100vh-200px)] scrollbar-none">
+            <div className={`max-w-full flex flex-col gap-0 overflow-y-auto my-2 gap-y-[0.4rem] max-h-[calc(100vh-200px)] scrollbar-none transition-all duration-200`}>
               {columns[col].map((task, i) => {
 
-                let id = ''
-                if (col === "backlog" && i === 0){
-                  id = 'id1'
-                }else if (col === "in progress" && i === 1){
-                  id = 'id2'
-                }else if (col === 'backlog' && i === 2){
-                  id = 'id3'
-                }else if (col === 'for checking' && i === 1){
-                  id = 'id4'
-                }else if (col === 'for checking' && i === 0){
-                  id = 'id5'
-                }else if (col === 'for checking' && i === 3){
-                  id = 'id6'
-                }
-
                 return (
-                  <div key={task.id} id={id} className="">
+                  <div key={task.id} id={task.id} className="">
                     <TaskBLock
                       projectId={projectId}
+                      showDependencies={showDependencies}
                       col={col}
                       task={task}
                       handleDragStart={handleDragStart}
@@ -151,31 +144,16 @@ const Project = () => {
                       setUsernameModal={setUsernameModal}
                       username={username}
                     />
-                    {col === "backlog" && i === 1 &&
+                    {showDependencies && task.dependsOn && task.dependsOn.map((d) => (
                       <Xarrow
-                      start={'id1'} 
-                      end={'id2'} 
-                      headSize={4}
-                      strokeWidth={2}
-                      color='#BABABA'
-                      animateDrawing={true}
-                  />}
-                    {col === "backlog" && i === 2 && <Xarrow
-                      start={'id3'} 
-                      end={'id4'} 
-                      headSize={4}
-                      strokeWidth={2}
-                      color='#BABABA'
-                      animateDrawing={true}
-                  />}
-                    {col === "for checking" && i === 0 && <div className=""><Xarrow
-                      start={'id5'} 
-                      end={'id6'} 
-                      headSize={4}
-                      strokeWidth={2}
-                      color='#BABABA'
-                      animateDrawing={true}
-                  /></div>}
+                        start={task.id} 
+                        end={d.id} 
+                        headSize={4}
+                        strokeWidth={2}
+                        color='#BABABA'
+                        animateDrawing={true}
+                    />
+                    ))}
                   </div>
                 );
               })}

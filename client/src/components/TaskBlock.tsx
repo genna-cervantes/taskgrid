@@ -5,11 +5,13 @@ import TaskModal from "./TaskModal";
 import TaskMediaCount from "./TaskMedia";
 import TaskCommentCount from "./TaskCommentCount";
 import TaskCategory from "./TaskCategory";
+import { Checkbox } from "./ui/checkbox";
 
 const TaskBlock = ({
   col,
   task,
   projectId,
+  showDependencies,
   taskCategoryOptions,
   handleDragStart,
   setUsernameModal,
@@ -18,6 +20,7 @@ const TaskBlock = ({
   col: ColumnKey;
   task: Task;
   projectId: string,
+  showDependencies: boolean;
   taskCategoryOptions: {
     category: string;
     color: string;
@@ -27,6 +30,11 @@ const TaskBlock = ({
   username: string|undefined
 }) => {
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
+  const [showSubtasks, setShowsubtasks] = useState(false);
+
+  const handleSubtaskChange = (e: React.FormEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+  }
 
   return (
     <>
@@ -34,7 +42,7 @@ const TaskBlock = ({
       <div
         tabIndex={0}
         role="button"
-        draggable
+        draggable={!showDependencies}
         onDragStart={() => handleDragStart(col, task)}
         onClick={() => setTaskDetailsModal(true)}
         onKeyDown={(e) => {
@@ -43,7 +51,7 @@ const TaskBlock = ({
             e.currentTarget.blur(); 
           }
         }}
-        className={`relative border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        className={`relative ${showDependencies ? "hover:cursor-pointer" : "hover:cursor-grab"} border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}><span className="font-semibold text-midWhite">[{task.projectTaskId}]</span> {task.title}</h1>
         <div className="mt-4">
@@ -68,7 +76,24 @@ const TaskBlock = ({
                 return display;
               })()}
             </div>
+            {task.subtasks && <div className="cursor-pointer" onClick={(e) => {
+              e.stopPropagation()
+              setShowsubtasks(!showSubtasks)}
+            }>
+              <p>{task.subtasks.filter((s) => s.isDone).length}/{task.subtasks.length}</p>
+            </div>}
           </div>
+            {showSubtasks && <div className="mt-5 mb-1">
+              <div className="h-[1px] w-full bg-faintWhite mt-4 mb-2"></div>
+              <div className="flex flex-col gap-y-2">
+                {task.subtasks.map((s) => (
+                  <span className="flex gap-x-2 w-full items-center text-xs">
+                    <Checkbox onChange={(e) => handleSubtaskChange(e)} onClick={(e) => e.stopPropagation()} value={s.isDone ? 1 : 0} />
+                    <p>{s.title}</p>
+                  </span>
+                ))}
+              </div>
+            </div>}
         </div>
       </div>
     </>
