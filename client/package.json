@@ -46,6 +46,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.6",
     "idb": "^8.0.2",
     "lucide-react": "^0.523.0",
     "mousetrap": "^1.6.5",

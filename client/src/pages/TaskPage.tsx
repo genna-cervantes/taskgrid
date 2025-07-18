@@ -79,7 +79,7 @@ const TaskPage = () => {
     task?.targetEndDate
   );
   const [taskDependsOn, setTaskDependsOn] = useState(task?.dependsOn ?? []);
-  const [taskSubtasks, setTaskSubtasks] = useState(task?.subtasks ?? [{ title: '', isDone: false }]);
+  const [taskSubtasks, setTaskSubtasks] = useState(task?.subtasks ? [...task.subtasks, {title: "", isDone: false}] : []);
 
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
     taskCategoryOptionsRes ?? []
@@ -425,7 +425,7 @@ const TaskPage = () => {
       setTaskTargetStartDate(task.targetStartDate);
       setTaskTargetEndDate(task.targetEndDate);
       setTaskDependsOn(task.dependsOn);
-      setTaskSubtasks(task.subtasks);
+      setTaskSubtasks(task.subtasks ? [...task.subtasks, {title: "", isDone: false}] : []);
       setIsInitialized(true);
     }
   }, [task, isInitialized]);
@@ -552,7 +552,7 @@ const TaskPage = () => {
             <hr className="flex-grow border-t border-faintWhite" />
           </div>
           <TaskDependsOn isPage={true} taskId={task.id} projectId={projectId} taskDependsOn={taskDependsOn} setTaskDependsOn={setTaskDependsOn} />
-          <TaskSubtasks isPage={true} taskSubtasks={taskSubtasks ?? [{ title: '', isDone: false }]} setTaskSubtasks={setTaskSubtasks} />
+          <TaskSubtasks isPage={true} taskSubtasks={taskSubtasks} setTaskSubtasks={setTaskSubtasks} />
           <div className="">
             <h3
               className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}

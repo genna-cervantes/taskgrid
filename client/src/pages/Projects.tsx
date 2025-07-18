@@ -21,10 +21,7 @@ import { Task } from "../../../server/src/shared/types";
 import { Kanban, KanbanSquare } from "lucide-react";
 
 const Projects = () => {
-  // pag share = true mag jjoin siya ndi kanya so hingin agad ung name
-  // pag galing sa home walang share = true so wag na hingin agad ung name
-
-  // UNG SA KAGAYA SA SE NA DAPAT GALING FROM THAT LINK KUNIN UNG STATE IF NDI HINGIN NA AGAD UNG NAME IF WALA NAKASET KASI SHARED UN
+  
   const location = useLocation();
   const fromHome = location.state?.from === "home"; // tracks ownership
   let isOwnBoard = true;
@@ -65,6 +62,7 @@ const Projects = () => {
   const { data: rawData, isLoading } = trpc.getTasks.useQuery({
     id: projectId,
   });
+  // handle multiple filter in one factor
   const { data: rawFilteredTasks, isLoading: filteredTasksIsLoading } =
     trpc.filterTask.useQuery(
       {
@@ -79,7 +77,6 @@ const Projects = () => {
 
   const data: Task[] | undefined = (rawData as Task[] | undefined)?.map(
     (rd) => {
-      console.log('rd', rd)
       return ({
       ...rd,
       targetStartDate: rd.targetStartDate
