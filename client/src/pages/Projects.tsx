@@ -46,18 +46,20 @@ const Projects = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const priority = searchParams.get("priority") || "";
   const assignedTo = searchParams.get("assignedTo") || "";
+  const category = searchParams.get("category") || "";
 
   const [usernameModal, setUsernameModal] = useState(false);
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
   const [filter, setFilter] = useState({
     priority: priority,
     assignedTo: assignedTo,
+    category: category
   });
 
   const actionContext = useContext(ActionContext);
   const { isMobile } = useDeviceDetect();
 
-  const isFilterEnabled = priority !== "" || assignedTo !== "";
+  const isFilterEnabled = priority !== "" || assignedTo !== "" || category !== "";
 
   const { data: rawData, isLoading } = trpc.getTasks.useQuery({
     id: projectId,
@@ -69,6 +71,7 @@ const Projects = () => {
         id: projectId,
         priority,
         assignedTo,
+        category
       },
       {
         enabled: isFilterEnabled,
@@ -85,6 +88,7 @@ const Projects = () => {
       targetEndDate: rd.targetEndDate ? new Date(rd.targetEndDate) : undefined,
     })}
   );
+
   const filteredTasks: Task[] | undefined = (
     rawFilteredTasks as Task[] | undefined
   )?.map((rd) => ({
@@ -165,6 +169,7 @@ const Projects = () => {
     handleFilterChange([
       { key: "priority", value: filter.priority },
       { key: "assignedTo", value: filter.assignedTo },
+      { key: "category", value: filter.category },
     ]);
   };
 
@@ -172,12 +177,14 @@ const Projects = () => {
     setFilter({
       priority: "",
       assignedTo: "",
+      category: ""
     });
 
     setSearchParams((prevParams) => {
       const newParams = new URLSearchParams(prevParams?.toString());
       newParams.delete("priority");
       newParams.delete("assignedTo");
+      newParams.delete("category");
       return newParams;
     });
   };

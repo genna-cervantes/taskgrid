@@ -47,10 +47,6 @@ const Sidebar = () => {
       func: function (){
         setActiveIndex(2)
         setToggleSidebar(!toggleSidebar)
-
-        const newParams = new URLSearchParams();
-        newParams.set("view", "Filter");
-        setSearchParams(newParams);
       }
     },
     {
@@ -93,8 +89,10 @@ const Sidebar = () => {
   
   const [priorityFilter, setPriorityFilter] = useState<{id: string, title: string}[]>(searchParams.get("priority") && searchParams.get("priority") !== "" ? [{id: searchParams.get("priority") ?? "", title: searchParams.get("priority") ?? ""}] : [])
   const [assignedToFilter, setAssignedToFilter] = useState<{id: string, title: string}[]>(searchParams.get("assignedTo") && searchParams.get("assignedTo") !== "" ? [{id: searchParams.get("assignedTo") ?? "", title: searchParams.get("assignedTo") ?? ""}] : [])
+  const [categoryFilter, setCategoryFilter] = useState<{id: string, title: string}[]>(searchParams.get("category") && searchParams.get("category") !== "" ? [{id: searchParams.get("category") ?? "", title: searchParams.get("category") ?? ""}] : [])
 
   const {data: usersInProject, isLoading: usersInProjectIsLoading} = trpc.getUsersInProject.useQuery({id: projectId ?? ""}, {enabled: !!projectId})
+  const {data: taskCategoryOptions, isLoading: taskCategoryOptionsIsLoading} = trpc.getTaskCategoryOptions.useQuery({projectId: projectId ?? ""}, {enabled: !!projectId})
 
   useEffect(() => {
     const index = hoveredIndex ?? activeIndex;
@@ -112,7 +110,9 @@ const Sidebar = () => {
     const newParams = new URLSearchParams(searchParams?.toString());
 
     const chosenFilters = [
+      {key: "view", value: "Filter"},
       {key: "priority", value: priorityFilter.map((f) => f.title).join(",")},
+      {key: "category", value: categoryFilter.map((f) => f.title).join(",")},
       {key: "assignedTo", value: assignedToFilter.map((f) => f.title).join(",")}
     ]
   
@@ -165,7 +165,7 @@ const Sidebar = () => {
         className={`transition-all duration-200 ${
           !toggleSidebar
             ? "absolute left-0 top-0 z-20 w-[3.25rem] h-full flex flex-col items-center pt-4 pb-6 dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5"
-            : "absolute z-20 top-0 l-0 w-60 h-full flex flex-col items-start pt-4 pb-6 dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5"
+            : "absolute z-20 top-0 l-0 w-64 h-full flex flex-col items-start pt-4 pb-6 dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5"
         }`}
       >
         {!toggleSidebar && (
@@ -203,7 +203,7 @@ const Sidebar = () => {
                     >
                       <Icon
                         className={`h-5 w-5 transition-colors duration-300 group-hover/nav:text-white group-focus/nav:text-white ${
-                          isActive === item.name
+                          activeIndex === index
                             ? "text-white"
                             : "text-midWhite"
                         }`}
@@ -261,7 +261,7 @@ const Sidebar = () => {
                     >
                       <Icon
                         className={`h-5 w-5 transition-colors duration-300 group-hover/nav:text-white ${
-                          isActive === item.name
+                          activeIndex === index
                             ? "text-white"
                             : "text-midWhite"
                         }`}
@@ -269,7 +269,7 @@ const Sidebar = () => {
                       />
                       <p
                         className={`text-xs pt-[2px] group-hover/nav:text-white ${
-                          isActive === item.name
+                          activeIndex === index
                             ? "text-white"
                             : "text-midWhite"
                         }`}
@@ -277,7 +277,7 @@ const Sidebar = () => {
                         {item.name}
                       </p>
                     </button>
-                    {isActive === "Filter" && item.name === "Filter" && <div className="w-full flex flex-col gap-y-3 mb-6 px-4">
+                    {isActive === "Filter" && item.name === "Filter" && <div className="w-full flex flex-col gap-y-3 mb-6 px-5">
                       <div className="w-full flex flex-col">
                         <p className="text-xs font-rubik text-midWhite">Priority:</p>
                         <MultiSelect value={priorityFilter} setValue={setPriorityFilter} placeholder="Choose priority" choices={priorityLevels.map((v) => ({id: v, title: v}))} />
@@ -286,6 +286,11 @@ const Sidebar = () => {
                       <div className="w-full flex flex-col">
                         <p className="text-xs font-rubik text-midWhite">Assigned To:</p>
                         <MultiSelect value={assignedToFilter} setValue={setAssignedToFilter} placeholder="Choose assigned to" choices={usersInProjectIsLoading || !usersInProject ? [] : usersInProject?.map((u) => ({id: u.username, title: u.username}))} />
+                      </div>
+
+                      <div className="w-full flex flex-col">
+                        <p className="text-xs font-rubik text-midWhite">Category:</p>
+                        <MultiSelect value={categoryFilter} setValue={setCategoryFilter} placeholder="Choose category" choices={taskCategoryOptionsIsLoading || !taskCategoryOptions ? [] : taskCategoryOptions?.map((t) => ({id: t.category, title: t.category}))} />
                       </div>
 
                       <button onClick={(e) => handleApplyFilter(e)} className="text-xs w-full py-2 bg-light flex justify-center rounded-md">Apply Filters</button>

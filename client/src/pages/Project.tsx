@@ -17,6 +17,7 @@ const Project = () => {
 
   const [addModal, setAddModal] = useState(false);
   const [showDependencies, setShowDependencies] = useState(false);
+  const [showAllSubtasks, setShowAllSubtasks] = useState(false);
 
   const { setUsernameModal, username, columns, taskCategoryOptions } = useOutletContext<{
     setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -72,10 +73,16 @@ const Project = () => {
       e.preventDefault();
       setShowDependencies((prev) => !prev)
     });
+
+    Mousetrap.bind('ctrl+alt+s', function(e) {
+      e.preventDefault();
+      setShowAllSubtasks((prev) => !prev)
+    });
     
     return () => {
       Mousetrap.unbind('ctrl+alt+n');
       Mousetrap.unbind('ctrl+alt+d');
+      Mousetrap.unbind('ctrl+alt+s');
     };
   }, []);
   
@@ -137,6 +144,7 @@ const Project = () => {
                     <TaskBLock
                       projectId={projectId}
                       showDependencies={showDependencies}
+                      showAllSubtasks={showAllSubtasks}
                       col={col}
                       task={task}
                       handleDragStart={handleDragStart}

@@ -481,13 +481,14 @@ export const appRouter = router({
   filterTask: publicProcedure
     .use(rateLimitMiddleware)
     .input(
-      z.object({ priority: z.string(), assignedTo: z.string(), id: z.string() })
+      z.object({ priority: z.string(), assignedTo: z.string(), id: z.string(), category: z.string() })
     )
     .query(async ({ input }) => {
       let filteredTasks = await getFilteredTasks(
         pool,
         input.priority,
         input.assignedTo,
+        input.category,
         input.id
       );
       return filteredTasks as Task[];

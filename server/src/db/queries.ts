@@ -2,391 +2,590 @@ import { Pool } from "pg";
 import { Comment, InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
+  const query =
+    "SELECT p.id, p.name, up.guest_id AS guestId FROM user_project_link AS up LEFT JOIN projects AS p ON p.id = up.project_id WHERE up.guest_id = $1 AND p.is_active = TRUE AND up.is_active = TRUE;";
+  const res = await pool.query(query, [guestId]);
 
-    const query = "SELECT p.id, p.name, up.guest_id AS guestId FROM user_project_link AS up LEFT JOIN projects AS p ON p.id = up.project_id WHERE up.guest_id = $1 AND p.is_active = TRUE AND up.is_active = TRUE;";
-    const res = await pool.query(query, [guestId])
-
-    return res.rows as Project[]
-}
+  return res.rows as Project[];
+};
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
-    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND is_active = TRUE';
-    const res = await pool.query(query, [id]);
+  const query =
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+  const res = await pool.query(query, [id]);
 
-    const tasks: Task[] = res.rows.map((task) => ({
-        ...task,
-        id: task.id.toString(),
-      }));
+  const tasks: Task[] = res.rows.map((task) => ({
+    ...task,
+    id: task.id.toString(),
+  }));
 
-    const tasksWithComments = await Promise.all(
-      tasks.map(async (t) => {
-        const commentQuery = 'SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;';
-        const commentRes = await pool.query(commentQuery, [t.id]);
-        return {
-          ...t,
-          commentCount: parseInt(commentRes.rows[0].count, 10)
-        };
-      })
-    );
+  const tasksWithComments = await Promise.all(
+    tasks.map(async (t) => {
+      const commentQuery =
+        "SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;";
+      const commentRes = await pool.query(commentQuery, [t.id]);
+      return {
+        ...t,
+        commentCount: parseInt(commentRes.rows[0].count, 10),
+      };
+    })
+  );
 
-    return tasksWithComments as Task[];
-}
+  return tasksWithComments as Task[];
+};
 
 export const getTaskIds = async (pool: Pool, projectId: string) => {
-    const query = 'SELECT id, title FROM tasks WHERE project_id = $1 AND is_active = TRUE;';
-    const res = await pool.query(query, [projectId]);
+  const query =
+    "SELECT id, title FROM tasks WHERE project_id = $1 AND is_active = TRUE;";
+  const res = await pool.query(query, [projectId]);
 
-    const miniTasks = res.rows.map((t) => ({...t, id: new String(t.id)}))
+  const miniTasks = res.rows.map((t) => ({ ...t, id: new String(t.id) }));
 
-    return miniTasks as {id: string, title: string}[];
-}
+  return miniTasks as { id: string; title: string }[];
+};
 
-export const getTaskById = async (pool: Pool, projectId: string, taskId: string) => {
-    
-    const query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
-    const res = await pool.query(query, [projectId, taskId]);
-    
-    const task: Task = {
-        ...res.rows[0],
-        id: res.rows[0].id.toString(),
-    };
-    
-    const commentQuery = 'SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;';
-    const commentRes = await pool.query(commentQuery, [task.id]);
+export const getTaskById = async (
+  pool: Pool,
+  projectId: string,
+  taskId: string
+) => {
+  const query =
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
+  const res = await pool.query(query, [projectId, taskId]);
 
-    const tasksWithComments =  {
-        ...task,
-        commentCount: parseInt(commentRes.rows[0].count, 10)
-    };
-    
-    return tasksWithComments as Task;
-}
+  const task: Task = {
+    ...res.rows[0],
+    id: res.rows[0].id.toString(),
+  };
 
-export const insertTask = async (pool: Pool, task: InsertableTask, id: string) => {
-    const query = 'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";'
-    const res = await pool.query(query, [id, task.title, task.link, task.description, task.priority, task.progress, task.assignedTo]);
+  const commentQuery =
+    "SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;";
+  const commentRes = await pool.query(commentQuery, [task.id]);
 
-    res.rows[0].id = res.rows[0].id.toString()
+  const tasksWithComments = {
+    ...task,
+    commentCount: parseInt(commentRes.rows[0].count, 10),
+  };
 
-    return res.rows[0] as Task;
-}
+  return tasksWithComments as Task;
+};
 
-export const updateTaskProgress = async (pool: Pool, taskId: string, progress: string) => {
-    const query = 'UPDATE tasks SET progress = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [progress, parseInt(taskId)]);
+export const insertTask = async (
+  pool: Pool,
+  task: InsertableTask,
+  id: string
+) => {
+  const query =
+    'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";';
+  const res = await pool.query(query, [
+    id,
+    task.title,
+    task.link,
+    task.description,
+    task.priority,
+    task.progress,
+    task.assignedTo,
+  ]);
 
-    return res.rowCount;
-}
+  res.rows[0].id = res.rows[0].id.toString();
+
+  return res.rows[0] as Task;
+};
+
+export const updateTaskProgress = async (
+  pool: Pool,
+  taskId: string,
+  progress: string
+) => {
+  const query =
+    "UPDATE tasks SET progress = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [progress, parseInt(taskId)]);
+
+  return res.rowCount;
+};
 
 export const deleteTask = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1';
-    const res = await pool.query(query, [taskId]);
+  const query = "UPDATE tasks SET is_active = FALSE WHERE id = $1";
+  const res = await pool.query(query, [taskId]);
 
-    return res.rowCount
-}
+  return res.rowCount;
+};
 
-export const insertUser = async (pool: Pool, username: string, guestId: string) => {
-    const query = 'INSERT INTO users (username, guest_id) VALUES ($1, $2)';
-    const res = await pool.query(query, [username, guestId]);
+export const insertUser = async (
+  pool: Pool,
+  username: string,
+  guestId: string
+) => {
+  const query = "INSERT INTO users (username, guest_id) VALUES ($1, $2)";
+  const res = await pool.query(query, [username, guestId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const setUsername = async (pool:Pool, username: string, guestId: string, id: string) => {
-    const query = 'UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [username, guestId, id]);
-    
-    return res.rowCount;
-}
+export const setUsername = async (
+  pool: Pool,
+  username: string,
+  guestId: string,
+  id: string
+) => {
+  const query =
+    "UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [username, guestId, id]);
+
+  return res.rowCount;
+};
 
 export const checkGuestId = async (pool: Pool, guestId: string) => {
-    const query = 'SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;';
-    const res = await pool.query(query, [guestId]);
+  const query =
+    "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";
+  const res = await pool.query(query, [guestId]);
 
-    return parseInt(res.rows[0].count);
-}
+  return parseInt(res.rows[0].count);
+};
 
 export const getUsername = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE'
-    const res = await pool.query(query, [id, guestId])
+  const query =
+    "SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [id, guestId]);
 
-    return res.rows[0]?.username ?? ""
-}
+  return res.rows[0]?.username ?? "";
+};
 
-export const kickUserFromProject = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2;';
-    const res = await pool.query(query, [id, guestId]);
+export const kickUserFromProject = async (
+  pool: Pool,
+  id: string,
+  guestId: string
+) => {
+  const query =
+    "UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2;";
+  const res = await pool.query(query, [id, guestId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
 export const getUsersInProject = async (pool: Pool, id: string) => {
-    const query = 'SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;';
-    const res = await pool.query(query, [id])
+  const query =
+    "SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;";
+  const res = await pool.query(query, [id]);
 
-    if (res.rowCount === 0){
-        return []
-    }
+  if (res.rowCount === 0) {
+    return [];
+  }
 
-    let users = res.rows.map((r) => {
-        return {
-            username: r.username,
-            guestId: r.guestid
-        }
-    })
+  let users = res.rows.map((r) => {
+    return {
+      username: r.username,
+      guestId: r.guestid,
+    };
+  });
 
-    return users;
-}
+  return users;
+};
 
 export const getUsernamesInProject = async (pool: Pool, id: string) => {
-    const query = 'SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE'
-    const res = await pool.query(query, [id]);
+  const query =
+    "SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE";
+  const res = await pool.query(query, [id]);
 
-    if (res.rowCount === 0){
-        return []
-    }
+  if (res.rowCount === 0) {
+    return [];
+  }
 
-    let usernames = res.rows.map((r) => r.username)
-    return usernames;
-}
+  let usernames = res.rows.map((r) => r.username);
+  return usernames;
+};
 
-export const updateAssignedTo = async (pool: Pool, taskId: string, assignTo: string[]) => {
-    const query = 'UPDATE tasks SET assign_to = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [assignTo, taskId])
+export const updateAssignedTo = async (
+  pool: Pool,
+  taskId: string,
+  assignTo: string[]
+) => {
+  const query =
+    "UPDATE tasks SET assign_to = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [assignTo, taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const updateTaskTitle = async (pool: Pool, taskId: string, title: string) => {
-    const query = 'UPDATE tasks SET title = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [title, taskId]);
+export const updateTaskTitle = async (
+  pool: Pool,
+  taskId: string,
+  title: string
+) => {
+  const query =
+    "UPDATE tasks SET title = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [title, taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const updateTaskDescription = async (pool: Pool, taskId: string, description?: string) => {
-    const query = 'UPDATE tasks SET description = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [description, taskId])
+export const updateTaskDescription = async (
+  pool: Pool,
+  taskId: string,
+  description?: string
+) => {
+  const query =
+    "UPDATE tasks SET description = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [description, taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const updateTaskLink = async (pool: Pool, taskId: string, link?: string) => {
-    const query = 'UPDATE tasks SET link = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [link, taskId])
+export const updateTaskLink = async (
+  pool: Pool,
+  taskId: string,
+  link?: string
+) => {
+  const query = "UPDATE tasks SET link = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [link, taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
+export const updateTaskPriority = async (
+  pool: Pool,
+  taskId: string,
+  priority: string
+) => {
+  const query =
+    "UPDATE tasks SET priority = $1 WHERE id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [priority, taskId]);
 
-export const updateTaskPriority = async (pool: Pool, taskId: string, priority: string) => {
-    const query = 'UPDATE tasks SET priority = $1 WHERE id = $2 AND is_active = TRUE';
-    const res = await pool.query(query, [priority, taskId]);
+  return res.rowCount;
+};
 
-    return res.rowCount;
-}
+export const updateTaskFiles = async (
+  pool: Pool,
+  taskId: string,
+  projectId: string,
+  keys: string[],
+  previousKeys: string[]
+) => {
+  if (keys.length + previousKeys.length > 3) {
+    throw new Error("too many task files");
+  }
 
-export const updateTaskFiles = async (pool: Pool, taskId: string, projectId: string, keys: string[], previousKeys: string[]) => {
-    if ((keys.length + previousKeys.length) > 3){
-        throw new Error("too many task files")
-    }
+  const query =
+    "UPDATE tasks SET files = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [
+    [...keys, ...previousKeys],
+    taskId,
+    projectId,
+  ]);
 
-    const query = 'UPDATE tasks SET files = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [[...keys, ...previousKeys], taskId, projectId]);
+  return res.rowCount;
+};
 
-    return res.rowCount;
-}
+export const updateTaskTargetStartDate = async (
+  pool: Pool,
+  taskId: string,
+  projectId: string,
+  targetStartDate: Date | undefined
+) => {
+  const query =
+    "UPDATE tasks SET target_start_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [targetStartDate, taskId, projectId]);
 
-export const updateTaskTargetStartDate = async (pool: Pool, taskId: string, projectId: string, targetStartDate: Date|undefined) => {
-    const query = 'UPDATE tasks SET target_start_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [targetStartDate, taskId, projectId]);
+  return res.rowCount;
+};
 
-    return res.rowCount;
-}
+export const updateTaskTargetEndDate = async (
+  pool: Pool,
+  taskId: string,
+  projectId: string,
+  targetEndDate: Date | undefined
+) => {
+  const query =
+    "UPDATE tasks SET target_end_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [targetEndDate, taskId, projectId]);
 
-export const updateTaskTargetEndDate = async (pool: Pool, taskId: string, projectId: string, targetEndDate: Date|undefined) => {
-    const query = 'UPDATE tasks SET target_end_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [targetEndDate, taskId, projectId]);
+  return res.rowCount;
+};
 
-    return res.rowCount;
-}
+export const updateTaskCategory = async (
+  pool: Pool,
+  taskId: string,
+  projectId: string,
+  category: string | undefined
+) => {
+  const query =
+    "UPDATE tasks SET category = $1 WHERE id = $2 AND project_id = $3;";
+  const res = await pool.query(query, [category, taskId, projectId]);
 
-export const updateTaskCategory = async (pool: Pool, taskId: string, projectId: string, category: string|undefined) => {
-    const query = 'UPDATE tasks SET category = $1 WHERE id = $2 AND project_id = $3;';
-    const res = await pool.query(query, [category, taskId, projectId]);
-
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
 export const deleteTaskById = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = FALSE WHERE id = $1 AND is_active = TRUE';
-    const res = await pool.query(query, [taskId])
+  const query =
+    "UPDATE tasks SET is_active = FALSE WHERE id = $1 AND is_active = TRUE";
+  const res = await pool.query(query, [taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
 export const undoDeleteTask = async (pool: Pool, taskId: string) => {
-    const query = 'UPDATE tasks SET is_active = TRUE WHERE id = $1';
-    const res = await pool.query(query, [taskId])
+  const query = "UPDATE tasks SET is_active = TRUE WHERE id = $1";
+  const res = await pool.query(query, [taskId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const addProject = async (pool: Pool, projectId: string, name: string, guestId: string) => {
-    const query = 'INSERT INTO projects (id, name, guest_id) VALUES ($1, $2, $3)';
-    const res = await pool.query(query, [projectId, name, guestId]);
+export const addProject = async (
+  pool: Pool,
+  projectId: string,
+  name: string,
+  guestId: string
+) => {
+  const query = "INSERT INTO projects (id, name, guest_id) VALUES ($1, $2, $3)";
+  const res = await pool.query(query, [projectId, name, guestId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
 export const getProjectOwner = async (pool: Pool, projectId: string) => {
-    const query = 'SELECT guest_id FROM projects WHERE id = $1 AND is_active = TRUE;';
-    const res = await pool.query(query, [projectId]);
+  const query =
+    "SELECT guest_id FROM projects WHERE id = $1 AND is_active = TRUE;";
+  const res = await pool.query(query, [projectId]);
 
-    return res.rows[0]?.guest_id;
-}
+  return res.rows[0]?.guest_id;
+};
 
-export const addUserProjectLink = async (pool: Pool, projectId: string, guestId: string, username: string) => {
-    const query = 'INSERT INTO user_project_link (project_id, guest_id, username) VALUES ($1, $2, $3);';
-    const res = await pool.query(query, [projectId, guestId, username]);
+export const addUserProjectLink = async (
+  pool: Pool,
+  projectId: string,
+  guestId: string,
+  username: string
+) => {
+  const query =
+    "INSERT INTO user_project_link (project_id, guest_id, username) VALUES ($1, $2, $3);";
+  const res = await pool.query(query, [projectId, guestId, username]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const editProjectName = async (pool: Pool, projectId: string, name: string, guestId: string) => {
-    const query = 'UPDATE projects SET name = $1 WHERE id = $2 AND guest_id = $3 AND is_active = TRUE';
-    const res = await pool.query(query, [name, projectId, guestId]);
+export const editProjectName = async (
+  pool: Pool,
+  projectId: string,
+  name: string,
+  guestId: string
+) => {
+  const query =
+    "UPDATE projects SET name = $1 WHERE id = $2 AND guest_id = $3 AND is_active = TRUE";
+  const res = await pool.query(query, [name, projectId, guestId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
 export const getProjectNameByKey = async (pool: Pool, id: string) => {
-    const query = 'SELECT name FROM projects WHERE id = $1 AND is_active = TRUE';
-    const res = await pool.query(query, [id]);
+  const query = "SELECT name FROM projects WHERE id = $1 AND is_active = TRUE";
+  const res = await pool.query(query, [id]);
 
-    return res.rows[0]?.name;
-}
+  return res.rows[0]?.name;
+};
 
-export const deleteProject = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2 AND is_active = TRUE;';
-    const res = await pool.query(query, [id, guestId])
+export const deleteProject = async (
+  pool: Pool,
+  id: string,
+  guestId: string
+) => {
+  const query =
+    "UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [id, guestId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const deleteUserProjectLink = async (pool: Pool, id: string, guestId: string) => {
-    const query = 'UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE;';
-    const res = await pool.query(query, [id, guestId])
-    
-    return res.rowCount;
-}
+export const deleteUserProjectLink = async (
+  pool: Pool,
+  id: string,
+  guestId: string
+) => {
+  const query =
+    "UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [id, guestId]);
 
-export const getFilteredTasks = async (pool: Pool, priority: string, assignedTo: string, projectId: string) => {
-    
-    let query = "";
-    let res;
+  return res.rowCount;
+};
 
-    if (priority !== "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE priority = $1 AND $2 = ANY(assign_to) AND project_id = $3 AND is_active = TRUE';
-        res = await pool.query(query, [priority, assignedTo, projectId]);
-    }else if (priority !== "" && assignedTo == ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE priority = $1 AND project_id = $2 AND is_active = TRUE'
-        res = await pool.query(query, [priority, projectId])
-    }else if (priority == "" && assignedTo !== ""){
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE $1 = ANY(assign_to) AND project_id = $2 AND is_active = TRUE'
-        res = await pool.query(query, [assignedTo, projectId]);
-    }else{
-        query = 'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND is_active = TRUE'
-        res = await pool.query(query, [projectId])
-    }
+export const getFilteredTasks = async (
+  pool: Pool,
+  priority: string,
+  assignedTo: string,
+  category: string,
+  projectId: string
+) => {
+  let priorityFilters = priority.split(",");
+  let assignedToFilters = assignedTo.split(",");
+  let categoryFitlers = category.split(",");
 
-    const tasks: Task[] = res.rows.map((task) => ({
-        ...task,
-        id: task.id.toString(),
-      }));
+  let query = `
+  SELECT id, title, description, link, priority, progress, 
+         assign_to AS "assignedTo", project_task_id AS "projectTaskId", 
+         files, target_start_date AS "targetStartDate", 
+         target_end_date AS "targetEndDate", category, 
+         depends_on AS "dependsOn", subtasks
+  FROM tasks
+  WHERE project_id = $1 AND is_active = TRUE
+`;
 
-    const tasksWithComments = await Promise.all(
-      tasks.map(async (t) => {
-        const commentQuery = 'SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;';
-        const commentRes = await pool.query(commentQuery, [t.id]);
-        return {
-          ...t,
-          commentCount: parseInt(commentRes.rows[0].count, 10)
-        };
-      })
-    );
+  let values: any[] = [projectId];
+  let paramIndex = 2;
 
-    return tasksWithComments as Task[];   
-}
+  // Add priority filter
+  if (priority !== "" && priorityFilters.length > 0) {
+    query += ` AND priority = ANY($${paramIndex})`;
+    values.push(priorityFilters);
+    paramIndex++;
+  }
 
-export const archiveTasksInColumn = async (pool: Pool, id: string, column: string) => {
-    const query = "UPDATE tasks SET is_active = False WHERE project_id = $1 AND progress = $2 AND is_active = TRUE;";
-    const res = await pool.query(query, [id, column]);
+  // Add assignedTo filter
+  if (assignedTo !== "" && assignedToFilters.length > 0) {
+    query += ` AND assign_to && $${paramIndex}`; // overlap check
+    values.push(assignedToFilters);
+    paramIndex++;
+  }
 
-    return res.rowCount;
-}
+  // Add category fitler
+  if (category !== "" && category.length > 0){
+    query += ` AND category = ANY($${paramIndex})`;
+    values.push(categoryFitlers)
+    paramIndex++;
+  }
+
+  const res = await pool.query(query, values);
+
+  const tasks: Task[] = res.rows.map((task) => ({
+    ...task,
+    id: task.id.toString(),
+  }));
+
+  const tasksWithComments = await Promise.all(
+    tasks.map(async (t) => {
+      const commentQuery =
+        "SELECT COUNT(*) FROM task_comments_link WHERE task_id = $1;";
+      const commentRes = await pool.query(commentQuery, [t.id]);
+      return {
+        ...t,
+        commentCount: parseInt(commentRes.rows[0].count, 10),
+      };
+    })
+  );
+
+  return tasksWithComments as Task[];
+};
+
+export const archiveTasksInColumn = async (
+  pool: Pool,
+  id: string,
+  column: string
+) => {
+  const query =
+    "UPDATE tasks SET is_active = False WHERE project_id = $1 AND progress = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [id, column]);
+
+  return res.rowCount;
+};
 
 // comments
-export const addComment = async (pool: Pool, taskId: string, comment: string, commentBy: string) => {
-    const query = "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
-    const res = await pool.query(query, [taskId, comment, commentBy])
-    
-    return res.rowCount;
-}
+export const addComment = async (
+  pool: Pool,
+  taskId: string,
+  comment: string,
+  commentBy: string
+) => {
+  const query =
+    "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
+  const res = await pool.query(query, [taskId, comment, commentBy]);
+
+  return res.rowCount;
+};
 
 export const getCommentsByTask = async (pool: Pool, taskId: string) => {
-    const query = 'SELECT comment_id AS "commentId", comment, comment_by AS "commentBy", created_at AS "createdAt" FROM task_comments_link WHERE task_id = $1 AND is_active = TRUE;';
-    const res = await pool.query(query, [taskId]);
+  const query =
+    'SELECT comment_id AS "commentId", comment, comment_by AS "commentBy", created_at AS "createdAt" FROM task_comments_link WHERE task_id = $1 AND is_active = TRUE;';
+  const res = await pool.query(query, [taskId]);
 
-    return res.rows as Comment[];
-}
+  return res.rows as Comment[];
+};
 
 export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
-    const query = 'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = TRUE LIMIT 1;';
-    const res = await pool.query(query, [projectId]);
+  const query =
+    'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = TRUE LIMIT 1;';
+  const res = await pool.query(query, [projectId]);
 
-    return res.rows[0].taskCategoryOptions as {category: string, color: string}[];
-}
+  return res.rows[0].taskCategoryOptions as {
+    category: string;
+    color: string;
+  }[];
+};
 
-export const updateTaskCategoryOptions = async (pool: Pool, projectId: string, taskCategoryOptions: {category: string, color: string}[]) => {
+export const updateTaskCategoryOptions = async (
+  pool: Pool,
+  projectId: string,
+  taskCategoryOptions: { category: string; color: string }[]
+) => {
+  const query1 =
+    'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
+  const res1 = await pool.query(query1, [projectId]);
 
-    const query1 = 'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
-    const res1 = await pool.query(query1, [projectId]);
+  const prevTaskCategories =
+    res1.rows[0]?.taskCategoryOptions?.map(
+      (c: { category: string }) => c.category
+    ) || [];
+  const newTaskCategories = taskCategoryOptions.map((c) => c.category);
 
-    const prevTaskCategories = res1.rows[0]?.taskCategoryOptions?.map((c: { category: string }) => c.category) || [];
-    const newTaskCategories = taskCategoryOptions.map((c) => c.category);
+  const removedTaskCategories = prevTaskCategories.filter(
+    (c: string) => !newTaskCategories.includes(c)
+  );
 
-    const removedTaskCategories = prevTaskCategories.filter((c: string) => !newTaskCategories.includes(c));
-
-    
-    // remove all removed categories from category column as well
-    if (removedTaskCategories.length > 0) {
-        const query2 = `
+  // remove all removed categories from category column as well
+  if (removedTaskCategories.length > 0) {
+    const query2 = `
         UPDATE tasks
         SET category = null
         WHERE category = ANY($1)
             AND project_id = $2
             AND is_active = TRUE;
         `;
-        await pool.query(query2, [removedTaskCategories, projectId]);
-    }
+    await pool.query(query2, [removedTaskCategories, projectId]);
+  }
 
-    const query = 'UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;';
-    const res = await pool.query(query, [JSON.stringify(taskCategoryOptions), projectId]);
+  const query =
+    "UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [
+    JSON.stringify(taskCategoryOptions),
+    projectId,
+  ]);
 
-    return res.rowCount
-}
+  return res.rowCount;
+};
 
-export const updateTaskDependsOn = async (pool: Pool, projectId: string, taskId: string, dependsOn: {id: string, title: string}[]) => {
-    const query = 'UPDATE tasks SET depends_on = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [dependsOn, taskId, projectId])
+export const updateTaskDependsOn = async (
+  pool: Pool,
+  projectId: string,
+  taskId: string,
+  dependsOn: { id: string; title: string }[]
+) => {
+  const query =
+    "UPDATE tasks SET depends_on = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [dependsOn, taskId, projectId]);
 
-    return res.rowCount;
-}
+  return res.rowCount;
+};
 
-export const updateTaskSubTasks = async (pool: Pool, projectId: string, taskId: string, subTasks: {title: string, isDone: boolean}[]) => {
-    const query = 'UPDATE tasks SET subtasks = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;';
-    const res = await pool.query(query, [subTasks.slice(0, subTasks.length - 1), taskId, projectId]);
+export const updateTaskSubTasks = async (
+  pool: Pool,
+  projectId: string,
+  taskId: string,
+  subTasks: { title: string; isDone: boolean }[]
+) => {
+  const query =
+    "UPDATE tasks SET subtasks = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+  const res = await pool.query(query, [
+    subTasks.slice(0, subTasks.length - 1),
+    taskId,
+    projectId,
+  ]);
 
-    return res.rowCount
-}
+  return res.rowCount;
+};
