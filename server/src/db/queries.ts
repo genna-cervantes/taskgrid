@@ -11,7 +11,7 @@ export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND is_active = TRUE';
   const res = await pool.query(query, [id]);
 
   const tasks: Task[] = res.rows.map((task) => ({
@@ -50,7 +50,7 @@ export const getTaskById = async (
   taskId: string
 ) => {
   const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
   const res = await pool.query(query, [projectId, taskId]);
 
   const task: Task = {
@@ -423,7 +423,7 @@ export const getFilteredTasks = async (
          assign_to AS "assignedTo", project_task_id AS "projectTaskId", 
          files, target_start_date AS "targetStartDate", 
          target_end_date AS "targetEndDate", category, 
-         depends_on AS "dependsOn", subtasks
+         depends_on AS "dependsOn", subtasks, index
   FROM tasks
   WHERE project_id = $1 AND is_active = TRUE
 `;
