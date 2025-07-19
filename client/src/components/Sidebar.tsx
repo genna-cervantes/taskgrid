@@ -106,7 +106,7 @@ const Sidebar = () => {
   
   const handleApplyFilter = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
-
+    
     const newParams = new URLSearchParams(searchParams?.toString());
 
     const chosenFilters = [
@@ -125,6 +125,12 @@ const Sidebar = () => {
     });
   
     setSearchParams(newParams);
+    setToggleSidebar(false);
+  }
+  
+  const handleClearFilter = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    setSearchParams({});
     setToggleSidebar(false);
   }
 
@@ -294,7 +300,7 @@ const Sidebar = () => {
                       </div>
 
                       <button onClick={(e) => handleApplyFilter(e)} className="text-xs w-full py-2 bg-light flex justify-center rounded-md">Apply Filters</button>
-                      {(priorityFilter.length > 0 || assignedToFilter.length > 0) && <button onClick={(e) => handleApplyFilter(e)} className="text-xs w-full py-2 bg-red-400 flex justify-center rounded-md">Clear Filters</button>}
+                      {(priorityFilter.length > 0 || assignedToFilter.length > 0 || categoryFilter.length > 0) && <button onClick={(e) => handleClearFilter(e)} className="text-xs w-full py-2 bg-red-400 flex justify-center rounded-md">Clear Filters</button>}
                     </div>
                     }
                   </>
