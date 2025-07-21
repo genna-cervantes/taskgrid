@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ColumnKey, Task } from "../../../server/src/shared/types";
 import TaskPriority from "./TaskPriority";
 import TaskModal from "./TaskModal";
@@ -7,6 +7,17 @@ import TaskCommentCount from "./TaskCommentCount";
 import TaskCategory from "./TaskCategory";
 import { Checkbox } from "./ui/checkbox";
 import { trpc } from "@/utils/trpc";
+import { useDrag, useDrop } from "react-dnd";
+
+export const ItemTypes = {
+  CARD: 'CARD',
+};
+
+interface DragItem {
+  id: string;
+  fromColumn: ColumnKey;
+  index: number;
+}
 
 const TaskBlock = ({
   col,
@@ -15,9 +26,11 @@ const TaskBlock = ({
   showDependencies,
   showAllSubtasks,
   taskCategoryOptions,
-  handleDragStart,
   setUsernameModal,
   username,
+  moveCard,
+  moveAcrossColumnPreview,
+  persistTaskMove
 }: {
   col: ColumnKey;
   task: Task;
@@ -30,10 +43,13 @@ const TaskBlock = ({
         color: string;
       }[]
     | undefined;
-  handleDragStart: (fromColumn: ColumnKey, task: Task) => void;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | undefined;
+  moveCard: (fromIndex: number, toIndex: number) => void
+  moveAcrossColumnPreview: (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => void;
+  persistTaskMove: (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => Promise<void>
 }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const utils = trpc.useUtils();
 
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
@@ -72,6 +88,50 @@ const TaskBlock = ({
     });
   };
 
+  // drag and drop implementation
+  const [, drop] = useDrop<DragItem>({
+    accept: ItemTypes.CARD,
+    hover(draggedItem: DragItem){
+      if (!ref.current) return;
+      if (!draggedItem || !draggedItem.id) return; 
+      if (draggedItem.id === task.id) return;
+
+      const isSameColumn = draggedItem.fromColumn === col;
+
+      if (isSameColumn){
+        moveCard(draggedItem.index, task.index);
+        draggedItem.index = task.index
+      }else{
+        moveAcrossColumnPreview(
+          draggedItem.id,
+          draggedItem.fromColumn,
+          col,
+          task.index
+        )
+        draggedItem.fromColumn = col;
+        draggedItem.index = task.index;
+      }
+    },
+    drop(draggedItem){
+      if (!draggedItem || !draggedItem.id) return;
+      persistTaskMove(draggedItem.id, draggedItem.fromColumn, col, task.index);
+    }
+  })
+
+  const [{isDragging}, drag] = useDrag({
+    type: ItemTypes.CARD,
+    item: () => ({
+      id: task.id,
+      fromColumn: col,
+      index: task.index
+    }),
+    collect: (monitor: any) => ({
+      isDragging: monitor.isDragging()
+    })
+  })
+
+  drag(drop(ref));
+
   return (
     <>
       {taskDetailsModal && (
@@ -85,10 +145,9 @@ const TaskBlock = ({
         />
       )}
       <div
+        ref={ref}
         tabIndex={0}
         role="button"
-        draggable={!showDependencies}
-        onDragStart={() => handleDragStart(col, task)}
         onClick={() => setTaskDetailsModal(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

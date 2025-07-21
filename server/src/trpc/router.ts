@@ -38,6 +38,7 @@ import {
   updateTaskDescription,
   updateTaskFiles,
   updateTaskLink,
+  updateTaskOrderBatched,
   updateTaskPriority,
   updateTaskProgress,
   updateTaskSubTasks,
@@ -47,7 +48,7 @@ import {
 } from "../db/queries.js";
 import { config } from "dotenv";
 import { rateLimitMiddleware } from "./middleware.js";
-import { Task, TaskSchema } from "../shared/types.js";
+import { ColumnKey, Task, TaskSchema } from "../shared/types.js";
 import s3 from "../aws/s3.js";
 
 config();
@@ -77,16 +78,16 @@ export const appRouter = router({
     }),
   getTaskIds: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({projectId: z.string()}))
-    .query(async ({input}) => {
-      let taskIds = await getTaskIds(pool, input.projectId)
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input }) => {
+      let taskIds = await getTaskIds(pool, input.projectId);
       return taskIds;
     }),
   getTaskById: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({projectId: z.string(), taskId: z.string()}))
-    .query(async({input}) => {
-      let task = await getTaskById(pool, input.projectId, input.taskId)
+    .input(z.object({ projectId: z.string(), taskId: z.string() }))
+    .query(async ({ input }) => {
+      let task = await getTaskById(pool, input.projectId, input.taskId);
       return task;
     }),
   insertTask: publicProcedure
@@ -150,12 +151,12 @@ export const appRouter = router({
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      try{
+      try {
         let userCount = await checkGuestId(pool, input.guestId);
         if (userCount && userCount === 1) return true;
         return false;
-      }catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       }
     }),
   getUsername: publicProcedure
@@ -274,7 +275,6 @@ export const appRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-
       console.log(process.env.S3_BUCKET);
       const uploads = await Promise.all(
         input.files.map(async ({ name, type }) => {
@@ -296,7 +296,7 @@ export const appRouter = router({
         })
       );
 
-      console.log('uploads', uploads);
+      console.log("uploads", uploads);
 
       const keys = uploads.map((u) => u.key);
       await updateTaskFiles(
@@ -311,60 +311,144 @@ export const appRouter = router({
     }),
   updateTaskTargetStartDate: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), targetStartDate: z.string().optional()}))
-    .mutation(async({input}) => {
-      const targetStartDate = input?.targetStartDate ? new Date(input.targetStartDate) : undefined
-      const updateCount = await updateTaskTargetStartDate(pool, input.taskId, input.projectId, targetStartDate);
-      
-      if (updateCount !== 1){
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        targetStartDate: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const targetStartDate = input?.targetStartDate
+        ? new Date(input.targetStartDate)
+        : undefined;
+      const updateCount = await updateTaskTargetStartDate(
+        pool,
+        input.taskId,
+        input.projectId,
+        targetStartDate
+      );
+
+      if (updateCount !== 1) {
         return false;
       }
       return true;
     }),
   updateTaskTargetEndDate: publicProcedure
-  .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), targetEndDate: z.string().optional()}))
-    .mutation(async({input}) => {
-      const targetEndDate = input?.targetEndDate ? new Date(input.targetEndDate) : undefined
-      const updateCount = await updateTaskTargetEndDate(pool, input.taskId, input.projectId, targetEndDate);
+    .use(rateLimitMiddleware)
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        targetEndDate: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const targetEndDate = input?.targetEndDate
+        ? new Date(input.targetEndDate)
+        : undefined;
+      const updateCount = await updateTaskTargetEndDate(
+        pool,
+        input.taskId,
+        input.projectId,
+        targetEndDate
+      );
 
-      if (updateCount !== 1){
+      if (updateCount !== 1) {
         return false;
       }
       return true;
     }),
   updateTaskCategory: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), category: z.string().optional()}))
-    .mutation(async({input}) => {
-      const updateCount = await updateTaskCategory(pool, input.taskId, input.projectId, input?.category);
-  
-      if (updateCount !== 1){
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        category: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const updateCount = await updateTaskCategory(
+        pool,
+        input.taskId,
+        input.projectId,
+        input?.category
+      );
+
+      if (updateCount !== 1) {
         return false;
       }
       return true;
     }),
   updateTaskDependsOn: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), dependsOn: z.array(z.object({id: z.string(), title: z.string()}))}))
-    .mutation(async({input}) => {
-      const updateCount = await updateTaskDependsOn(pool, input.projectId, input.taskId, input.dependsOn);
-      
-      if (updateCount !== 1){
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        dependsOn: z.array(z.object({ id: z.string(), title: z.string() })),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const updateCount = await updateTaskDependsOn(
+        pool,
+        input.projectId,
+        input.taskId,
+        input.dependsOn
+      );
+
+      if (updateCount !== 1) {
         return false;
       }
       return true;
     }),
   updateTaskSubtasks: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), projectId: z.string(), subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()}))}))
-    .mutation(async ({input}) => {
+    .input(
+      z.object({
+        taskId: z.string(),
+        projectId: z.string(),
+        subtasks: z.array(z.object({ title: z.string(), isDone: z.boolean() })),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("st", input.subtasks);
 
-      console.log('st', input.subtasks)
+      const updateCount = await updateTaskSubTasks(
+        pool,
+        input.projectId,
+        input.taskId,
+        input.subtasks
+      );
 
-      const updateCount = await updateTaskSubTasks(pool, input.projectId, input.taskId, input.subtasks);
-      
-      if (updateCount !== 1){
+      if (updateCount !== 1) {
+        return false;
+      }
+      return true;
+    }),
+  updateTaskOrderBatched: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(
+      z.object({
+        payload:  z.array(
+        z.object({
+          taskId: z.string(),
+          index: z.number(),
+          progress: ColumnKey,
+        })
+      ),
+      projectId: z.string()
+      })
+    )
+    .mutation(async ({ input }) => {
+       const updateCount = await updateTaskOrderBatched(
+        pool,
+        input.payload,
+        input.projectId
+      );
+
+      if (updateCount !== 1) {
         return false;
       }
       return true;
@@ -481,7 +565,12 @@ export const appRouter = router({
   filterTask: publicProcedure
     .use(rateLimitMiddleware)
     .input(
-      z.object({ priority: z.string(), assignedTo: z.string(), id: z.string(), category: z.string() })
+      z.object({
+        priority: z.string(),
+        assignedTo: z.string(),
+        id: z.string(),
+        category: z.string(),
+      })
     )
     .query(async ({ input }) => {
       let filteredTasks = await getFilteredTasks(
@@ -503,41 +592,66 @@ export const appRouter = router({
     }),
   addComment: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string(), comment: z.string(), commentBy: z.string()}))
-    .mutation(async ({input}) => {
-      let insertCount = await addComment(pool, input.taskId, input.comment, input.commentBy)
+    .input(
+      z.object({
+        taskId: z.string(),
+        comment: z.string(),
+        commentBy: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      let insertCount = await addComment(
+        pool,
+        input.taskId,
+        input.comment,
+        input.commentBy
+      );
       if (insertCount && insertCount > 0) return true;
       return false;
     }),
   getCommentsByTask: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({taskId: z.string()}))
-    .query(async ({input}) => {
-      try{
+    .input(z.object({ taskId: z.string() }))
+    .query(async ({ input }) => {
+      try {
         let comments = await getCommentsByTask(pool, input.taskId);
         return comments;
-      }catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
       }
     }),
   getTaskCategoryOptions: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({projectId: z.string()}))
-    .query(async ({input}) => {
-      let taskCategoryOptions = await getTaskCategoryOptions(pool, input.projectId);
-      return taskCategoryOptions
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input }) => {
+      let taskCategoryOptions = await getTaskCategoryOptions(
+        pool,
+        input.projectId
+      );
+      return taskCategoryOptions;
     }),
   updateTaskCategoryOptions: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({projectId: z.string(), taskCategoryOptions: z.array(z.object({category: z.string(), color: z.string()}))}))
-    .mutation(async ({input}) => {
-      console.log('updating task category options,', input.taskCategoryOptions)
-      let updateCount = await updateTaskCategoryOptions(pool, input.projectId, input.taskCategoryOptions)
+    .input(
+      z.object({
+        projectId: z.string(),
+        taskCategoryOptions: z.array(
+          z.object({ category: z.string(), color: z.string() })
+        ),
+      })
+    )
+    .mutation(async ({ input }) => {
+      console.log("updating task category options,", input.taskCategoryOptions);
+      let updateCount = await updateTaskCategoryOptions(
+        pool,
+        input.projectId,
+        input.taskCategoryOptions
+      );
 
       if (updateCount && updateCount > 0) return true;
       return false;
     }),
-  
+
   sample: publicProcedure.use(rateLimitMiddleware).query(() => {
     return "hello";
   }),

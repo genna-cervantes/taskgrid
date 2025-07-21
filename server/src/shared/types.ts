@@ -3,7 +3,8 @@ import { z } from "zod";
 // TASKS
 
 // COLUMNS
-export type ColumnKey = "backlog" | "in progress" | "for checking" | "done";
+export const ColumnKey = z.enum(['backlog', 'in progress', 'for checking', 'done']);
+export type ColumnKey = z.infer<typeof ColumnKey>;
 
 export type Columns = {
   [key in ColumnKey]: Task[];

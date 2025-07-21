@@ -9,6 +9,8 @@ import {
   RecentTaskProvider,
 } from "./contexts/RecentTaskContext";
 import { UserProvider } from "./contexts/UserContext";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const queryClient = new QueryClient();
 export const trpcClient = trpc.createClient({
@@ -25,7 +27,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <UserProvider>
         <RecentTaskProvider>
           <ActionProvider>
-            <App />
+            <DndProvider backend={HTML5Backend}>
+              <App />
+            </DndProvider>
           </ActionProvider>
         </RecentTaskProvider>
       </UserProvider>

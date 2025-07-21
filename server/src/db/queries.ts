@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { Comment, InsertableTask, Project, Task } from "../shared/types.js";
+import { ColumnKey, Comment, InsertableTask, Project, Task } from "../shared/types.js";
 
 export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
   const query =
@@ -588,4 +588,46 @@ export const updateTaskSubTasks = async (
   ]);
 
   return res.rowCount;
+};
+
+export const updateTaskOrderBatched = async (
+  pool: Pool,
+  payload: { taskId: string; index: number; progress: ColumnKey }[],
+  projectId: string
+): Promise<number> => {
+  if (payload.length === 0) return 0;
+
+  const taskIds = payload.map((t) => t.taskId);
+  const indices = payload.map((t) => t.index);
+  const progressValues = payload.map((t) => t.progress);
+
+  // Build CASE statements with proper parameter references
+  const indexCases = payload
+    .map((_, i) => `WHEN $${i + 1} THEN $${payload.length + i + 1}`)
+    .join('\n        ');
+  
+  const progressCases = payload
+    .map((_, i) => `WHEN $${i + 1} THEN $${2 * payload.length + i + 1}`)
+    .join('\n        ');
+
+  const placeholders = taskIds.map((_, i) => `$${i + 1}`).join(', ');
+
+  const query = `
+    UPDATE tasks
+    SET
+      index = CASE id
+        ${indexCases}
+      END,
+      progress = CASE id
+        ${progressCases}
+      END
+    WHERE id IN (${placeholders})
+      AND project_id = $${3 * payload.length + 1}
+  `;
+
+  // Parameters: taskIds, indices, progressValues, projectId
+  const values = [...taskIds, ...indices, ...progressValues, projectId];
+
+  const res = await pool.query(query, values);
+  return res.rowCount || 0;
 };
