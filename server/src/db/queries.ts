@@ -597,30 +597,32 @@ export const updateTaskOrderBatched = async (
 ): Promise<number> => {
   if (payload.length === 0) return 0;
 
-  const taskIds = payload.map((t) => t.taskId);
+  console.log(payload)
+
+  const taskIds = payload.map((t) => Number(t.taskId));
   const indices = payload.map((t) => t.index);
   const progressValues = payload.map((t) => t.progress);
 
   // Build CASE statements with proper parameter references
   const indexCases = payload
     .map((_, i) => `WHEN $${i + 1} THEN $${payload.length + i + 1}`)
-    .join('\n        ');
+    .join('\n');
   
   const progressCases = payload
     .map((_, i) => `WHEN $${i + 1} THEN $${2 * payload.length + i + 1}`)
-    .join('\n        ');
+    .join('\n');
 
   const placeholders = taskIds.map((_, i) => `$${i + 1}`).join(', ');
 
   const query = `
     UPDATE tasks
     SET
-      index = CASE id
+      index = (CASE id
         ${indexCases}
-      END,
-      progress = CASE id
+      END)::integer,
+      progress = (CASE id
         ${progressCases}
-      END
+      END)::text
     WHERE id IN (${placeholders})
       AND project_id = $${3 * payload.length + 1}
   `;

@@ -98,7 +98,7 @@ const TaskDiscussionBoardBase = (
               comments.map((c) => (
                 <div
                   key={c.commentId}
-                  className="p-2 rounded bg-faintWhite/5"
+                  className="p-2 rounded border border-faintWhite/10"
                 >
                   <Comment comment={c.comment} />
                   <div className="flex justify-between w-full items-center mt-2">

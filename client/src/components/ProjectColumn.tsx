@@ -2,12 +2,12 @@ import React from "react";
 import { ColumnKey, Columns, Task } from "../../../server/src/shared/types";
 import { Ellipsis } from "lucide-react";
 import AddTask from "./AddTask";
-import TaskBlock from "./TaskBlock";
+import TaskBlock, { DropIndicator } from "./TaskBlock";
 import Xarrow from "react-xarrows";
 
 const ProjectColumn = ({
   col,
-  colTasks,
+  columns,
   setColumns,
   addModal,
   setAddModal,
@@ -20,7 +20,7 @@ const ProjectColumn = ({
   persistTaskMove
 }: {
   col: ColumnKey;
-  colTasks: Task[];
+  columns: Columns;
   setColumns: React.Dispatch<React.SetStateAction<Columns>>;
   addModal: boolean;
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,48 +35,110 @@ const ProjectColumn = ({
       }[]
     | undefined;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
-  persistTaskMove: (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => Promise<void>
+  persistTaskMove: (payload: {
+    taskId: string;
+    progress: "backlog" | "in progress" | "for checking" | "done";
+    index: number;
+}[]) => Promise<void>
 }) => {
 
-    const moveCard = (fromIndex: number, toIndex: number) => {
-        if (fromIndex === toIndex) return;
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string, progress: string) => {
+    e.dataTransfer.setData("taskId", taskId)
+    e.dataTransfer.setData("col", progress)
+  }
+  
+  const getIndicators = () => {
+    return Array.from(document.querySelectorAll(`[data-column="${col}"]`))
+  }
+  
+  const getNearestIndicator = (e: React.DragEvent<HTMLDivElement>, indicators: Element[]) => {
+    const nearest = indicators.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = e.clientY - (box.top + 10)
+      
+      if (offset < 0 && offset > closest.offset){
+        return {offset, element: child}
+      }else{
+        return closest;
+      }
+    }, {
+      offset: Number.NEGATIVE_INFINITY,
+      element: indicators[indicators.length - 1]
+    })
+    
+    return nearest
+  }
 
-        const updated = [...colTasks];
-        const [movedTask] = updated.splice(fromIndex, 1);
-        updated.splice(toIndex, 0, movedTask);
+  const clearHighlights = (els?: Element[]) => {
+    const indicators = els || getIndicators();
 
-        setColumns((prev) => ({
-            ...prev,
-            [col]: updated.sort((a, b) => a.index - b.index)
-        }))
-    };
+    indicators.forEach((i: Element) => i.style.opacity = "0")
 
-    const moveAcrossColumnPreview = (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => {
-        setColumns((prev) => {
-            const from = [...prev[fromColumn]]
-            const to = [...prev[toColumn]]
+  }
+  
+  const highlightIndicators = (e: React.DragEvent<HTMLDivElement>) => {
+    const indicators = getIndicators()
+    clearHighlights(indicators)
 
-            const taskIndex = from.findIndex((t) => t.id === taskId);
-            if (taskIndex === -1) return prev;
+    const nearest = getNearestIndicator(e, indicators)
 
-            const [movedTask] = from.splice(taskIndex, 1);
-            if (!movedTask) return prev;
-            
-            const updatedTask = {
-                ...movedTask,
-                progress: toColumn
-            };
+    nearest.element.style.opacity = "1";
+  }
 
-            const insertIndex = Math.min(Math.max(0, toIndex), to.length);
-            to.splice(insertIndex, 0, updatedTask)
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    highlightIndicators(e)
+  }
 
-            return {
-                ...prev,
-                [fromColumn]: from,
-                [toColumn]: to.sort((a, b) => a.index - b.index)
-            }
-        })
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    clearHighlights();
+  }
+
+  const handleDragEnd = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    clearHighlights()
+
+    const taskId = e.dataTransfer.getData("taskId") // task being dragged
+    const taskCol = e.dataTransfer.getData("col") as ColumnKey // task being dragged
+
+    const indicators = getIndicators()
+    const nearestIndicator = getNearestIndicator(e, indicators)
+
+    const beforeId = nearestIndicator.element.dataset.before || "-1" // task after idrop ung task being dragged
+
+    const payload: {taskId: string, progress: ColumnKey, index: number}[] = []
+
+    if (beforeId !== taskId) {
+
+      // get card
+      let taskToMove = columns[taskCol].find((t) => t.id === taskId)
+      if (!taskToMove) return;
+
+      // if same column // update only one column [0, 1, 2, 3]
+      const beforeIndex = columns[col].find((t) => t.id === beforeId)?.index ?? columns[col].length// index of beforeId
+      const taskIndex = taskToMove.index
+      
+      if (taskCol === col){  
+        if (beforeIndex -1 >= taskIndex){
+          payload.push({taskId, progress: taskCol, index: beforeIndex -1})
+          payload.push(...columns[col].filter((t) => t.index > taskIndex && t.index <= beforeIndex -1 && t.index !== taskIndex).map((t) => ({taskId: t.id, progress: taskCol, index: t.index - 1})))
+        }else if (beforeIndex -1 < taskIndex){
+          payload.push({taskId, progress: taskCol, index: beforeIndex})
+          payload.push(...columns[col].filter((t) => t.index < taskIndex && t.index >= beforeIndex && t.index !== taskIndex).map((t) => ({taskId: t.id, progress: taskCol, index: t.index + 1})))
+        }
+      }else{
+        // handles from column
+        payload.push(...columns[taskCol].filter((t) => t.index > taskIndex).map((t) => ({taskId: t.id, index: t.index - 1, progress: t.progress as ColumnKey})))
+
+        // handles to column
+        payload.push({taskId, progress: col, index: beforeIndex})
+        payload.push(...columns[col].filter((t) => t.index < taskIndex && t.index >= beforeIndex && t.index !== taskIndex).map((t) => ({taskId: t.id, progress: col, index: t.index + 1})))
+        
+      }
     }
+    await persistTaskMove(payload)
+  }
 
   return (
     <div
@@ -89,7 +151,7 @@ const ProjectColumn = ({
             {col}
           </h2>
           <div className="px-2 flex justify-center items-center font-semibold text-xs capitalize py-1 text-center font-noto rounded-full bg-gray-500/20">
-            {colTasks.length}
+            {columns[col].length}
           </div>
         </div>
         <div className="flex items-center gap-x-1">
@@ -112,17 +174,18 @@ const ProjectColumn = ({
         </div>
       </div>
 
-      {/* gap-y-3 if open ung dependencies */}
       <div
-        className={`max-w-full flex flex-col gap-0 overflow-y-auto my-2 gap-y-[0.4rem] max-h-[calc(100vh-200px)] scrollbar-none transition-all duration-200`}
+        className={`max-w-full flex flex-col gap-0 overflow-y-auto mb-2 h-[calc(100vh-200px)] scrollbar-none transition-all duration-200`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDragEnd}
       >
-        {colTasks && colTasks.sort((a, b) => a.index - b.index).map((task, i) => {
-
-        //   console.log(task)
+        {columns[col] && columns[col].sort((a, b) => a.index - b.index).map((task, i) => {
 
           return (
             <div key={task.id} id={task.id} className="">
               <TaskBlock
+                handleDragStart={handleDragStart}
                 projectId={projectId}
                 showDependencies={showDependencies}
                 showAllSubtasks={showAllSubtasks}
@@ -131,9 +194,6 @@ const ProjectColumn = ({
                 taskCategoryOptions={taskCategoryOptions}
                 setUsernameModal={setUsernameModal}
                 username={username}
-                moveCard={moveCard}
-                moveAcrossColumnPreview={moveAcrossColumnPreview}
-                persistTaskMove={persistTaskMove}
               />
               {showDependencies &&
                 task.dependsOn &&
@@ -150,16 +210,17 @@ const ProjectColumn = ({
             </div>
           );
         })}
+        <DropIndicator beforeId="-1" column={col} />
+        <AddTask
+          type="block"
+          addModal={addModal}
+          setAddModal={setAddModal}
+          projectId={projectId}
+          col={col}
+          className="hidden group-hover/column:block"
+          username={username}
+        />
       </div>
-      <AddTask
-        type="block"
-        addModal={addModal}
-        setAddModal={setAddModal}
-        projectId={projectId}
-        col={col}
-        className="hidden group-hover/column:block"
-        username={username}
-      />
     </div>
   );
 };

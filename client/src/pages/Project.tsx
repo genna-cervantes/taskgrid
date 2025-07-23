@@ -41,21 +41,6 @@ const Project = () => {
       setColumns(rawColumns);
   }, [rawColumns]);
 
-  const [dragData, setDragData] = useState<{
-    from: ColumnKey;
-    task: Task;
-  } | null>(null);
-
-  const updateTaskProgress = trpc.updateTaskProgress.useMutation({
-    onSuccess: (data) => {
-      console.log("Task updated:", data);
-      utils.getTasks.invalidate({ id: projectId });
-    },
-    onError: (error) => {
-      console.error("Failed to create task:", error.message);
-    },
-  });
-
   const updateTaskOrderBatched = trpc.updateTaskOrderBatched.useMutation({
     onSuccess: (data) => {
       console.log("Task ordered:", data);
@@ -67,34 +52,7 @@ const Project = () => {
   })
 
   // drag and drop
- const persistTaskMove = async (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => {
-    const fromTasks = columns[fromColumn];
-    const toTasks = columns[toColumn];
-
-    const payload = [];
-
-    for (let i = 0; i < fromTasks.length; i++){
-      const t = fromTasks[i];
-      if (t.index !== i || t.progress !== fromColumn){
-        payload.push({
-          taskId: t.id,
-          index: i,
-          progress: fromColumn
-        })
-      }
-    }
-
-    for (let i = 0; i < toTasks.length; i++){
-      const t = toTasks[i];
-      if (t.index !== i || t.progress !== toColumn){
-        payload.push({
-          taskId: t.id,
-          index: i,
-          progress: toColumn
-        })
-      }
-    }
-
+ const persistTaskMove = async (payload: {taskId: string, progress: ColumnKey, index: number}[]) => {
     if (payload.length > 0) {
       updateTaskOrderBatched.mutate({payload, projectId: projectId ?? ""});
     }
@@ -141,7 +99,7 @@ const Project = () => {
           <React.Fragment key={col}>
             <ProjectColumn
               col={col}
-              colTasks={columns[col]}
+              columns={columns}
               setColumns={setColumns}
               addModal={addModal}
               setAddModal={setAddModal}

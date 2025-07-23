@@ -7,17 +7,6 @@ import TaskCommentCount from "./TaskCommentCount";
 import TaskCategory from "./TaskCategory";
 import { Checkbox } from "./ui/checkbox";
 import { trpc } from "@/utils/trpc";
-import { useDrag, useDrop } from "react-dnd";
-
-export const ItemTypes = {
-  CARD: 'CARD',
-};
-
-interface DragItem {
-  id: string;
-  fromColumn: ColumnKey;
-  index: number;
-}
 
 const TaskBlock = ({
   col,
@@ -28,9 +17,7 @@ const TaskBlock = ({
   taskCategoryOptions,
   setUsernameModal,
   username,
-  moveCard,
-  moveAcrossColumnPreview,
-  persistTaskMove
+  handleDragStart
 }: {
   col: ColumnKey;
   task: Task;
@@ -45,11 +32,8 @@ const TaskBlock = ({
     | undefined;
   setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | undefined;
-  moveCard: (fromIndex: number, toIndex: number) => void
-  moveAcrossColumnPreview: (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => void;
-  persistTaskMove: (taskId: string, fromColumn: ColumnKey, toColumn: ColumnKey, toIndex: number) => Promise<void>
+  handleDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string, progress: string) => void
 }) => {
-  const ref = useRef<HTMLDivElement>(null);
   const utils = trpc.useUtils();
 
   const [taskDetailsModal, setTaskDetailsModal] = useState(false);
@@ -88,49 +72,6 @@ const TaskBlock = ({
     });
   };
 
-  // drag and drop implementation
-  const [, drop] = useDrop<DragItem>({
-    accept: ItemTypes.CARD,
-    hover(draggedItem: DragItem){
-      if (!ref.current) return;
-      if (!draggedItem || !draggedItem.id) return; 
-      if (draggedItem.id === task.id) return;
-
-      const isSameColumn = draggedItem.fromColumn === col;
-
-      if (isSameColumn){
-        moveCard(draggedItem.index, task.index);
-        draggedItem.index = task.index
-      }else{
-        moveAcrossColumnPreview(
-          draggedItem.id,
-          draggedItem.fromColumn,
-          col,
-          task.index
-        )
-        draggedItem.fromColumn = col;
-        draggedItem.index = task.index;
-      }
-    },
-    drop(draggedItem){
-      if (!draggedItem || !draggedItem.id) return;
-      persistTaskMove(draggedItem.id, draggedItem.fromColumn, col, task.index);
-    }
-  })
-
-  const [{isDragging}, drag] = useDrag({
-    type: ItemTypes.CARD,
-    item: () => ({
-      id: task.id,
-      fromColumn: col,
-      index: task.index
-    }),
-    collect: (monitor: any) => ({
-      isDragging: monitor.isDragging()
-    })
-  })
-
-  drag(drop(ref));
 
   return (
     <>
@@ -144,10 +85,12 @@ const TaskBlock = ({
           setTaskDetailsModal={setTaskDetailsModal}
         />
       )}
+      <DropIndicator beforeId={task.id} column={col} />
       <div
-        ref={ref}
         tabIndex={0}
         role="button"
+        draggable={true}
+        onDragStart={(e) => handleDragStart(e, task.id, task.progress)}
         onClick={() => setTaskDetailsModal(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -155,7 +98,7 @@ const TaskBlock = ({
             e.currentTarget.blur();
           }
         }}
-        className={`relative ${showDependencies ? "hover:cursor-pointer" : "hover:cursor-grab"} border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-backgroundDark bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}>
           <span className="font-semibold text-midWhite">
@@ -232,5 +175,12 @@ const TaskBlock = ({
     </>
   );
 };
+
+export const DropIndicator = ({beforeId, column}: {beforeId: string, column: ColumnKey}) => {
+  return <div
+  data-before={beforeId}
+  data-column={column}
+   className="h-[2px] w-full bg-purple-200/50 my-1 opacity-0"></div>
+}
 
 export default TaskBlock;
