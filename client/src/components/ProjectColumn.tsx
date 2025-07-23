@@ -143,7 +143,7 @@ const ProjectColumn = ({
   return (
     <div
       key={col}
-      className="flex-1 px-3 py-3 dark:bg-backgroundDark bg-lmMidBackground rounded-md border-[1px] dark:border-faintWhite/5 border-faintBlack/5 group/column"
+      className="flex-1 px-3 py-3 text-white/90 rounded-md group/column bg-[#1A1A1A]"
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">

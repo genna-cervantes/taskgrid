@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 export const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -26,7 +26,7 @@ const AddProjectForm = ({
   });
 
   const utils = trpc.useUtils();
-  const userContext = useGuestId();
+  const userContext = useUserContext();
 
   const addProject = trpc.addProject.useMutation({
     onSuccess: (data) => {
@@ -44,14 +44,14 @@ const AddProjectForm = ({
     addProject.mutate({
       id,
       name: data.name,
-      guestId: userContext.guestId ?? "",
+      guestId: userContext.userId ?? "",
     });
   };
 
   if (
     userContext.isLoading &&
-    userContext.guestId == null &&
-    !userContext.guestId
+    userContext.userId == null &&
+    !userContext.userId
   ) {
     return <>Loading Guest ID...</>;
   }

@@ -1,6 +1,6 @@
 import React from "react";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 const DeleteProjectModal = ({
   editProject,
@@ -19,7 +19,7 @@ const DeleteProjectModal = ({
   >;
   setDeleteProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const userContext = useGuestId();
+  const userContext = useUserContext();
   const utils = trpc.useUtils();
 
   const deleteProject = trpc.deleteProject.useMutation({
@@ -48,14 +48,14 @@ const DeleteProjectModal = ({
   const handleLeave = () => {
     deleteProject.mutate({
       id: editProject.projectId,
-      guestId: userContext.guestId ?? "",
+      guestId: userContext.userId ?? "",
     });
   };
 
   if (
     userContext.isLoading &&
-    userContext.guestId == null &&
-    !userContext.guestId
+    userContext.userId == null &&
+    !userContext.userId
   ) {
     return <>Loading Guest ID...</>;
   }

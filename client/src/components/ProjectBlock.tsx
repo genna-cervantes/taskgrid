@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 const ProjectBlock = ({
   p,
@@ -31,14 +31,14 @@ const ProjectBlock = ({
 }) => {
 
   // check if owner
-  const userContext = useGuestId();
+  const userContext = useUserContext();
   const {data: ownerGuestId} = trpc.getProjectOwner.useQuery({id: p.id})
 
-  const isOwner = Boolean(ownerGuestId) && userContext?.guestId === ownerGuestId ;
+  const isOwner = Boolean(ownerGuestId) && userContext?.userId === ownerGuestId ;
 
   return (
     <Link
-      className="dark:bg-backgroundDark bg-lmMidBackground border-[1px] dark:border-faintWhite/5 border-faintBlack/5 rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
+      className="dark:bg-[#1A1A1A] bg-lmMidBackground border-[1px] dark:border-faintWhite/5 border-faintBlack/5 rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
       to={`/projects/${p.id}`}
       state={{ from: "home" }}
     >

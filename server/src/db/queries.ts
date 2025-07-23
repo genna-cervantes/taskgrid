@@ -122,6 +122,63 @@ export const insertUser = async (
   return res.rowCount;
 };
 
+// SAMPLE TO ALWAYS USE
+export const insertUserWithWorkspace = async (pool: Pool, username: string, guestId: string, workspaceId: string, workspaceName: string) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const insertUserQuery = `
+      INSERT INTO users (username, guest_id)
+      VALUES ($1, $2)
+      RETURNING guest_id;
+    `;
+    const userRes = await client.query(insertUserQuery, [username, guestId]);
+
+    const insertWorkspaceQuery = `
+      INSERT INTO workspaces (workspace_id, name, user_id)
+      VALUES ($1, $2, $3);
+    `;
+    const userId = userRes.rows[0].guest_id || guestId; // fallback if not auto ID
+    const workspaceRes = await client.query(insertWorkspaceQuery, [workspaceId, workspaceName, userId]);
+
+    await client.query('COMMIT');
+
+    return workspaceRes.rowCount === userRes.rowCount ? 1 : 0;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Transaction failed:', err);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
+export const insertWorkspace = async (pool: Pool, userId: string, workspaceId: string, workspaceName: string ) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const insertWorkspaceQuery = `
+      INSERT INTO workspaces (workspace_id, name, user_id)
+      VALUES ($1, $2, $3);
+    `;
+    const workspaceRes = await client.query(insertWorkspaceQuery, [workspaceId, workspaceName, userId]);
+
+    await client.query('COMMIT');
+
+    return workspaceRes.rowCount;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Transaction failed:', err);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
 export const setUsername = async (
   pool: Pool,
   username: string,
@@ -141,6 +198,34 @@ export const checkGuestId = async (pool: Pool, guestId: string) => {
   const res = await pool.query(query, [guestId]);
 
   return parseInt(res.rows[0].count);
+};
+
+export const checkGuestIdAndWorkspaces = async (pool: Pool, guestId: string) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const checkUserQuery = "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";    
+    const userRes = await client.query(checkUserQuery, [guestId]);
+
+    const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE;`;
+    const workspaceRes = await client.query(getWorkspacesQuery, [guestId]);
+
+    await client.query('COMMIT');
+
+    return {
+      userExists: parseInt(userRes.rows[0].count) === 1,
+      workspaces: workspaceRes.rows.map((w) => w.workspace_id),
+    };
+    
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Transaction failed:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
 };
 
 export const getUsername = async (pool: Pool, id: string, guestId: string) => {

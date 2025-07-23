@@ -4,13 +4,14 @@ import ProjectBlock from "../components/ProjectBlock";
 import AddProjectBlock from "../components/AddProjectBlock";
 import DeleteProjectModal from "../components/DeleteProjectModal";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 import { Project } from "../../../server/src/shared/types";
 import ManageProjectModal from "../components/ManageProjectModal";
-import { useTheme } from "../contexts/ThemeContext";
+// import { useTheme } from "../contexts/ThemeContext";
+import BreadCrumbs from "@/components/BreadCrumbs";
 
 const Home = () => {
-  const userContext = useGuestId();
+  const userContext = useUserContext();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [editProject, setEditProject] = useState({
     projectId: "",
@@ -19,7 +20,7 @@ const Home = () => {
   const [editProjectModal, setEditProjectModal] = useState(false);
   const [manageProjectModal, setManageProjectModal] = useState(false);
   const [deleteProjectModal, setDeleteProjectModal] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  // const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -46,16 +47,16 @@ const Home = () => {
   }, []);
 
   const { data: projects, isLoading: projectsIsLoading } =
-    trpc.getUserProjects.useQuery({ guestId: userContext.guestId ?? "" });
+    trpc.getUserProjects.useQuery({ guestId: userContext.userId ?? "" });
 
   // need loading screen
-  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId) {
+  if (userContext.isLoading && userContext.userId == null && !userContext.userId) {
     return <>Loading Guest ID...</>;
   }
 
   return (
-    <div className="my-6">
-      <div className="text-center">
+    <div className="">
+      {/* <div className="text-center">
         <div className="flex justify-center items-center gap-4">
           <h1 className="text-2xl pt-4">
             Your <span className="text-green-400 font-semibold">TasKan</span> Boards
@@ -71,14 +72,15 @@ const Home = () => {
         <p className="text-xs pt-2 opacity-50">
           Guest ID: {userContext.guestId ?? "Loading..."}
         </p>
-      </div>
+      </div> */}
 
+      <BreadCrumbs crumbs={[]} />
       {!projects && projectsIsLoading ? (
         <p className="text-sm opacity-50 text-center mt-8">
           Loading your taskan boards...
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-8 gap-x-8 gap-y-4 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4">
           {projects &&
             projects.map((p: Project) => {
               return (

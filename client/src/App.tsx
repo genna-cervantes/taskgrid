@@ -8,14 +8,21 @@ import NoPage from "./pages/NoPage";
 import Project from "./pages/Project";
 import TaskLayout from "./pages/TaskLayout";
 import TaskPage from "./pages/TaskPage";
+import WorkspaceRedirector from "./redirectors/WorkspaceRedirector";
 
 const App = () => {
+
+  // check local storage for workspace id else they are a guest and i generate a random workspace id ??
+
   return (
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
+            <Route index element={<WorkspaceRedirector />} />
+
+            <Route path="workspaces/:workspaceId" element={<Home />} />
+
             <Route path="projects" element={<Projects />}>
               <Route path=":projectId" element={<Project />}>
                 <Route path="tasks" element={<TaskLayout />}>

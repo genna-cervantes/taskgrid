@@ -9,6 +9,7 @@ import {
   addUserProjectLink,
   archiveTasksInColumn,
   checkGuestId,
+  checkGuestIdAndWorkspaces,
   deleteProject,
   deleteTask,
   deleteTaskById,
@@ -28,6 +29,8 @@ import {
   getUsersInProject,
   insertTask,
   insertUser,
+  insertUserWithWorkspace,
+  insertWorkspace,
   kickUserFromProject,
   setUsername,
   undoDeleteTask,
@@ -132,6 +135,22 @@ export const appRouter = router({
       if (taskCount && taskCount > 0) return true;
       return false;
     }),
+  insertUserWithWorkspace: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({username: z.string(), guestId: z.string(), workspaceId: z.string(), workspaceName: z.string()}))
+    .mutation(async ({input}) => {
+      let insertCount = await insertUserWithWorkspace(pool, input.username, input.guestId, input.workspaceId, input.workspaceName);
+      if (insertCount && insertCount > 0) return {userId: input.guestId, workspaceId: input.workspaceId};
+      return false;
+    }),
+  insertWorkspace: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({userId: z.string(), workspaceId: z.string(), workspaceName: z.string()}))
+    .mutation(async ({input}) => {
+      let insertCount = await insertWorkspace(pool, input.userId, input.workspaceId, input.workspaceName);
+      if (insertCount && insertCount > 0) return {workspaceId: input.workspaceId};
+      return false;
+    }),
   setUsername: publicProcedure
     .use(rateLimitMiddleware)
     .input(
@@ -155,6 +174,21 @@ export const appRouter = router({
         let userCount = await checkGuestId(pool, input.guestId);
         if (userCount && userCount === 1) return true;
         return false;
+      } catch (err) {
+        console.log(err);
+      }
+    }),
+  checkGuestIdAndWorkspaces: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ guestId: z.string() }))
+    .query(async ({ input }) => {
+      try {
+        let data = await checkGuestIdAndWorkspaces(pool, input.guestId);
+        
+        return {
+          userExists: data.userExists,
+          workspaces: data.workspaces as string[]
+        };
       } catch (err) {
         console.log(err);
       }

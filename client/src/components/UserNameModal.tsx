@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 const UserNameModal = ({
   fromHome,
@@ -13,7 +13,7 @@ const UserNameModal = ({
 }) => {
   
   const utils = trpc.useUtils()
-  const userContext = useGuestId()
+  const userContext = useUserContext()
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -27,7 +27,7 @@ const UserNameModal = ({
     onSuccess: (data) => {
       console.log("Name set:", data);
       setUsernameModal(false);
-      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
+      utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -37,7 +37,7 @@ const UserNameModal = ({
   const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
     onSuccess: (data) => {
       setUsernameModal(false);
-      utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
+      utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
       console.log("User project link set:", data);
     },
     onError: (error) => {
@@ -74,22 +74,22 @@ const UserNameModal = ({
     }
     
     // update
-    if (userContext.guestId == null){
+    if (userContext.userId == null){
       setError("Guest Id is required!");
       return;
     }
     
     setIsLoading(true)
     
-    if (users?.some((u) => u.guestId === userContext.guestId)) {
-      setUsername.mutate({id: projectId, username: name, guestId: userContext.guestId})
+    if (users?.some((u) => u.guestId === userContext.userId)) {
+      setUsername.mutate({id: projectId, username: name, guestId: userContext.userId})
       setIsLoading(false)
       setUsernameModal(false);
       return;
     }
     
     // insert
-    insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.guestId})
+    insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.userId})
 
     await sleep(5000);
     setIsLoading(false)
@@ -119,10 +119,10 @@ const UserNameModal = ({
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
-    utils.getUsername.invalidate({ id: projectId, guestId: userContext.guestId ?? "" });
+    utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
   }
   
-  if (userContext.isLoading && userContext.guestId == null && !userContext.guestId){
+  if (userContext.isLoading && userContext.userId == null && !userContext.userId){
     return <>
       Loading Guest ID...
     </>

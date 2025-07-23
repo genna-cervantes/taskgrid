@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ProjectFormData, projectSchema } from "./AddProjectForm";
 import { trpc } from "../utils/trpc";
-import { useGuestId } from "../contexts/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 const EditProjectModal = ({
   editProject,
@@ -22,7 +22,7 @@ const EditProjectModal = ({
   >;
   setEditProjectModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const userContext = useGuestId();
+  const userContext = useUserContext();
   const utils = trpc.useUtils();
 
   const editProjectName = trpc.editProjectName.useMutation({
@@ -51,7 +51,7 @@ const EditProjectModal = ({
     editProjectName.mutate({
       id: editProject.projectId,
       name: data.name,
-      guestId: userContext.guestId ?? "",
+      guestId: userContext.userId ?? "",
     });
   };
 
@@ -66,8 +66,8 @@ const EditProjectModal = ({
 
   if (
     userContext.isLoading &&
-    userContext.guestId == null &&
-    !userContext.guestId
+    userContext.userId == null &&
+    !userContext.userId
   ) {
     return <>Loading Guest ID...</>;
   }

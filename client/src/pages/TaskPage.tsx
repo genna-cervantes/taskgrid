@@ -9,7 +9,7 @@ import { priorityLevels } from "@/components/AddTaskForm";
 import TaskTargetDates from "@/components/TaskTargetDates";
 import { Task } from "../../../server/src/shared/types";
 import TaskAssignee from "@/components/TaskAssignee";
-import { useGuestId } from "@/contexts/UserContext";
+import { useUserContext } from "@/contexts/UserContext";
 import TaskSelectMedia from "@/components/TaskSelectMedia";
 import TaskImageModal from "@/components/TaskImageModal";
 import TaskLink from "@/components/TaskLink";
@@ -37,11 +37,11 @@ const TaskPage = () => {
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const userContext = useGuestId();
+  const userContext = useUserContext();
   const { data: username } =
     trpc.getUsername.useQuery({
       id: projectId,
-      guestId: userContext.guestId ?? "",
+      guestId: userContext.userId ?? "",
     });
 
   const { data, isLoading: taskDataIsLoading } = trpc.getTaskById.useQuery({

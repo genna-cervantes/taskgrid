@@ -1,14 +1,18 @@
-import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
   Blocks,
   Calendar,
+  CircleUserRound,
   ExternalLink,
+  FolderClosed,
   Funnel,
   House,
   LucideProps,
   MessageSquare,
+  SidebarClose,
+  SidebarOpen,
   SquareKanban,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -23,8 +27,34 @@ const Sidebar = () => {
   const { projectId } = useParams();
   const navigate = useNavigate()
 
+  let location = useLocation()
+  let parent = location.pathname.split('/')[1];
+
+  console.log('parent', parent)
+
   const navItems = [
     {
+      parent: "workspaces",
+      icon: FolderClosed,
+      name: "Workspaces",
+      func: function (){
+        // setActiveIndex(0)
+        // navigate(`/projects/${projectId}`)
+        // setToggleSidebar(false)
+      }
+    },
+    {
+      parent: "workspaces",
+      icon: CircleUserRound,
+      name: "Profile",
+      func: function (){
+        // setActiveIndex(0)
+        // navigate(`/projects/${projectId}`)
+        // setToggleSidebar(false)
+      }
+    },
+    {
+      parent: "projects",
       icon: SquareKanban,
       name: "Kanban",
       func: function (){
@@ -34,6 +64,7 @@ const Sidebar = () => {
       }
     },
     {
+      parent: "projects",
       icon: Calendar,
       name: "Calendar",
       func: function (){
@@ -42,6 +73,7 @@ const Sidebar = () => {
       }
     },
     {
+      parent: "projects",
       icon: Funnel,
       name: "Filter",
       func: function (){
@@ -50,6 +82,7 @@ const Sidebar = () => {
       }
     },
     {
+      parent: "projects",
       icon: MessageSquare,
       name: "KanifyAI",
       func: function (){
@@ -58,6 +91,7 @@ const Sidebar = () => {
       }
     },
     {
+      parent: "projects",
       icon: Blocks,
       name: "Integrations",
       func: function (){
@@ -66,6 +100,7 @@ const Sidebar = () => {
       }
     },
     {
+      parent: "projects",
       icon: ExternalLink,
       name: "Share",
       func: function (){
@@ -74,13 +109,14 @@ const Sidebar = () => {
       }
     },
   ];
+
   const [toggleSidebar, setToggleSidebar] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   
   // default set to location // if may serach params
   const view = searchParams.get("view") ?? "kanban"
   
-  const [activeIndex, setActiveIndex] = useState(navItems.findIndex((n) => n.name.toLowerCase() === view.toLowerCase()));
+  const [activeIndex, setActiveIndex] = useState(navItems.findIndex((n) => location.pathname.startsWith("projects") ? n.name.toLowerCase() === view.toLowerCase() : n.name.toLowerCase() === parent));
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [indicatorTop, setIndicatorTop] = useState(0);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -156,29 +192,18 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="relative z-20">
-      {/* Backdrop */}
-      {toggleSidebar && (
-        <div
-          onClick={() => {
-            setToggleSidebar(false)
-            // setForceActive("")
-          }}
-          className="fixed inset-0 bg-black/50 transition-opacity duration-200"
-        />
-      )}
       <div
-        className={`transition-all duration-200 ${
+        className={`transition-all h-full duration-200 pt-4 pb-6 ${
           !toggleSidebar
-            ? "absolute left-0 top-0 z-20 w-[3.25rem] h-full flex flex-col items-center pt-4 pb-6 dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5"
-            : "absolute z-20 top-0 l-0 w-64 h-full flex flex-col items-start pt-4 pb-6 dark:bg-backgroundDark border-[1px] dark:border-faintWhite/5"
+            ? "left-0 top-0 w-[3.5rem] flex flex-col items-center"
+            : " top-0 l-0 w-64 flex flex-col items-start "
         }`}
       >
         {!toggleSidebar && (
           <div className="transition-all duration-200 w-full">
-            <button className="h-6 mb-6 w-full flex justify-center" title="share">
+            <Link to='/' className="h-6 mb-6 w-full flex justify-center" title="share">
               <img src={kanifyLogo} />
-            </button>
+            </Link>
 
             <div className="relative flex flex-col items-center w-full">
               {/* Sliding indicator */}
@@ -194,7 +219,7 @@ const Sidebar = () => {
               )}
 
               {/* Sidebar nav items */}
-              {navItems.map((item, index) => {
+              {navItems.filter((i) => i.parent === parent).map((item, index) => {
                 const Icon = item.icon;
 
                 return (                  
@@ -222,10 +247,10 @@ const Sidebar = () => {
 
             <button
               onClick={() => setToggleSidebar(!toggleSidebar)}
-              className="px-1 py-2 group rounded-md text-midWhite hover:text-white bottom-4 fixed left-2"
+              className="px-2 py-2 group rounded-md text-midWhite hover:text-white bottom-4 fixed left-2"
               title="share"
             >
-              <ArrowRight className="h-4" strokeWidth={2} />
+              <SidebarOpen className="h-5" strokeWidth={2} />
             </button>
           </div>
         )}
@@ -251,7 +276,7 @@ const Sidebar = () => {
               )}
 
               {/* Sidebar nav items */}
-              {navItems.map((item, index) => {
+              {navItems.filter((i) => i.parent === parent).map((item, index) => {
                 const Icon = item.icon;
 
                 return (
@@ -310,16 +335,15 @@ const Sidebar = () => {
 
             <button
               onClick={() => setToggleSidebar(!toggleSidebar)}
-              className="px-1 mx-2 flex gap-x-2 py-2 group rounded-md text-midWhite hover:text-white bottom-4 fixed"
+              className="px-1 mx-2 flex items-center gap-x-2 py-2 group rounded-md text-midWhite hover:text-white bottom-4 fixed"
               title="share"
             >
-              <ArrowLeft className="h-4" strokeWidth={2} />
+              <SidebarClose className="h-5" strokeWidth={2} />
               <p className="text-xs">Close Sidebar</p>
             </button>
           </div>
         )}
       </div>
-    </div>
   );
 };
 

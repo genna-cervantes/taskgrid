@@ -94,7 +94,7 @@ const Project = () => {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 pb-4 flex-1 overflow-auto lg:overflow-y-hidden ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-1 overflow-auto lg:overflow-y-hidden ">
         {(Object.keys(columns) as ColumnKey[]).map((col) => (
           <React.Fragment key={col}>
             <ProjectColumn
