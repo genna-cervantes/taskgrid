@@ -1,34 +1,5 @@
 import { Pool } from "pg";
-import { ColumnKey, Comment, InsertableTask, Project, Task } from "../shared/types.js";
-
-export const getUserWorkspaceProjects = async (pool: Pool, guestId: string, workspaceId: string) => {
-  const query =
-    `SELECT p.id, p.name, w.user_id AS guestId , w.workspace_id AS workspaceId
-    FROM workspaces AS w
-    LEFT JOIN projects AS p 
-    ON p.workspace_id = w.workspace_id 
-    WHERE w.user_id = $1 AND w.workspace_id = $2 AND p.is_active = TRUE AND w.is_active = TRUE;`;
-  const res = await pool.query(query, [guestId, workspaceId]);
-
-  return res.rows as Project[];
-};
-
-export const getUserWorkspaces = async (pool: Pool, guestId: string) => {
-  const query =
-    `SELECT workspace_id AS workspaceId, name
-    FROM workspaces
-    WHERE user_id = $1 AND is_active = TRUE;`;
-  const res = await pool.query(query, [guestId]);
-  
-  return res.rows as {workspaceId: string, name: string}[];
-}
-
-export const checkWorkspaceId = async (pool: Pool, guestId: string, workspaceId: string) => {
-  const query = `SELECT name FROM workspaces WHERE workspace_id = $1 AND user_id = $2 AND is_active = TRUE;`;
-  const res = await pool.query(query, [workspaceId, guestId]);
-
-  return res.rowCount === 1 ? res.rows[0].name as string : false;
-}
+import { ColumnKey, InsertableTask, Task } from "../../shared/types.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   const query =
@@ -73,6 +44,10 @@ export const getTaskById = async (
   const query =
     'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
   const res = await pool.query(query, [projectId, taskId]);
+
+  if (res.rows.length === 0) {
+    throw new Error('Task not found');
+  }
 
   const task: Task = {
     ...res.rows[0],
@@ -130,175 +105,6 @@ export const deleteTask = async (pool: Pool, taskId: string) => {
   const res = await pool.query(query, [taskId]);
 
   return res.rowCount;
-};
-
-export const insertUser = async (
-  pool: Pool,
-  username: string,
-  guestId: string
-) => {
-  const query = "INSERT INTO users (username, guest_id) VALUES ($1, $2)";
-  const res = await pool.query(query, [username, guestId]);
-
-  return res.rowCount;
-};
-
-// SAMPLE TO ALWAYS USE
-export const insertUserWithWorkspace = async (pool: Pool, username: string, guestId: string, workspaceId: string, workspaceName: string) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query('BEGIN');
-
-    const insertUserQuery = `
-      INSERT INTO users (username, guest_id)
-      VALUES ($1, $2)
-      RETURNING guest_id;
-    `;
-    const userRes = await client.query(insertUserQuery, [username, guestId]);
-
-    const insertWorkspaceQuery = `
-      INSERT INTO workspaces (workspace_id, name, user_id)
-      VALUES ($1, $2, $3);
-    `;
-    const userId = userRes.rows[0].guest_id || guestId; // fallback if not auto ID
-    const workspaceRes = await client.query(insertWorkspaceQuery, [workspaceId, workspaceName, userId]);
-
-    await client.query('COMMIT');
-
-    return workspaceRes.rowCount === userRes.rowCount ? 1 : 0;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Transaction failed:', err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-export const insertWorkspace = async (pool: Pool, userId: string, workspaceId: string, workspaceName: string ) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query('BEGIN');
-
-    const insertWorkspaceQuery = `
-      INSERT INTO workspaces (workspace_id, name, user_id)
-      VALUES ($1, $2, $3);
-    `;
-    const workspaceRes = await client.query(insertWorkspaceQuery, [workspaceId, workspaceName, userId]);
-
-    await client.query('COMMIT');
-
-    return workspaceRes.rowCount;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Transaction failed:', err);
-    return false;
-  } finally {
-    client.release();
-  }
-}
-
-export const setUsername = async (
-  pool: Pool,
-  username: string,
-  guestId: string,
-  id: string
-) => {
-  const query =
-    "UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;";
-  const res = await pool.query(query, [username, guestId, id]);
-
-  return res.rowCount;
-};
-
-export const checkGuestId = async (pool: Pool, guestId: string) => {
-  const query =
-    "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";
-  const res = await pool.query(query, [guestId]);
-
-  return parseInt(res.rows[0].count);
-};
-
-export const checkGuestIdAndWorkspaces = async (pool: Pool, guestId: string) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query('BEGIN');
-
-    const checkUserQuery = "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";    
-    const userRes = await client.query(checkUserQuery, [guestId]);
-
-    const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE;`;
-    const workspaceRes = await client.query(getWorkspacesQuery, [guestId]);
-
-    await client.query('COMMIT');
-
-    return {
-      userExists: parseInt(userRes.rows[0].count) === 1,
-      workspaces: workspaceRes.rows.map((w) => w.workspace_id),
-    };
-    
-  } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Transaction failed:', err);
-    throw err;
-  } finally {
-    client.release();
-  }
-};
-
-export const getUsername = async (pool: Pool, id: string, guestId: string) => {
-  const query =
-    "SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE";
-  const res = await pool.query(query, [id, guestId]);
-
-  return res.rows[0]?.username ?? "";
-};
-
-export const kickUserFromProject = async (
-  pool: Pool,
-  id: string,
-  guestId: string
-) => {
-  const query =
-    "UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2;";
-  const res = await pool.query(query, [id, guestId]);
-
-  return res.rowCount;
-};
-
-export const getUsersInProject = async (pool: Pool, id: string) => {
-  const query =
-    "SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;";
-  const res = await pool.query(query, [id]);
-
-  if (res.rowCount === 0) {
-    return [];
-  }
-
-  let users = res.rows.map((r) => {
-    return {
-      username: r.username,
-      guestId: r.guestid,
-    };
-  });
-
-  return users;
-};
-
-export const getUsernamesInProject = async (pool: Pool, id: string) => {
-  const query =
-    "SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE";
-  const res = await pool.query(query, [id]);
-
-  if (res.rowCount === 0) {
-    return [];
-  }
-
-  let usernames = res.rows.map((r) => r.username);
-  return usernames;
 };
 
 export const updateAssignedTo = async (
@@ -368,7 +174,7 @@ export const updateTaskFiles = async (
   previousKeys: string[]
 ) => {
   if (keys.length + previousKeys.length > 3) {
-    throw new Error("too many task files");
+    throw new Error("Too many task files");
   }
 
   const query =
@@ -436,105 +242,6 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
   return res.rowCount;
 };
 
-export const addProject = async (
-  pool: Pool,
-  projectId: string,
-  name: string,
-  guestId: string,
-  workspaceId: string
-) => {
-  const query = "INSERT INTO projects (id, name, guest_id, workspace_id) VALUES ($1, $2, $3, $4)";
-  const res = await pool.query(query, [projectId, name, guestId, workspaceId]);
-
-  return res.rowCount;
-};
-
-export const getProjectOwner = async (pool: Pool, projectId: string) => {
-  const query =
-    "SELECT guest_id FROM projects WHERE id = $1 AND is_active = TRUE;";
-  const res = await pool.query(query, [projectId]);
-
-  return res.rows[0]?.guest_id;
-};
-
-export const getProjectStats = async (pool: Pool, projectId: string) => {
-  const query = `
-  SELECT progress, COUNT(*) AS count
-  FROM tasks
-  WHERE project_id = $1 AND is_active = TRUE
-  GROUP BY progress;
-  `
-  const res = await pool.query(query, [projectId])
-
-  const allStatuses: ColumnKey[] = ['backlog', 'in progress', 'for checking', 'done'];
-
-  const stats = Object.fromEntries(
-    allStatuses.map((status) => {
-      const found = res.rows.find((r) => r.progress === status);
-      return [status, found ? Number(found.count) : 0];
-    })
-  )
-
-  return stats as { [key in ColumnKey]: number };
-}
-
-export const addUserProjectLink = async (
-  pool: Pool,
-  projectId: string,
-  guestId: string,
-  username: string
-) => {
-  const query =
-    "INSERT INTO user_project_link (project_id, guest_id, username) VALUES ($1, $2, $3);";
-  const res = await pool.query(query, [projectId, guestId, username]);
-
-  return res.rowCount;
-};
-
-export const editProjectName = async (
-  pool: Pool,
-  projectId: string,
-  name: string,
-  guestId: string
-) => {
-  const query =
-    "UPDATE projects SET name = $1 WHERE id = $2 AND guest_id = $3 AND is_active = TRUE";
-  const res = await pool.query(query, [name, projectId, guestId]);
-
-  return res.rowCount;
-};
-
-export const getProjectNameByKey = async (pool: Pool, id: string) => {
-  const query = "SELECT name FROM projects WHERE id = $1 AND is_active = TRUE";
-  const res = await pool.query(query, [id]);
-
-  return res.rows[0]?.name;
-};
-
-export const deleteProject = async (
-  pool: Pool,
-  id: string,
-  guestId: string
-) => {
-  const query =
-    "UPDATE projects SET is_active = FALSE WHERE id = $1 AND guest_id = $2 AND is_active = TRUE;";
-  const res = await pool.query(query, [id, guestId]);
-
-  return res.rowCount;
-};
-
-export const deleteUserProjectLink = async (
-  pool: Pool,
-  id: string,
-  guestId: string
-) => {
-  const query =
-    "UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE;";
-  const res = await pool.query(query, [id, guestId]);
-
-  return res.rowCount;
-};
-
 export const getFilteredTasks = async (
   pool: Pool,
   priority: string,
@@ -594,7 +301,7 @@ export const getFilteredTasks = async (
       const commentRes = await pool.query(commentQuery, [t.id]);
       return {
         ...t,
-        commentCount: parseInt(commentRes.rows[0].count, 10),
+        commentCount: parseInt(commentRes.rows[0].count ?? '0', 10) ?? 0,
       };
     })
   );
@@ -652,40 +359,55 @@ export const updateTaskCategoryOptions = async (
   projectId: string,
   taskCategoryOptions: { category: string; color: string }[]
 ) => {
-  const query1 =
-    'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
-  const res1 = await pool.query(query1, [projectId]);
+    const client = await pool.connect();
+  
+    try{
 
-  const prevTaskCategories =
-    res1.rows[0]?.taskCategoryOptions?.map(
-      (c: { category: string }) => c.category
-    ) || [];
-  const newTaskCategories = taskCategoryOptions.map((c) => c.category);
+        await client.query('BEGIN')
+      
+      const query1 =
+        'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
+      const res1 = await pool.query(query1, [projectId]);
+    
+      const prevTaskCategories =
+        res1.rows[0]?.taskCategoryOptions?.map(
+          (c: { category: string }) => c.category
+        ) || [];
+      const newTaskCategories = taskCategoryOptions.map((c) => c.category);
+    
+      const removedTaskCategories = prevTaskCategories.filter(
+        (c: string) => !newTaskCategories.includes(c)
+      );
+    
+      // remove all removed categories from category column as well
+      if (removedTaskCategories.length > 0) {
+        const query2 = `
+            UPDATE tasks
+            SET category = null
+            WHERE category = ANY($1)
+                AND project_id = $2
+                AND is_active = TRUE;
+            `;
+        await pool.query(query2, [removedTaskCategories, projectId]);
+      }
+    
+      const query =
+        "UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;";
+    
+      const res = await pool.query(query, [
+        JSON.stringify(taskCategoryOptions),
+        projectId,
+      ]);
 
-  const removedTaskCategories = prevTaskCategories.filter(
-    (c: string) => !newTaskCategories.includes(c)
-  );
-
-  // remove all removed categories from category column as well
-  if (removedTaskCategories.length > 0) {
-    const query2 = `
-        UPDATE tasks
-        SET category = null
-        WHERE category = ANY($1)
-            AND project_id = $2
-            AND is_active = TRUE;
-        `;
-    await pool.query(query2, [removedTaskCategories, projectId]);
+      await client.query("COMMIT")
+    
+      return res.rowCount;
+  }catch(err){
+    await client.query("ROLLBACK")
+    throw err;
+  }finally{
+    client.release()
   }
-
-  const query =
-    "UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;";
-  const res = await pool.query(query, [
-    JSON.stringify(taskCategoryOptions),
-    projectId,
-  ]);
-
-  return res.rowCount;
 };
 
 export const updateTaskDependsOn = async (

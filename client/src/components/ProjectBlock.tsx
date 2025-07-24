@@ -59,13 +59,13 @@ const ProjectBlock = ({
       to={`/workspaces/${workspaceId}/projects/${p.id}`}
     >
       <div className="flex justify-between">
-        <h1 className="font-bold truncate">
+        <h1 className="font-bold truncate text-white/80">
           {p.name}
         </h1>
         <div className="relative">
           <button
             title="Edit Project"
-            className="cursor-pointer px-1 py-1 dark:text-white text-fadedBlack hover:dark:text-midWhite hover:text-midBlack"
+            className="cursor-pointer px-1 py-1 dark:text-white/90 text-fadedBlack hover:dark:text-midWhite hover:text-midBlack"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

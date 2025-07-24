@@ -3,59 +3,14 @@ import { router, publicProcedure } from "./trpc.js";
 import { z } from "zod";
 import { Pool } from "pg";
 import { randomUUID } from "crypto";
-import {
-  addComment,
-  addProject,
-  addUserProjectLink,
-  archiveTasksInColumn,
-  checkGuestId,
-  checkGuestIdAndWorkspaces,
-  checkWorkspaceId,
-  deleteProject,
-  deleteTask,
-  deleteTaskById,
-  deleteUserProjectLink,
-  editProjectName,
-  getCommentsByTask,
-  getFilteredTasks,
-  getProjectNameByKey,
-  getProjectOwner,
-  getProjectStats,
-  getTaskById,
-  getTaskCategoryOptions,
-  getTaskIds,
-  getTasksFromProjectId,
-  getUsername,
-  getUsernamesInProject,
-  getUsersInProject,
-  getUserWorkspaceProjects,
-  getUserWorkspaces,
-  insertTask,
-  insertUser,
-  insertUserWithWorkspace,
-  insertWorkspace,
-  kickUserFromProject,
-  setUsername,
-  undoDeleteTask,
-  updateAssignedTo,
-  updateTaskCategory,
-  updateTaskCategoryOptions,
-  updateTaskDependsOn,
-  updateTaskDescription,
-  updateTaskFiles,
-  updateTaskLink,
-  updateTaskOrderBatched,
-  updateTaskPriority,
-  updateTaskProgress,
-  updateTaskSubTasks,
-  updateTaskTargetEndDate,
-  updateTaskTargetStartDate,
-  updateTaskTitle,
-} from "../db/queries.js";
 import { config } from "dotenv";
 import { rateLimitMiddleware } from "./middleware.js";
 import { ColumnKey, Task, TaskSchema } from "../shared/types.js";
 import s3 from "../aws/s3.js";
+import { addProject, deleteProject, editProjectName, getProjectNameByKey, getProjectOwner, getProjectStats, getUserWorkspaceProjects } from "../db/queries/projects.js";
+import { checkWorkspaceId, getUserWorkspaces, insertWorkspace } from "../db/queries/workspaces.js";
+import { addComment, archiveTasksInColumn, deleteTask, deleteTaskById, getCommentsByTask, getFilteredTasks, getTaskById, getTaskCategoryOptions, getTaskIds, getTasksFromProjectId, insertTask, undoDeleteTask, updateAssignedTo, updateTaskCategory, updateTaskCategoryOptions, updateTaskDependsOn, updateTaskDescription, updateTaskFiles, updateTaskLink, updateTaskOrderBatched, updateTaskPriority, updateTaskProgress, updateTaskSubTasks, updateTaskTargetEndDate, updateTaskTargetStartDate, updateTaskTitle } from "../db/queries/tasks.js";
+import { addUserProjectLink, checkGuestId, checkGuestIdAndWorkspaces, deleteUserProjectLink, getUsername, getUsernamesInProject, getUsersInProject, insertUser, insertUserWithWorkspace, kickUserFromProject, setUsername } from "../db/queries/users.js";
 
 config();
 
