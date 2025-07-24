@@ -48,10 +48,10 @@ const Project = () => {
     setColumns(rawColumns);
   }, [rawColumns]);
 
-  const updateTaskOrderBatched = trpc.updateTaskOrderBatched.useMutation({
+  const updateTaskOrderBatched = trpc.tasks.updateTaskOrderBatched.useMutation({
     onSuccess: (data) => {
       console.log("Task ordered:", data);
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to order tasks:", error.message);

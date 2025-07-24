@@ -28,10 +28,10 @@ const AddProjectForm = ({
   const utils = trpc.useUtils();
   const userContext = useUserContext();
 
-  const addProject = trpc.addProject.useMutation({
+  const addProject = trpc.projects.addProject.useMutation({
     onSuccess: (data) => {
       setAddProjectForm(false);
-      utils.getUserWorkspaceProjects.invalidate();
+      utils.projects.getUserWorkspaceProjects.invalidate();
       console.log("Project created:", data);
     },
     onError: (error) => {

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
 import { useUserContext } from "../contexts/UserContext";
-import { CheckCircle, CheckCircle2, ClipboardList, Eye, Loader2 } from "lucide-react";
+import { CheckCircle2, ClipboardList, Eye, Loader2 } from "lucide-react";
 
 const ProjectBlock = ({
   p,
@@ -36,10 +36,10 @@ const ProjectBlock = ({
 }) => {
   // check if owner
   const userContext = useUserContext();
-  const { data: ownerGuestId } = trpc.getProjectOwner.useQuery({ id: p.id });
+  const { data: ownerGuestId } = trpc.projects.getProjectOwner.useQuery({ id: p.id });
 
   const { data: projectStats, isLoading: projectsStatsIsLoading } =
-    trpc.getProjectStats.useQuery({ projectId: p.id }) as {
+    trpc.projects.getProjectStats.useQuery({ projectId: p.id }) as {
       data:
         | {
             backlog: number;

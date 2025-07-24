@@ -39,11 +39,11 @@ const TaskBlock = ({
 
   const [subtasks, setSubtasks] = useState(task.subtasks);
 
-  const updateTaskSubtasks = trpc.updateTaskSubtasks.useMutation({
+  const updateTaskSubtasks = trpc.tasks.updateTaskSubtasks.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: task.id, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: task.id, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);

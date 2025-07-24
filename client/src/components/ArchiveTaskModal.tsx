@@ -22,10 +22,10 @@ const ArchiveTaskModal = ({
   const recentTaskContext = useContext(RecentTaskContext);
   const actionContext = useContext(ActionContext);
 
-  const archiveTasksByColumn = trpc.archiveTaskByColumn.useMutation({
+  const archiveTasksByColumn = trpc.tasks.archiveTaskByColumn.useMutation({
     onSuccess: (data) => {
       console.log("Task deleted:", data);
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);

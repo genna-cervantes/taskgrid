@@ -25,7 +25,7 @@ const EditProjectModal = ({
   const userContext = useUserContext();
   const utils = trpc.useUtils();
 
-  const editProjectName = trpc.editProjectName.useMutation({
+  const editProjectName = trpc.projects.editProjectName.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
       setEditProjectModal(false);
@@ -33,7 +33,7 @@ const EditProjectModal = ({
         projectId: "",
         projectName: "",
       });
-      utils.getUserProjects.invalidate();
+      utils.projects.getUserWorkspaceProjects.invalidate();
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);

@@ -15,7 +15,7 @@ const TaskDependsOn = ({
   taskDependsOn: {id: string, title: string}[]|undefined;
   setTaskDependsOn: React.Dispatch<React.SetStateAction<{id: string, title: string}[]>>;
 }) => {
-  const { data: tasks } = trpc.getTaskIds.useQuery({
+  const { data: tasks } = trpc.tasks.getTaskIds.useQuery({
     projectId,
   });
 

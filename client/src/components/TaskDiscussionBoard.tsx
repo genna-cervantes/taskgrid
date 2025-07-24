@@ -52,8 +52,7 @@ const TaskDiscussionBoardBase = (
 
   const utils = trpc.useUtils();
 
-  const { data, isLoading: commentsIsLoading } =
-    trpc.getCommentsByTask.useQuery({ taskId });
+  const { data, isLoading: commentsIsLoading } = trpc.tasks.getCommentsByTask.useQuery({ taskId });
 
   const comments = data?.map((c) => ({
     ...c,
@@ -62,9 +61,9 @@ const TaskDiscussionBoardBase = (
       : null,
   }));
 
-  const addComment = trpc.addComment.useMutation({
+  const addComment = trpc.tasks.addComment.useMutation({
     onSuccess: () => {
-      utils.getCommentsByTask.invalidate({ taskId });
+      utils.tasks.getCommentsByTask.invalidate({ taskId });
     },
   });
 

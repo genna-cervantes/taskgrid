@@ -33,7 +33,7 @@ const TaskPage = () => {
   const projectId = projectIdParam ?? "";
   const taskId = taskIdParam ?? "";
 
-  const { data: projectName, isLoading: projectNameIsLoading } = trpc.getProjectNameByKey.useQuery(
+  const { data: projectName, isLoading: projectNameIsLoading } = trpc.projects.getProjectNameByKey.useQuery(
       {
         id: projectId!,
       },
@@ -41,7 +41,7 @@ const TaskPage = () => {
     );
   
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
-    trpc.checkWorkspaceId.useQuery(
+    trpc.workspaces.checkWorkspaceId.useQuery(
       { workspaceId: workspaceId!, guestId: userContext.userId! },
       { enabled: userContext.userId !== "" && workspaceId !== "" }
     );
@@ -54,17 +54,17 @@ const TaskPage = () => {
   const saveBtnRef = useRef<HTMLButtonElement>(null)
 
   const { data: username } =
-    trpc.getUsername.useQuery({
+    trpc.users.getUsername.useQuery({
       id: projectId,
       guestId: userContext.userId ?? "",
     });
 
-  const { data, isLoading: taskDataIsLoading } = trpc.getTaskById.useQuery({
+  const { data, isLoading: taskDataIsLoading } = trpc.tasks.getTaskById.useQuery({
     projectId,
     taskId: taskId,
   });
 
-  const { data: taskCategoryOptionsRes } = trpc.getTaskCategoryOptions.useQuery(
+  const { data: taskCategoryOptionsRes } = trpc.tasks.getTaskCategoryOptions.useQuery(
     { projectId }
   );
 
@@ -105,7 +105,7 @@ const TaskPage = () => {
   const [taskMediaError, setTaskMediaError] = useState("");
   const [taskLinkError, setTaskLinkError] = useState("");
 
-  const getUploadUrls = trpc.uploadTaskImages.useMutation();
+  const getUploadUrls = trpc.tasks.uploadTaskImages.useMutation();
 
   const [uploadTaskImagesIsLoading, setUploadTaskImagesIsLoading] =
     useState(false);
@@ -162,131 +162,131 @@ const TaskPage = () => {
   };
 
   // TRPC METHODS
-  const deleteTask = trpc.deleteTask.useMutation({
+  const deleteTask = trpc.tasks.deleteTask.useMutation({
     onSuccess: (data) => {
       console.log("Task deleted:", data);
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateAssignedTo = trpc.updateAssignedTo.useMutation({
+  const updateAssignedTo = trpc.tasks.updateAssignedTo.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskTitle = trpc.updateTaskTitle.useMutation({
+  const updateTaskTitle = trpc.tasks.updateTaskTitle.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskDescription = trpc.updateTaskDescription.useMutation({
+  const updateTaskDescription = trpc.tasks.updateTaskDescription.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskLink = trpc.updateTaskLink.useMutation({
+  const updateTaskLink = trpc.tasks.updateTaskLink.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskPriority = trpc.updateTaskPriority.useMutation({
+  const updateTaskPriority = trpc.tasks.updateTaskPriority.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskTargetStartDate = trpc.updateTaskTargetStartDate.useMutation({
+  const updateTaskTargetStartDate = trpc.tasks.updateTaskTargetStartDate.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskTargetEndDate = trpc.updateTaskTargetEndDate.useMutation({
+  const updateTaskTargetEndDate = trpc.tasks.updateTaskTargetEndDate.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const updateTaskCategory = trpc.updateTaskCategory.useMutation({
+  const updateTaskCategory = trpc.tasks.updateTaskCategory.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
   
-  const updateTaskDependsOn = trpc.updateTaskDependsOn.useMutation({
+  const updateTaskDependsOn = trpc.tasks.updateTaskDependsOn.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   })
   
-  const updateTaskSubtasks = trpc.updateTaskSubtasks.useMutation({
+  const updateTaskSubtasks = trpc.tasks.updateTaskSubtasks.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     }    
   })
 
-  const updateTaskCategoryOptions = trpc.updateTaskCategoryOptions.useMutation({
+  const updateTaskCategoryOptions = trpc.tasks.updateTaskCategoryOptions.useMutation({
     onSuccess: (data) => {
       console.log("Task updated:", data);
-      utils.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
-      utils.getTaskCategoryOptions.invalidate({ projectId });
+      utils.tasks.getTaskById.invalidate({ taskId: taskId, projectId: projectId });
+      utils.tasks.getTaskCategoryOptions.invalidate({ projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -422,7 +422,7 @@ const TaskPage = () => {
     // for media - add checker if something actually changed tho
     await handleUpload(task.id);
 
-    utils.getTaskById.invalidate();
+    utils.tasks.getTaskById.invalidate();
     setTaskLinkError("");
     setTaskAssignedToError("");
 

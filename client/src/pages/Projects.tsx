@@ -42,12 +42,12 @@ const Projects = () => {
 
   // check if workspace exists
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
-    trpc.checkWorkspaceId.useQuery(
+    trpc.workspaces.checkWorkspaceId.useQuery(
       { workspaceId: workspaceId!, guestId: userContext.userId! },
       { enabled: userContext.userId !== "" && workspaceId !== "" }
     );
 
-  const { data: rawData, isLoading } = trpc.getTasks.useQuery(
+  const { data: rawData, isLoading } = trpc.tasks.getTasks.useQuery(
     {
       id: projectId!,
     },
@@ -55,7 +55,7 @@ const Projects = () => {
   );
   // handle multiple filter in one factor
   const { data: rawFilteredTasks, isLoading: filteredTasksIsLoading } =
-    trpc.filterTask.useQuery(
+    trpc.tasks.filterTask.useQuery(
       {
         id: projectId!,
         priority,
@@ -100,7 +100,7 @@ const Projects = () => {
     : {};
 
   const { data: username, isLoading: usernameIsLoading } =
-    trpc.getUsername.useQuery(
+    trpc.users.getUsername.useQuery(
       {
         id: projectId!,
         guestId: userContext.userId ?? "",
@@ -108,7 +108,7 @@ const Projects = () => {
       { enabled: projectId !== "" }
     );
 
-  const { data: projectName, isLoading: projectNameIsLoading } = trpc.getProjectNameByKey.useQuery(
+  const { data: projectName, isLoading: projectNameIsLoading } = trpc.projects.getProjectNameByKey.useQuery(
     {
       id: projectId!,
     },
@@ -116,7 +116,7 @@ const Projects = () => {
   );
 
   // task category options
-  const { data: taskCategoryOptions } = trpc.getTaskCategoryOptions.useQuery(
+  const { data: taskCategoryOptions } = trpc.tasks.getTaskCategoryOptions.useQuery(
     { projectId: projectId! },
     { enabled: projectId !== "" }
   );

@@ -24,7 +24,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false); // 🔑 prevent multiple inits
 
-  const insertUserWithWorkspace = trpc.insertUserWithWorkspace.useMutation({
+  const insertUserWithWorkspace = trpc.users.insertUserWithWorkspace.useMutation({
     onSuccess: (data) => {
       if (data){
         setUserId(data.userId);
@@ -38,7 +38,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     },
   });
 
-  const insertWorkspace = trpc.insertWorkspace.useMutation({
+  const insertWorkspace = trpc.workspaces.insertWorkspace.useMutation({
     onSuccess: (data) => {
       if (data){
         setCurrentWorkspace(data.workspaceId);
@@ -54,7 +54,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     typeof window !== "undefined" ? localStorage.getItem("guestId") : null;
 
   const { data: userData, isLoading: dbLoading } =
-    trpc.checkGuestIdAndWorkspaces.useQuery(
+    trpc.users.checkGuestIdAndWorkspaces.useQuery(
       { guestId: storedGuestId ?? '' },
       {
         enabled: !!storedGuestId

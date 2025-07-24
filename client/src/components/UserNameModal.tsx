@@ -23,21 +23,21 @@ const UserNameModal = ({
   const [provideGuestId, setProvideGuestId] = useState("");
   const [provideGuestIdError, setProvideGuestIdError] = useState("");
   
-  const setUsername = trpc.setUsername.useMutation({
+  const setUsername = trpc.users.setUsername.useMutation({
     onSuccess: (data) => {
       console.log("Name set:", data);
       setUsernameModal(false);
-      utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
+      utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
   
-  const insertUserProjectLink = trpc.insertUserProjectLink.useMutation({
+  const insertUserProjectLink = trpc.users.insertUserProjectLink.useMutation({
     onSuccess: (data) => {
       setUsernameModal(false);
-      utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
+      utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
       console.log("User project link set:", data);
     },
     onError: (error) => {
@@ -45,7 +45,7 @@ const UserNameModal = ({
     },
   });
   
-  const { data: users } = trpc.getUsersInProject.useQuery({
+  const { data: users } = trpc.users.getUsersInProject.useQuery({
     id: projectId,
   });
 
@@ -119,7 +119,7 @@ const UserNameModal = ({
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
-    utils.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
+    utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
   }
   
   if (userContext.isLoading && userContext.userId == null && !userContext.userId){

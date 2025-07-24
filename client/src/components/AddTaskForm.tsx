@@ -64,11 +64,11 @@ const AddTaskForm = ({
   const [files, setFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  const { data: usersInProject } = trpc.getUsernamesInProject.useQuery({
+  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
     id: projectId,
   });
 
-  const insertTask = trpc.insertTask.useMutation({
+  const insertTask = trpc.tasks.insertTask.useMutation({
     onSuccess: async (data) => {
       console.log("Task created:", data);
       
@@ -84,14 +84,14 @@ const AddTaskForm = ({
 
       // files
 
-      utils.getTasks.invalidate({ id: projectId });
+      utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
     },
   });
 
-  const getUploadUrls = trpc.uploadTaskImages.useMutation();
+  const getUploadUrls = trpc.tasks.uploadTaskImages.useMutation();
 
   const handleUpload = async (taskId: string) => {
     

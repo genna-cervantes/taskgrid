@@ -56,10 +56,10 @@ const Home = () => {
   }, []);
 
   // check if workspace exists
-  const { data: workspaceName, isLoading: workspaceExistsIsLoading } = trpc.checkWorkspaceId.useQuery({workspaceId: workspaceId!, guestId: userContext.userId ?? ""}, {enabled: userContext.userId !== "" && workspaceId !== ""})
+  const { data: workspaceName, isLoading: workspaceExistsIsLoading } = trpc.workspaces.checkWorkspaceId.useQuery({workspaceId: workspaceId!, guestId: userContext.userId ?? ""}, {enabled: !!userContext.userId && !!workspaceId})
 
   const { data: projects, isLoading: projectsIsLoading } =
-    trpc.getUserWorkspaceProjects.useQuery({ guestId: userContext.userId ?? "", workspaceId: workspaceId! }, {enabled: userContext.userId !== "" && workspaceId !== ""});
+    trpc.projects.getUserWorkspaceProjects.useQuery({ guestId: userContext.userId ?? "", workspaceId: workspaceId! }, {enabled: !!userContext.userId && !!workspaceId});
 
   // keyboard shortcuts
   useEffect(() => {

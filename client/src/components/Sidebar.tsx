@@ -199,17 +199,17 @@ const Sidebar = ({
   );
 
   const { data: usersInProject, isLoading: usersInProjectIsLoading } =
-    trpc.getUsersInProject.useQuery(
+    trpc.users.getUsersInProject.useQuery(
       { id: projectId ?? "" },
       { enabled: !!projectId }
     );
   const { data: taskCategoryOptions, isLoading: taskCategoryOptionsIsLoading } =
-    trpc.getTaskCategoryOptions.useQuery(
+    trpc.tasks.getTaskCategoryOptions.useQuery(
       { projectId: projectId ?? "" },
       { enabled: !!projectId }
     );
   const { data: userWorkspaces, isLoading: userWorkspacesIsLoading } =
-    trpc.getUserWorkspaces.useQuery(
+    trpc.workspaces.getUserWorkspaces.useQuery(
       { guestId: userContext.userId ?? "" },
       { enabled: userContext.userId !== "" }
     );

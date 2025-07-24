@@ -22,10 +22,10 @@ const DeleteProjectModal = ({
   const userContext = useUserContext();
   const utils = trpc.useUtils();
 
-  const deleteProject = trpc.deleteProject.useMutation({
+  const deleteProject = trpc.projects.deleteProject.useMutation({
     onSuccess: (data) => {
       console.log("Project created:", data);
-      utils.getUserWorkspaceProjects.invalidate();
+      utils.projects.getUserWorkspaceProjects.invalidate();
       setDeleteProjectModal(false);
       setEditProject({
         projectId: "",

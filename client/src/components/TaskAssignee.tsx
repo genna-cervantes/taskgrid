@@ -17,7 +17,7 @@ const TaskAssignee = ({
   setTaskAssignedTo: React.Dispatch<React.SetStateAction<string[]>>;
   taskAssignedToError: string;
 }) => {
-  const { data: usersInProject } = trpc.getUsernamesInProject.useQuery({
+  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
     id: projectId,
   });
 

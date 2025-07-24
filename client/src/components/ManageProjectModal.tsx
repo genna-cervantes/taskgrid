@@ -22,13 +22,13 @@ const ManageProjectModal = ({
   const utils = trpc.useUtils();
 
   const { data: usersInProject, isLoading: usersInProjectIsLoading } =
-    trpc.getUsersInProject.useQuery({
+    trpc.users.getUsersInProject.useQuery({
       id: editProject.projectId,
     });
 
-  const kickUser = trpc.kickUserFromProject.useMutation({
+  const kickUser = trpc.users.kickUserFromProject.useMutation({
     onSuccess: () => {
-      utils.getUsersInProject.invalidate()
+      utils.users.getUsersInProject.invalidate()
     },
     onError: (error) => {
       console.log("error occured", error);

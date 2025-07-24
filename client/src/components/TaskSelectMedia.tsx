@@ -51,7 +51,7 @@ const TaskSelectMedia = ({
   const [taskImagesHasInitialized, setTaskImagesHasInitialized] =
     useState(false);
 
-  const { isLoading: taskImageUrlsIsLoading } = trpc.getTaskImages.useQuery(
+  const { isLoading: taskImageUrlsIsLoading } = trpc.tasks.getTaskImages.useQuery(
     { taskId: task.id, projectId, keys: task.files },
     {
       enabled: !!task && !taskImagesHasInitialized,
