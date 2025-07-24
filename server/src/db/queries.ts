@@ -1,13 +1,34 @@
 import { Pool } from "pg";
 import { ColumnKey, Comment, InsertableTask, Project, Task } from "../shared/types.js";
 
-export const getProjectsFromGuestId = async (pool: Pool, guestId: string) => {
+export const getUserWorkspaceProjects = async (pool: Pool, guestId: string, workspaceId: string) => {
   const query =
-    "SELECT p.id, p.name, up.guest_id AS guestId FROM user_project_link AS up LEFT JOIN projects AS p ON p.id = up.project_id WHERE up.guest_id = $1 AND p.is_active = TRUE AND up.is_active = TRUE;";
-  const res = await pool.query(query, [guestId]);
+    `SELECT p.id, p.name, w.user_id AS guestId , w.workspace_id AS workspaceId
+    FROM workspaces AS w
+    LEFT JOIN projects AS p 
+    ON p.workspace_id = w.workspace_id 
+    WHERE w.user_id = $1 AND w.workspace_id = $2 AND p.is_active = TRUE AND w.is_active = TRUE;`;
+  const res = await pool.query(query, [guestId, workspaceId]);
 
   return res.rows as Project[];
 };
+
+export const getUserWorkspaces = async (pool: Pool, guestId: string) => {
+  const query =
+    `SELECT workspace_id AS workspaceId, name
+    FROM workspaces
+    WHERE user_id = $1 AND is_active = TRUE;`;
+  const res = await pool.query(query, [guestId]);
+  
+  return res.rows as {workspaceId: string, name: string}[];
+}
+
+export const checkWorkspaceId = async (pool: Pool, guestId: string, workspaceId: string) => {
+  const query = `SELECT name FROM workspaces WHERE workspace_id = $1 AND user_id = $2 AND is_active = TRUE;`;
+  const res = await pool.query(query, [workspaceId, guestId]);
+
+  return res.rowCount === 1 ? res.rows[0].name as string : false;
+}
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   const query =
@@ -419,10 +440,11 @@ export const addProject = async (
   pool: Pool,
   projectId: string,
   name: string,
-  guestId: string
+  guestId: string,
+  workspaceId: string
 ) => {
-  const query = "INSERT INTO projects (id, name, guest_id) VALUES ($1, $2, $3)";
-  const res = await pool.query(query, [projectId, name, guestId]);
+  const query = "INSERT INTO projects (id, name, guest_id, workspace_id) VALUES ($1, $2, $3, $4)";
+  const res = await pool.query(query, [projectId, name, guestId, workspaceId]);
 
   return res.rowCount;
 };
@@ -434,6 +456,27 @@ export const getProjectOwner = async (pool: Pool, projectId: string) => {
 
   return res.rows[0]?.guest_id;
 };
+
+export const getProjectStats = async (pool: Pool, projectId: string) => {
+  const query = `
+  SELECT progress, COUNT(*) AS count
+  FROM tasks
+  WHERE project_id = $1 AND is_active = TRUE
+  GROUP BY progress;
+  `
+  const res = await pool.query(query, [projectId])
+
+  const allStatuses: ColumnKey[] = ['backlog', 'in progress', 'for checking', 'done'];
+
+  const stats = Object.fromEntries(
+    allStatuses.map((status) => {
+      const found = res.rows.find((r) => r.progress === status);
+      return [status, found ? Number(found.count) : 0];
+    })
+  )
+
+  return stats as { [key in ColumnKey]: number };
+}
 
 export const addUserProjectLink = async (
   pool: Pool,
@@ -681,8 +724,6 @@ export const updateTaskOrderBatched = async (
   projectId: string
 ): Promise<number> => {
   if (payload.length === 0) return 0;
-
-  console.log(payload)
 
   const taskIds = payload.map((t) => Number(t.taskId));
   const indices = payload.map((t) => t.index);

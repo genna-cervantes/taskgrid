@@ -31,7 +31,7 @@ const AddProjectForm = ({
   const addProject = trpc.addProject.useMutation({
     onSuccess: (data) => {
       setAddProjectForm(false);
-      utils.getUserProjects.invalidate();
+      utils.getUserWorkspaceProjects.invalidate();
       console.log("Project created:", data);
     },
     onError: (error) => {
@@ -41,10 +41,13 @@ const AddProjectForm = ({
 
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
+    if (userContext.userId === "" || userContext.currentWorkspace === "") return;
+
     addProject.mutate({
       id,
       name: data.name,
       guestId: userContext.userId ?? "",
+      workspaceId: userContext.currentWorkspace ?? ""
     });
   };
 

@@ -45,7 +45,7 @@ const MultiSelect = ({
           <span
             className={cn(
               isPage ? "text-base" : "text-sm",
-              value.length === 0 ? "text-faintWhite" : "text-white"
+              value.length === 0 ? "text-faintWhite" : "text-white/90"
             )}
           >
             {value.length === 0

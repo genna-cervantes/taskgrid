@@ -18,7 +18,7 @@ const Comment = ({ comment }: { comment: string }) => {
     <>
       <div
         ref={ref}
-        className={`text-sm text-white break-words ${
+        className={`text-sm text-white/80 break-words ${
           expanded ? "" : "line-clamp-2"
         }`}
         style={{ transition: "all 0.2s" }}
@@ -82,16 +82,16 @@ const TaskDiscussionBoardBase = (
       </div>
       <div className="flex flex-col flex-1 min-h-0 justify-between gap-y-6">
         <div
-          className={`flex-1 overflow-y-auto ${
+          className={`flex-1 overflow-y-auto super-thin-scrollbar pr-3 ${
             isPage
-              ? "min-h-[37rem] max-h-[37rem]"
+              ? "min-h-[36rem] max-h-[36rem]"
               : "max-h-[32.5rem] min-h-[32.5rem]"
-          } scrollbar-none`}
+          }`}
         >
           {commentsIsLoading && (
             <p className="text-sm text-midWhite">Comments are loading...</p>
           )}
-          <div className="flex flex-col gap-y-2">
+          <div className="flex flex-col gap-y-3">
             {!commentsIsLoading &&
             Array.isArray(comments) &&
             comments.length > 0 ? (

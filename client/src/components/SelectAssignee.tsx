@@ -49,7 +49,7 @@ const SelectAssignee = ({
           <span
             className={cn(
               isPage ? "text-base" : "text-sm",
-              taskAssignedTo.length === 0 ? "text-faintWhite" : "text-white"
+              taskAssignedTo.length === 0 ? "text-faintWhite" : "text-white/90"
             )}
           >
             {taskAssignedTo.length === 0

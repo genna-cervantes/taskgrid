@@ -9,10 +9,19 @@ import { Project } from "../../../server/src/shared/types";
 import ManageProjectModal from "../components/ManageProjectModal";
 // import { useTheme } from "../contexts/ThemeContext";
 import BreadCrumbs from "@/components/BreadCrumbs";
+import { Navigate, useOutletContext, useParams } from "react-router-dom";
+import Mousetrap from "mousetrap";
 
 const Home = () => {
   const userContext = useUserContext();
+  const { workspaceId } = useParams()
+  
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const { setToggleSidebar } = useOutletContext<{
+      setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+    }>();
+
   const [editProject, setEditProject] = useState({
     projectId: "",
     projectName: "",
@@ -46,35 +55,40 @@ const Home = () => {
     };
   }, []);
 
+  // check if workspace exists
+  const { data: workspaceName, isLoading: workspaceExistsIsLoading } = trpc.checkWorkspaceId.useQuery({workspaceId: workspaceId!, guestId: userContext.userId ?? ""}, {enabled: userContext.userId !== "" && workspaceId !== ""})
+
   const { data: projects, isLoading: projectsIsLoading } =
-    trpc.getUserProjects.useQuery({ guestId: userContext.userId ?? "" });
+    trpc.getUserWorkspaceProjects.useQuery({ guestId: userContext.userId ?? "", workspaceId: workspaceId! }, {enabled: userContext.userId !== "" && workspaceId !== ""});
+
+  // keyboard shortcuts
+  useEffect(() => {
+    Mousetrap.bind("ctrl+b", function (e) {
+      e.preventDefault();
+      setToggleSidebar((prev) => !prev);
+    });
+
+    return () => {
+      Mousetrap.unbind("ctrl+b");
+    };
+  }, []);
 
   // need loading screen
   if (userContext.isLoading && userContext.userId == null && !userContext.userId) {
     return <>Loading Guest ID...</>;
   }
+  if (workspaceExistsIsLoading && !workspaceName) {
+    return <>Loading Workspace...</>;
+  }
+
+  // no provided workspace id
+  if (!workspaceId || workspaceId === "" || !workspaceName){
+    return <Navigate to={`/workspaces/${userContext.currentWorkspace}`} replace />;
+  }
 
   return (
     <div className="">
-      {/* <div className="text-center">
-        <div className="flex justify-center items-center gap-4">
-          <h1 className="text-2xl pt-4">
-            Your <span className="text-green-400 font-semibold">TasKan</span> Boards
-          </h1>
-          <button
-            onClick={toggleTheme}
-            className="mt-4 p-2 rounded-lg bg-gray-200 dark:bg-backgroundDark hover:bg-gray-300 dark:hover:bg-light transition-colors"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? "🌞" : "🌙"}
-          </button>
-        </div>
-        <p className="text-xs pt-2 opacity-50">
-          Guest ID: {userContext.guestId ?? "Loading..."}
-        </p>
-      </div> */}
-
-      <BreadCrumbs crumbs={[]} />
+      <BreadCrumbs crumbs={[{name: workspaceName, url: `/workspaces/${workspaceId}`}]} />
       {!projects && projectsIsLoading ? (
         <p className="text-sm opacity-50 text-center mt-8">
           Loading your taskan boards...
@@ -87,6 +101,7 @@ const Home = () => {
                 <ProjectBlock
                   key={p.id}
                   p={p}
+                  workspaceId={workspaceId}
                   editProject={editProject}
                   setEditProject={setEditProject}
                   dropdownRef={dropdownRef}

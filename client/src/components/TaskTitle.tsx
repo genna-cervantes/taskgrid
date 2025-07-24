@@ -18,7 +18,7 @@ const TaskTitle = ({
       </h3>
       <textarea
         placeholder="What's this about?"
-        className={`w-full ${isPage ? "text-base" : "text-sm"} h-12 super-thin-scrollbar placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
+        className={`w-full ${isPage ? "text-base" : "text-sm"} text-white/90 h-12 super-thin-scrollbar placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
         value={taskTitle}
         onChange={(e) => setTaskTitle(e.target.value)}
       />

@@ -1,7 +1,10 @@
 import { Outlet } from "react-router-dom";
 
 const TaskLayout = () => {
-  return <div className="w-full">
+
+  console.log('calling task layout')
+
+  return <div className="w-full h-full">
       <Outlet />
   </div>
 };

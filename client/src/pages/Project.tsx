@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Outlet, useMatch, useOutletContext, useParams } from "react-router-dom";
+import {
+  Outlet,
+  useMatch,
+  useOutletContext,
+  useParams,
+} from "react-router-dom";
 import TaskBLock from "../components/TaskBlock";
 import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
@@ -10,7 +15,6 @@ import Mousetrap from "mousetrap";
 import Xarrow from "react-xarrows";
 import ProjectColumn from "@/components/ProjectColumn";
 
-
 const Project = () => {
   const { projectId } = useParams();
   const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
@@ -20,11 +24,14 @@ const Project = () => {
   const [showDependencies, setShowDependencies] = useState(false);
   const [showAllSubtasks, setShowAllSubtasks] = useState(false);
 
-  const { setUsernameModal, username, columns: rawColumns, taskCategoryOptions } = useOutletContext<{
-    setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
+  const {
+    username,
+    columns: rawColumns,
+    taskCategoryOptions,
+  } = useOutletContext<{
     username: string | undefined;
     columns: Columns;
-    taskCategoryOptions: {category: string, color: string}[]|undefined
+    taskCategoryOptions: { category: string; color: string }[] | undefined;
   }>();
 
   if (!rawColumns) {
@@ -37,8 +44,8 @@ const Project = () => {
 
   const [columns, setColumns] = useState<Columns>(rawColumns);
   useEffect(() => {
-      // Update columns when rawColumns changes
-      setColumns(rawColumns);
+    // Update columns when rawColumns changes
+    setColumns(rawColumns);
   }, [rawColumns]);
 
   const updateTaskOrderBatched = trpc.updateTaskOrderBatched.useMutation({
@@ -49,47 +56,48 @@ const Project = () => {
     onError: (error) => {
       console.error("Failed to order tasks:", error.message);
     },
-  })
+  });
 
   // drag and drop
- const persistTaskMove = async (payload: {taskId: string, progress: ColumnKey, index: number}[]) => {
+  const persistTaskMove = async (
+    payload: { taskId: string; progress: ColumnKey; index: number }[]
+  ) => {
     if (payload.length > 0) {
-      updateTaskOrderBatched.mutate({payload, projectId: projectId ?? ""});
+      updateTaskOrderBatched.mutate({ payload, projectId: projectId ?? "" });
     }
- }
+  };
 
   // keyboard shortcuts
   useEffect(() => {
-    Mousetrap.bind('ctrl+alt+n', function(e) {
+    Mousetrap.bind("ctrl+alt+n", function (e) {
       e.preventDefault();
       setAddModal(true);
     });
 
-    Mousetrap.bind('ctrl+alt+d', function(e) {
+    Mousetrap.bind("ctrl+alt+d", function (e) {
       e.preventDefault();
-      setShowDependencies((prev) => !prev)
+      setShowDependencies((prev) => !prev);
     });
 
-    Mousetrap.bind('ctrl+alt+s', function(e) {
+    Mousetrap.bind("ctrl+alt+s", function (e) {
       e.preventDefault();
-      setShowAllSubtasks((prev) => !prev)
+      setShowAllSubtasks((prev) => !prev);
     });
-    
+
     return () => {
-      Mousetrap.unbind('ctrl+alt+n');
-      Mousetrap.unbind('ctrl+alt+d');
-      Mousetrap.unbind('ctrl+alt+s');
+      Mousetrap.unbind("ctrl+alt+n");
+      Mousetrap.unbind("ctrl+alt+d");
+      Mousetrap.unbind("ctrl+alt+s");
     };
   }, []);
-  
 
   // should redirect to not found
   if (!projectId) {
     return <div>missing project id</div>;
   }
 
-  if (isTaskRoute){
-    return <Outlet />
+  if (isTaskRoute) {
+    return <Outlet />;
   }
 
   return (
@@ -100,7 +108,6 @@ const Project = () => {
             <ProjectColumn
               col={col}
               columns={columns}
-              setColumns={setColumns}
               addModal={addModal}
               setAddModal={setAddModal}
               taskCategoryOptions={taskCategoryOptions}
@@ -108,9 +115,8 @@ const Project = () => {
               username={username}
               showDependencies={showDependencies}
               showAllSubtasks={showAllSubtasks}
-              setUsernameModal={setUsernameModal}
               persistTaskMove={persistTaskMove}
-             />
+            />
           </React.Fragment>
         ))}
       </div>

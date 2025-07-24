@@ -21,14 +21,16 @@ const App = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<WorkspaceRedirector />} />
 
+            <Route path="workspaces" element={<WorkspaceRedirector />} />
             <Route path="workspaces/:workspaceId" element={<Home />} />
 
-            <Route path="projects" element={<Projects />}>
+            <Route path="workspaces/:workspaceId/projects" element={<Projects />}>
               <Route path=":projectId" element={<Project />}>
-                <Route path="tasks" element={<TaskLayout />}>
-                  <Route path=":taskId" element={<TaskPage />} />
-                </Route>
               </Route>
+            </Route>
+
+            <Route path="workspaces/:workspaceId/projects/:projectId/tasks" element={<TaskLayout />}>
+              <Route path=":taskId" element={<TaskPage />} />
             </Route>
             <Route path="contact" element={<Contact />} />
             <Route path="*" element={<NoPage />} />

@@ -21,11 +21,30 @@ import { linkSchema } from "@/components/TaskModal";
 import TaskTitle from "@/components/TaskTitle";
 import TaskDependsOn from "@/components/TaskDependsOn";
 import TaskSubtasks from "@/components/TaskSubtasks";
+import BreadCrumbs from "@/components/BreadCrumbs";
 
 const TaskPage = () => {
-  const { projectId: projectIdParam, taskId: taskIdParam } = useParams();
+  
+  const actionContext = useContext(ActionContext);
+  const recentTaskContext = useContext(RecentTaskContext);
+  const userContext = useUserContext();
+
+  const { projectId: projectIdParam, taskId: taskIdParam, workspaceId } = useParams();
   const projectId = projectIdParam ?? "";
   const taskId = taskIdParam ?? "";
+
+  const { data: projectName, isLoading: projectNameIsLoading } = trpc.getProjectNameByKey.useQuery(
+      {
+        id: projectId!,
+      },
+      { enabled: projectId !== "" }
+    );
+  
+  const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
+    trpc.checkWorkspaceId.useQuery(
+      { workspaceId: workspaceId!, guestId: userContext.userId! },
+      { enabled: userContext.userId !== "" && workspaceId !== "" }
+    );
 
   const joinDiscussionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -34,10 +53,6 @@ const TaskPage = () => {
 
   const saveBtnRef = useRef<HTMLButtonElement>(null)
 
-  const actionContext = useContext(ActionContext);
-  const recentTaskContext = useContext(RecentTaskContext);
-
-  const userContext = useUserContext();
   const { data: username } =
     trpc.getUsername.useQuery({
       id: projectId,
@@ -448,7 +463,7 @@ const TaskPage = () => {
 
     Mousetrap.bind("esc", function (e) {
       e.preventDefault();
-      navigate(`/projects/${projectId}`);
+      navigate(`/workspaces/${workspaceId}/projects/${projectId}`);
     });
 
     return () => {
@@ -468,9 +483,26 @@ const TaskPage = () => {
   }
 
   return (
-    <div className="w-full h-screen flex">
+    <>
+    {!projectNameIsLoading && !workspaceExistsIsLoading && <BreadCrumbs
+      crumbs={[
+        {
+          name: workspaceName as string,
+          url: `/workspaces/${workspaceId}`,
+        },
+        {
+          name: projectName as string,
+          url: `/workspaces/${workspaceId}/projects/${projectId}`,
+        },
+        {
+          name: task.title,
+          url: `/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`,
+        },
+      ]}
+    />}
+    <div className="w-full flex h-full">
       <div className="scrollbar-group w-[60%] h-full">
-        <div className="group-hover-scrollbar w-full px-4 flex flex-col gap-y-4 max-h-screen overflow-y-scroll super-thin-scrollbar">
+        <div className="group-hover-scrollbar w-full pr-4 flex flex-col gap-y-4 max-h-screen overflow-y-scroll super-thin-scrollbar">
           <TaskTitle
             isPage={true}
             taskTitle={taskTitle}
@@ -566,7 +598,7 @@ const TaskPage = () => {
               onChange={(e) => setTaskTitle(e.target.value)}
             />
           </div>
-          <div className="mb-16 flex gap-x-4">
+          <div className="mb-20 flex gap-x-4">
             <button
               onClick={handleSaveTask}
               ref={saveBtnRef}
@@ -632,7 +664,7 @@ const TaskPage = () => {
           </div>
         </div>
       </div>
-      <div className="w-[40%] px-6 h-screen">
+      <div className="w-[40%] pl-4 pr-2 py-1 h-screen">
         <TaskDiscussionBoard
           ref={joinDiscussionRef}
           isPage={true}
@@ -641,6 +673,7 @@ const TaskPage = () => {
         />
       </div>
     </div>
+    </>
   );
 };
 

@@ -80,7 +80,7 @@ export function EditableDropdown({
         <Button
           className={`${isPage ? "text-base" : "text-sm"} border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${taskCategoryOptions.find((o) => o.category === taskCategory) ? "text-white" : "text-faintWhite"}`}
         >
-          <span className="flex w-full items-center gap-x-4">
+          <span className="flex w-full items-center gap-x-4 text-white/90">
             <span
               className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-200`}
             ></span>
@@ -105,7 +105,9 @@ export function EditableDropdown({
                     className={`h-3 w-3 rounded-full bg-${opt.color}-200`}
                   ></span>
                   <Input
-                    ref={(el) => (inputRefs.current[opt.category] = el)}
+                    ref={(el) => {
+                      (inputRefs.current[opt.category] = el)}
+                    }
                     value={opt.category}
                     onChange={(e) => handleChange(opt.color, e.target.value)}
                     onBlur={() => setEditingCategory(null)}

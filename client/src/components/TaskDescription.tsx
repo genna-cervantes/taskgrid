@@ -10,7 +10,7 @@ const TaskDescription = ({taskDescription, setTaskDescription, isPage = false}: 
       </h3>
       <textarea
         placeholder="What's this about?"
-        className={`w-full ${isPage ? "text-base" : "text-sm"} ${isPage ? "h-24" : "h-16"} placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
+        className={`w-full ${isPage ? "text-base" : "text-sm"} ${isPage ? "h-24" : "h-16"} text-white/90 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
         value={taskDescription}
         onChange={(e) => setTaskDescription(e.target.value)}
       />

@@ -10,6 +10,7 @@ import {
   archiveTasksInColumn,
   checkGuestId,
   checkGuestIdAndWorkspaces,
+  checkWorkspaceId,
   deleteProject,
   deleteTask,
   deleteTaskById,
@@ -19,7 +20,7 @@ import {
   getFilteredTasks,
   getProjectNameByKey,
   getProjectOwner,
-  getProjectsFromGuestId,
+  getProjectStats,
   getTaskById,
   getTaskCategoryOptions,
   getTaskIds,
@@ -27,6 +28,8 @@ import {
   getUsername,
   getUsernamesInProject,
   getUsersInProject,
+  getUserWorkspaceProjects,
+  getUserWorkspaces,
   insertTask,
   insertUser,
   insertUserWithWorkspace,
@@ -65,13 +68,42 @@ const pool = new Pool({
 });
 
 export const appRouter = router({
-  getUserProjects: publicProcedure
+  getUserWorkspaceProjects: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
+    .query(async ({ input }) => {
+      try{
+        let projects = await getUserWorkspaceProjects(pool, input.guestId, input.workspaceId);
+        return projects;
+      }catch(err){
+        console.error(err)
+        return []
+      }
+    }),
+  getUserWorkspaces: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      let projects = await getProjectsFromGuestId(pool, input.guestId);
-      return projects;
+      try{
+        let workspaces = await getUserWorkspaces(pool, input.guestId);
+        return workspaces as {workspaceId: string, name: string}[];
+      }catch(err){
+        console.error(err)
+        return []
+      }
     }),
+  checkWorkspaceId: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
+    .query(async ({ input }) => {
+      try{
+        let exists = await checkWorkspaceId(pool, input.guestId, input.workspaceId);
+        return exists;
+      }catch(err){
+        console.error(err)
+        return false
+      }
+    }),  
   getTasks: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
@@ -505,14 +537,16 @@ export const appRouter = router({
     }),
   addProject: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ id: z.string(), name: z.string(), guestId: z.string() }))
+    .input(z.object({ id: z.string(), name: z.string(), guestId: z.string(), workspaceId: z.string() }))
     .mutation(async ({ input }) => {
       let taskCount = await addProject(
         pool,
         input.id,
         input.name,
-        input.guestId
+        input.guestId,
+        input.workspaceId
       );
+
       let userProjectLinkCount = await addUserProjectLink(
         pool,
         input.id,
@@ -539,7 +573,19 @@ export const appRouter = router({
       }
       return false;
     }),
-  insertUserProjectLink: publicProcedure
+  getProjectStats: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input }) => {
+      try{
+        let stats = await getProjectStats(pool, input.projectId)
+        return stats 
+      }catch(err){
+        console.error(err)
+        return {};
+      }
+    }),
+    insertUserProjectLink: publicProcedure
     .use(rateLimitMiddleware)
     .input(
       z.object({ id: z.string(), username: z.string(), guestId: z.string() })

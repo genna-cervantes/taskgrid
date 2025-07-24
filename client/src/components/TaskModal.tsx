@@ -26,7 +26,6 @@ const TaskModal = ({
   projectId,
   taskCategoryOptionsProp,
   setTaskDetailsModal,
-  setUsernameModal,
   username,
 }: {
   task: Task;
@@ -36,7 +35,6 @@ const TaskModal = ({
     color: string;
 }[] | undefined;
   setTaskDetailsModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | undefined;
 }) => {
   const utils = trpc.useUtils();
@@ -317,7 +315,6 @@ const TaskModal = ({
       updateAssignedTo.mutate({ taskId: task.id, assignTo: [username] });
     } else {
       setTaskDetailsModal(false);
-      setUsernameModal(true);
     }
   };
 
@@ -426,7 +423,7 @@ const TaskModal = ({
         />
       )}
       <div
-        className={`h-[87%] dark:bg-backgroundDark dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
+        className={`h-[87%] dark:bg-[#212121] dark:border-faintWhite/5 border-[1px] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] ${openDiscussion ? "md:max-w-5xl" : "md:max-w-2xl"} flex h-auto transition-all duration-200 ease-in-out`}
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <div

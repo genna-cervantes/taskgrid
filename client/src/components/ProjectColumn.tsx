@@ -8,7 +8,6 @@ import Xarrow from "react-xarrows";
 const ProjectColumn = ({
   col,
   columns,
-  setColumns,
   addModal,
   setAddModal,
   projectId,
@@ -16,12 +15,10 @@ const ProjectColumn = ({
   showDependencies,
   showAllSubtasks,
   taskCategoryOptions,
-  setUsernameModal,
   persistTaskMove
 }: {
   col: ColumnKey;
   columns: Columns;
-  setColumns: React.Dispatch<React.SetStateAction<Columns>>;
   addModal: boolean;
   setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
   projectId: string;
@@ -34,7 +31,6 @@ const ProjectColumn = ({
         color: string;
       }[]
     | undefined;
-  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   persistTaskMove: (payload: {
     taskId: string;
     progress: "backlog" | "in progress" | "for checking" | "done";
@@ -72,7 +68,7 @@ const ProjectColumn = ({
   const clearHighlights = (els?: Element[]) => {
     const indicators = els || getIndicators();
 
-    indicators.forEach((i: Element) => i.style.opacity = "0")
+    indicators.forEach((i: Element) => (i as HTMLElement).style.opacity = "0")
 
   }
   
@@ -80,9 +76,9 @@ const ProjectColumn = ({
     const indicators = getIndicators()
     clearHighlights(indicators)
 
-    const nearest = getNearestIndicator(e, indicators)
+    const nearest = getNearestIndicator(e, indicators);
 
-    nearest.element.style.opacity = "1";
+    (nearest.element as HTMLElement).style.opacity = "1";
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -105,7 +101,7 @@ const ProjectColumn = ({
     const indicators = getIndicators()
     const nearestIndicator = getNearestIndicator(e, indicators)
 
-    const beforeId = nearestIndicator.element.dataset.before || "-1" // task after idrop ung task being dragged
+    const beforeId = (nearestIndicator.element as HTMLElement)?.dataset.before || "-1" // task after idrop ung task being dragged
 
     const payload: {taskId: string, progress: ColumnKey, index: number}[] = []
 
@@ -192,7 +188,6 @@ const ProjectColumn = ({
                 col={col}
                 task={task}
                 taskCategoryOptions={taskCategoryOptions}
-                setUsernameModal={setUsernameModal}
                 username={username}
               />
               {showDependencies &&

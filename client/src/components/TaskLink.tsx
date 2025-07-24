@@ -21,7 +21,7 @@ const TaskLink = ({
 
       <input
         placeholder="https://"
-        className={`w-full shadow-bottom-grey pb-2 placeholder:text-faintWhite ${isPage ? "text-base" : "text-sm"} focus:outline-none focus:ring-0 focus:border-transparent`}
+        className={`w-full shadow-bottom-grey pb-2 text-white/90 placeholder:text-faintWhite ${isPage ? "text-base" : "text-sm"} focus:outline-none focus:ring-0 focus:border-transparent`}
         value={taskLink ?? ''}
         onChange={(e) => setTaskLink(e.target.value)}
       />

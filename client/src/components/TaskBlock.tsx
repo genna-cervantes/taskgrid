@@ -15,7 +15,6 @@ const TaskBlock = ({
   showDependencies,
   showAllSubtasks,
   taskCategoryOptions,
-  setUsernameModal,
   username,
   handleDragStart
 }: {
@@ -30,7 +29,6 @@ const TaskBlock = ({
         color: string;
       }[]
     | undefined;
-  setUsernameModal: React.Dispatch<React.SetStateAction<boolean>>;
   username: string | undefined;
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string, progress: string) => void
 }) => {
@@ -79,7 +77,6 @@ const TaskBlock = ({
         <TaskModal
           taskCategoryOptionsProp={taskCategoryOptions}
           username={username}
-          setUsernameModal={setUsernameModal}
           task={task}
           projectId={projectId}
           setTaskDetailsModal={setTaskDetailsModal}
