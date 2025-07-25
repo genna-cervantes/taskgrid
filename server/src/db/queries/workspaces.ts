@@ -42,5 +42,5 @@ export const insertWorkspace = async (
     userId,
   ]);
 
-  return workspaceRes.rowCount;
+  return (workspaceRes.rowCount ?? 0) === 1 ? true : false;
 };

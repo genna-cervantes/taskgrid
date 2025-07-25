@@ -36,7 +36,7 @@ export const insertUserWithWorkspace = async (
 
     await client.query("COMMIT");
 
-    return workspaceRes.rowCount === userRes.rowCount ? 1 : 0;
+    return workspaceRes.rowCount === 1 && workspaceRes.rowCount === userRes.rowCount ? true : false;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -57,7 +57,7 @@ export const setUsername = async (
     "UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;";
   const res = await pool.query(query, [username, guestId, id]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const checkGuestId = async (pool: Pool, guestId: string) => {
@@ -67,7 +67,7 @@ export const checkGuestId = async (pool: Pool, guestId: string) => {
     "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";
   const res = await pool.query(query, [guestId]);
 
-  return parseInt(res.rows[0].count);
+  return parseInt(res.rows[0].count) === 1 ? true : false;
 };
 
 export const checkGuestIdAndWorkspaces = async (
@@ -92,7 +92,7 @@ export const checkGuestIdAndWorkspaces = async (
 
     return {
       userExists: parseInt(userRes.rows[0].count) === 1,
-      workspaces: workspaceRes.rows.map((w) => w.workspace_id),
+      workspaces: workspaceRes.rows.map((w) => w.workspace_id as string),
     };
   } catch (err) {
     await client.query("ROLLBACK");
@@ -109,7 +109,9 @@ export const getUsername = async (pool: Pool, id: string, guestId: string) => {
     "SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [id, guestId]);
 
-  return res.rows[0]?.username ?? "";
+  if (!res.rows[0]?.username) throw new Error("Bad requeset user does not exist")
+
+  return res.rows[0].username as string;
 };
 
 export const kickUserFromProject = async (
@@ -123,7 +125,7 @@ export const kickUserFromProject = async (
     "UPDATE user_project_link SET is_active = FALSE WHERE project_id = $1 AND guest_id = $2;";
   const res = await pool.query(query, [id, guestId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const getUsersInProject = async (pool: Pool, id: string) => {
@@ -159,7 +161,7 @@ export const getUsernamesInProject = async (pool: Pool, id: string) => {
   }
 
   let usernames = res.rows.map((r) => r.username);
-  return usernames;
+  return usernames as string[];
 };
 
 export const addUserProjectLink = async (
@@ -202,5 +204,5 @@ export const insertUser = async (
   const query = "INSERT INTO users (username, guest_id) VALUES ($1, $2)";
   const res = await pool.query(query, [username, guestId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true: false;
 };

@@ -11,10 +11,8 @@ import {
   getUserWorkspaceProjects,
 } from "../../db/queries/projects.js";
 import { pool } from "../router.js";
-import {
-  addUserProjectLink,
-  deleteUserProjectLink,
-} from "../../db/queries/users.js";
+import { tryCatch } from "../../lib/utils.js";
+import { TRPCError } from "@trpc/server";
 
 export const projectsRouter = router({
   addProject: publicProcedure
@@ -28,106 +26,132 @@ export const projectsRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      let taskCount = await addProject(
-        pool,
-        input.id,
-        input.name,
-        input.guestId,
-        input.workspaceId
+      let result = await tryCatch(
+        addProject(pool, input.id, input.name, input.guestId, input.workspaceId)
       );
-
-      let userProjectLinkCount = await addUserProjectLink(
-        pool,
-        input.id,
-        input.guestId,
-        ""
-      );
-      if (
-        taskCount &&
-        userProjectLinkCount &&
-        taskCount > 0 &&
-        userProjectLinkCount > 0
-      ) {
-        return taskCount;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create project",
+          cause: result.error,
+        });
       }
-      return false;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create project",
+        });
+      }
+
+      return result.data;
     }),
   getProjectOwner: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      let guestId = await getProjectOwner(pool, input.id);
-      if (guestId) {
-        return guestId as string;
+      let result = await tryCatch(getProjectOwner(pool, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch project owner",
+          cause: result.error,
+        });
       }
-      return false;
+
+      return result.data;
     }),
   getProjectStats: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let stats = await getProjectStats(pool, input.projectId);
-        return stats;
-      } catch (err) {
-        console.error(err);
-        return {};
+      let result = await tryCatch(getProjectStats(pool, input.projectId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch project stats",
+          cause: result.error,
+        });
       }
+
+      return result.data;
     }),
   editProjectName: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string(), name: z.string(), guestId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await editProjectName(
-        pool,
-        input.id,
-        input.name,
-        input.guestId
+      let result = await tryCatch(
+        editProjectName(pool, input.id, input.name, input.guestId)
       );
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project name",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project name",
+        });
+      }
+
+      return result.data;
     }),
   getProjectNameByKey: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      let projectName = await getProjectNameByKey(pool, input.id);
-      return projectName as string;
+      let result = await tryCatch(getProjectNameByKey(pool, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch project name",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   deleteProject: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string(), guestId: z.string() }))
     .mutation(async ({ input }) => {
-      let projectCount = await deleteProject(pool, input.id, input.guestId);
-      let userProjectLinkCount = await deleteUserProjectLink(
-        pool,
-        input.id,
-        input.guestId
-      );
+      let result = await tryCatch(deleteProject(pool, input.id, input.guestId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete project",
+          cause: result.error,
+        });
+      }
 
-      if (
-        projectCount &&
-        projectCount > 0 &&
-        userProjectLinkCount &&
-        userProjectLinkCount > 0
-      )
-        return true;
-      return false;
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete project",
+        });
+      }
+
+      return result.data;
     }),
   getUserWorkspaceProjects: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let projects = await getUserWorkspaceProjects(
-          pool,
-          input.guestId,
-          input.workspaceId
-        );
-        return projects;
-      } catch (err) {
-        console.error(err);
-        return [];
+      let result = await tryCatch(
+        getUserWorkspaceProjects(pool, input.guestId, input.workspaceId)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch project",
+          cause: result.error,
+        });
       }
+
+      return result.data;
     }),
 });

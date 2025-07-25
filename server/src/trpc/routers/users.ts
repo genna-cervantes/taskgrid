@@ -14,6 +14,8 @@ import {
   setUsername,
 } from "../../db/queries/users.js";
 import { pool } from "../router.js";
+import { tryCatch } from "../../lib/utils.js";
+import { TRPCError } from "@trpc/server";
 
 export const usersRouter = router({
   insertUserWithWorkspace: publicProcedure
@@ -27,16 +29,31 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      let insertCount = await insertUserWithWorkspace(
-        pool,
-        input.username,
-        input.guestId,
-        input.workspaceId,
-        input.workspaceName
+      let result = await tryCatch(
+        insertUserWithWorkspace(
+          pool,
+          input.username,
+          input.guestId,
+          input.workspaceId,
+          input.workspaceName
+        )
       );
-      if (insertCount && insertCount > 0)
-        return { userId: input.guestId, workspaceId: input.workspaceId };
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user and workspace",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user and workspace",
+        });
+      }
+
+      return result.data;
     }),
   setUsername: publicProcedure
     .use(rateLimitMiddleware)
@@ -44,94 +61,149 @@ export const usersRouter = router({
       z.object({ username: z.string(), guestId: z.string(), id: z.string() })
     )
     .mutation(async ({ input }) => {
-      let userCount = await setUsername(
-        pool,
-        input.username,
-        input.guestId,
-        input.id
+      let result = await tryCatch(
+        setUsername(pool, input.username, input.guestId, input.id)
       );
-      if (userCount && userCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update username",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update username",
+        });
+      }
+
+      return result.data;
     }),
   checkGuestId: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let userCount = await checkGuestId(pool, input.guestId);
-        if (userCount && userCount === 1) return true;
-        return false;
-      } catch (err) {
-        console.log(err);
+      let result = await tryCatch(checkGuestId(pool, input.guestId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch guest id",
+          cause: result.error,
+        });
       }
+
+      return result.data;
     }),
   checkGuestIdAndWorkspaces: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let data = await checkGuestIdAndWorkspaces(pool, input.guestId);
-
-        return {
-          userExists: data.userExists,
-          workspaces: data.workspaces as string[],
-        };
-      } catch (err) {
-        console.log(err);
+      let result = await tryCatch(
+        checkGuestIdAndWorkspaces(pool, input.guestId)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch guest id and workspaces",
+          cause: result.error,
+        });
       }
+
+      return result.data;
     }),
   getUsername: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string(), guestId: z.string() }))
     .query(async ({ input }) => {
-      let username = await getUsername(pool, input.id, input.guestId);
-      return username;
+      let result = await tryCatch(getUsername(pool, input.id, input.guestId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch username",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   kickUserFromProject: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string(), id: z.string() }))
     .mutation(async ({ input }) => {
-      let userCount = await kickUserFromProject(pool, input.id, input.guestId);
-      if (userCount && userCount === 1) return true;
-      return false;
+      let result = await tryCatch(
+        kickUserFromProject(pool, input.id, input.guestId)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to remove user from project",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to remove user from project",
+        });
+      }
+
+      return result.data;
     }),
   getUsersInProject: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      let users = await getUsersInProject(pool, input.id);
-      return users;
+      let result = await tryCatch(getUsersInProject(pool, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch users in project",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   getUsernamesInProject: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      let users = await getUsernamesInProject(pool, input.id);
-      return users as string[];
-    }),
-  insertUserProjectLink: publicProcedure
-    .use(rateLimitMiddleware)
-    .input(
-      z.object({ id: z.string(), username: z.string(), guestId: z.string() })
-    )
-    .mutation(async ({ input }) => {
-      let userProjectLinkCount = await addUserProjectLink(
-        pool,
-        input.id,
-        input.guestId,
-        input.username
-      );
-      if (userProjectLinkCount && userProjectLinkCount > 0) {
-        return userProjectLinkCount;
+      let result = await tryCatch(getUsernamesInProject(pool, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch usernames in project",
+          cause: result.error,
+        });
       }
-      return false;
+
+      return result.data;
     }),
   insertUser: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ username: z.string(), guestId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await insertUser(pool, input.username, input.guestId);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(
+        insertUser(pool, input.username, input.guestId)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create user",
+        });
+      }
+
+      return result.data;
     }),
 });

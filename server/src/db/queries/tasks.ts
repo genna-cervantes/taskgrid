@@ -1,5 +1,10 @@
 import { Pool } from "pg";
-import { ColumnKey, Comment, InsertableTask, Task } from "../../shared/types.js";
+import {
+  ColumnKey,
+  Comment,
+  InsertableTask,
+  Task,
+} from "../../shared/types.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
@@ -81,7 +86,7 @@ export const insertTask = async (
   if (!id || !task) throw new Error("Bad request missing required fields");
 
   const query =
-    'INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId";';
+    "INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;";
   const res = await pool.query(query, [
     id,
     task.title,
@@ -92,9 +97,11 @@ export const insertTask = async (
     task.assignedTo,
   ]);
 
-  res.rows[0].id = res.rows[0].id.toString();
+  let taskId: string = res.rows[0].id.toString();
 
-  return res.rows[0] as Task;
+  if (!taskId) throw new Error("Bad request query retuned no id");
+
+  return taskId;
 };
 
 export const updateTaskProgress = async (
@@ -109,7 +116,7 @@ export const updateTaskProgress = async (
     "UPDATE tasks SET progress = $1 WHERE id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [progress, parseInt(taskId)]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const deleteTask = async (pool: Pool, taskId: string) => {
@@ -118,7 +125,7 @@ export const deleteTask = async (pool: Pool, taskId: string) => {
   const query = "UPDATE tasks SET is_active = FALSE WHERE id = $1";
   const res = await pool.query(query, [taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateAssignedTo = async (
@@ -147,7 +154,7 @@ export const updateTaskTitle = async (
     "UPDATE tasks SET title = $1 WHERE id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [title, taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskDescription = async (
@@ -161,7 +168,7 @@ export const updateTaskDescription = async (
     "UPDATE tasks SET description = $1 WHERE id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [description, taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskLink = async (
@@ -174,7 +181,7 @@ export const updateTaskLink = async (
   const query = "UPDATE tasks SET link = $1 WHERE id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [link, taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskPriority = async (
@@ -189,7 +196,7 @@ export const updateTaskPriority = async (
     "UPDATE tasks SET priority = $1 WHERE id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [priority, taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskFiles = async (
@@ -197,7 +204,12 @@ export const updateTaskFiles = async (
   taskId: string,
   projectId: string,
   keys: string[],
-  previousKeys: string[]
+  previousKeys: string[],
+  uploads: {
+    name: string;
+    key: string;
+    url: string;
+  }[]
 ) => {
   if (!taskId || !projectId)
     throw new Error("Bad request missing required fields");
@@ -214,7 +226,10 @@ export const updateTaskFiles = async (
     projectId,
   ]);
 
-  return res.rowCount;
+  return {
+    success: (res.rowCount ?? 0) === 1 ? true : false,
+    uploads,
+  };
 };
 
 export const updateTaskTargetStartDate = async (
@@ -230,7 +245,7 @@ export const updateTaskTargetStartDate = async (
     "UPDATE tasks SET target_start_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
   const res = await pool.query(query, [targetStartDate, taskId, projectId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskTargetEndDate = async (
@@ -246,7 +261,7 @@ export const updateTaskTargetEndDate = async (
     "UPDATE tasks SET target_end_date = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
   const res = await pool.query(query, [targetEndDate, taskId, projectId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskCategory = async (
@@ -262,7 +277,7 @@ export const updateTaskCategory = async (
     "UPDATE tasks SET category = $1 WHERE id = $2 AND project_id = $3;";
   const res = await pool.query(query, [category, taskId, projectId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const deleteTaskById = async (pool: Pool, taskId: string) => {
@@ -272,7 +287,7 @@ export const deleteTaskById = async (pool: Pool, taskId: string) => {
     "UPDATE tasks SET is_active = FALSE WHERE id = $1 AND is_active = TRUE";
   const res = await pool.query(query, [taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const undoDeleteTask = async (pool: Pool, taskId: string) => {
@@ -281,7 +296,7 @@ export const undoDeleteTask = async (pool: Pool, taskId: string) => {
   const query = "UPDATE tasks SET is_active = TRUE WHERE id = $1";
   const res = await pool.query(query, [taskId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const getFilteredTasks = async (
@@ -357,14 +372,14 @@ export const archiveTasksInColumn = async (
   pool: Pool,
   id: string,
   column: string
-) => {
+): Promise<true> => {
   if (!id || !column) throw new Error("Bad request missing required fields");
 
   const query =
     "UPDATE tasks SET is_active = False WHERE project_id = $1 AND progress = $2 AND is_active = TRUE;";
   const res = await pool.query(query, [id, column]);
 
-  return res.rowCount;
+  return true;
 };
 
 // comments
@@ -381,7 +396,7 @@ export const addComment = async (
     "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
   const res = await pool.query(query, [taskId, comment, commentBy]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const getCommentsByTask = async (pool: Pool, taskId: string) => {
@@ -400,6 +415,9 @@ export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
   const query =
     'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = TRUE LIMIT 1;';
   const res = await pool.query(query, [projectId]);
+
+  if (!res.rows[0].taskCategoryOptions)
+    throw new Error("Bad request project does not exist");
 
   return res.rows[0].taskCategoryOptions as {
     category: string;
@@ -455,7 +473,7 @@ export const updateTaskCategoryOptions = async (
 
     await client.query("COMMIT");
 
-    return res.rowCount;
+    return (res.rowCount ?? 0) === 1 ? true : false;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -477,7 +495,7 @@ export const updateTaskDependsOn = async (
     "UPDATE tasks SET depends_on = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
   const res = await pool.query(query, [dependsOn, taskId, projectId]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskSubTasks = async (
@@ -497,16 +515,15 @@ export const updateTaskSubTasks = async (
     projectId,
   ]);
 
-  return res.rowCount;
+  return (res.rowCount ?? 0) === 1 ? true : false;
 };
 
 export const updateTaskOrderBatched = async (
   pool: Pool,
   payload: { taskId: string; index: number; progress: ColumnKey }[],
   projectId: string
-): Promise<number> => {
+) => {
   if (!projectId) throw new Error("Bad request missing required fields");
-  if (payload.length === 0) return 0;
 
   const taskIds = payload.map((t) => Number(t.taskId));
   const indices = payload.map((t) => t.index);
@@ -540,5 +557,5 @@ export const updateTaskOrderBatched = async (
   const values = [...taskIds, ...indices, ...progressValues, projectId];
 
   const res = await pool.query(query, values);
-  return res.rowCount || 0;
+  return res.rowCount === payload.length ? true : false;
 };

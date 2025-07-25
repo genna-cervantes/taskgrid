@@ -33,28 +33,56 @@ import { pool } from "../router.js";
 import { ColumnKey, Comment, Task, TaskSchema } from "../../shared/types.js";
 import { randomUUID } from "crypto";
 import s3 from "../../aws/s3.js";
+import { tryCatch } from "../../lib/utils.js";
+import { TRPCError } from "@trpc/server";
 
 export const tasksRouter = router({
   getTasks: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      let tasks = await getTasksFromProjectId(pool, input.id);
-      return tasks;
+      let result = await tryCatch(getTasksFromProjectId(pool, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   getTaskIds: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input }) => {
-      let taskIds = await getTaskIds(pool, input.projectId);
-      return taskIds;
+      let result = await tryCatch(getTaskIds(pool, input.projectId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   getTaskById: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string(), taskId: z.string() }))
     .query(async ({ input }) => {
-      let task = await getTaskById(pool, input.projectId, input.taskId);
-      return task;
+      let result = await tryCatch(
+        getTaskById(pool, input.projectId, input.taskId)
+      );
+      if (result.error !== null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   insertTask: publicProcedure
     .use(rateLimitMiddleware)
@@ -65,82 +93,182 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log("got here");
-      let task = await insertTask(pool, input.task, input.id);
-      // if (taskCount && taskCount > 0) return true
-      return task;
+      let result = await tryCatch(insertTask(pool, input.task, input.id));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   updateTaskProgress: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string(), progress: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateTaskProgress(
-        pool,
-        input.taskId,
-        input.progress
+      let result = await tryCatch(
+        updateTaskProgress(pool, input.taskId, input.progress)
       );
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   deleteTask: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await deleteTask(pool, input.taskId);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(deleteTask(pool, input.taskId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateAssignedTo: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ assignTo: z.array(z.string()), taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateAssignedTo(
-        pool,
-        input.taskId,
-        input.assignTo
+      let result = await tryCatch(
+        updateAssignedTo(pool, input.taskId, input.assignTo)
       );
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskTitle: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ title: z.string(), taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateTaskTitle(pool, input.taskId, input.title);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(
+        updateTaskTitle(pool, input.taskId, input.title)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskDescription: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ description: z.string().optional(), taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateTaskDescription(
-        pool,
-        input.taskId,
-        input.description
+      let result = await tryCatch(
+        updateTaskDescription(pool, input.taskId, input.description)
       );
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskLink: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ link: z.string().optional(), taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateTaskLink(pool, input.taskId, input.link);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(
+        updateTaskLink(pool, input.taskId, input.link)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskPriority: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ priority: z.string(), taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await updateTaskPriority(
-        pool,
-        input.taskId,
-        input.priority
+      let result = await tryCatch(
+        updateTaskPriority(pool, input.taskId, input.priority)
       );
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   getTaskImages: publicProcedure
     .input(
@@ -177,41 +305,62 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log(process.env.S3_BUCKET);
-      const uploads = await Promise.all(
-        input.files.map(async ({ name, type }) => {
-          const key = `${input.projectId}/${
-            input.taskId
-          }/${randomUUID()}-${name}`;
+      const uploads = input.files.map(({ name, type }) => {
+        const key = `${input.projectId}/${
+          input.taskId
+        }/${randomUUID()}-${name}`;
 
-          const url = s3.getSignedUrl("putObject", {
-            Bucket: process.env.S3_BUCKET!,
-            Key: key,
-            ContentType: type,
-            ACL: "private",
-            Expires: 60,
-          });
+        const url = s3.getSignedUrl("putObject", {
+          Bucket: process.env.S3_BUCKET!,
+          Key: key,
+          ContentType: type,
+          ACL: "private",
+          Expires: 60,
+        });
 
-          return {
-            name,
-            key,
-            url,
-          };
-        })
-      );
-
-      console.log("uploads", uploads);
+        return {
+          name,
+          key,
+          url,
+        };
+      });
 
       const keys = uploads.map((u) => u.key);
-      await updateTaskFiles(
-        pool,
-        input.taskId,
-        input.projectId,
-        keys,
-        input.previousKeys
+
+      let result = await tryCatch(
+        updateTaskFiles(
+          pool,
+          input.taskId,
+          input.projectId,
+          keys,
+          input.previousKeys,
+          uploads
+        )
       );
 
-      return { success: true, files: uploads };
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (result.data && !result.data.success) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data as {
+        success: true;
+        uploads: {
+          name: string;
+          key: string;
+          url: string;
+        }[];
+      };
     }),
   updateTaskTargetStartDate: publicProcedure
     .use(rateLimitMiddleware)
@@ -226,17 +375,31 @@ export const tasksRouter = router({
       const targetStartDate = input?.targetStartDate
         ? new Date(input.targetStartDate)
         : undefined;
-      const updateCount = await updateTaskTargetStartDate(
-        pool,
-        input.taskId,
-        input.projectId,
-        targetStartDate
-      );
 
-      if (updateCount !== 1) {
-        return false;
+      let result = await tryCatch(
+        updateTaskTargetStartDate(
+          pool,
+          input.taskId,
+          input.projectId,
+          targetStartDate
+        )
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskTargetEndDate: publicProcedure
     .use(rateLimitMiddleware)
@@ -251,17 +414,32 @@ export const tasksRouter = router({
       const targetEndDate = input?.targetEndDate
         ? new Date(input.targetEndDate)
         : undefined;
-      const updateCount = await updateTaskTargetEndDate(
-        pool,
-        input.taskId,
-        input.projectId,
-        targetEndDate
+
+      let result = await tryCatch(
+        updateTaskTargetEndDate(
+          pool,
+          input.taskId,
+          input.projectId,
+          targetEndDate
+        )
       );
 
-      if (updateCount !== 1) {
-        return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskCategory: publicProcedure
     .use(rateLimitMiddleware)
@@ -273,17 +451,26 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const updateCount = await updateTaskCategory(
-        pool,
-        input.taskId,
-        input.projectId,
-        input?.category
+      let result = await tryCatch(
+        updateTaskCategory(pool, input.taskId, input.projectId, input?.category)
       );
 
-      if (updateCount !== 1) {
-        return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskDependsOn: publicProcedure
     .use(rateLimitMiddleware)
@@ -295,17 +482,30 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const updateCount = await updateTaskDependsOn(
-        pool,
-        input.projectId,
-        input.taskId,
-        input.dependsOn
+      let result = await tryCatch(
+        updateTaskDependsOn(
+          pool,
+          input.projectId,
+          input.taskId,
+          input.dependsOn
+        )
       );
-
-      if (updateCount !== 1) {
-        return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskSubtasks: publicProcedure
     .use(rateLimitMiddleware)
@@ -317,19 +517,26 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log("st", input.subtasks);
-
-      const updateCount = await updateTaskSubTasks(
-        pool,
-        input.projectId,
-        input.taskId,
-        input.subtasks
+      let result = await tryCatch(
+        updateTaskSubTasks(pool, input.projectId, input.taskId, input.subtasks)
       );
 
-      if (updateCount !== 1) {
-        return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   updateTaskOrderBatched: publicProcedure
     .use(rateLimitMiddleware)
@@ -346,32 +553,72 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const updateCount = await updateTaskOrderBatched(
-        pool,
-        input.payload,
-        input.projectId
+      let result = await tryCatch(
+        updateTaskOrderBatched(pool, input.payload, input.projectId)
       );
 
-      if (updateCount !== 1) {
-        return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
-      return true;
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   deleteTaskById: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await deleteTaskById(pool, input.taskId);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(deleteTaskById(pool, input.taskId));
+
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   undoDeleteTask: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await undoDeleteTask(pool, input.taskId);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(undoDeleteTask(pool, input.taskId));
+
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   filterTask: publicProcedure
     .use(rateLimitMiddleware)
@@ -384,22 +631,40 @@ export const tasksRouter = router({
       })
     )
     .query(async ({ input }) => {
-      let filteredTasks = await getFilteredTasks(
-        pool,
-        input.priority,
-        input.assignedTo,
-        input.category,
-        input.id
+      let result = await tryCatch(
+        getFilteredTasks(
+          pool,
+          input.priority,
+          input.assignedTo,
+          input.category,
+          input.id
+        )
       );
-      return filteredTasks as Task[];
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   archiveTaskByColumn: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ id: z.string(), column: z.string() }))
     .mutation(async ({ input }) => {
-      let taskCount = await archiveTasksInColumn(pool, input.id, input.column);
-      if (taskCount && taskCount > 0) return true;
-      return false;
+      let result = await tryCatch(
+        archiveTasksInColumn(pool, input.id, input.column)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+      return result.data;
     }),
   addComment: publicProcedure
     .use(rateLimitMiddleware)
@@ -411,35 +676,57 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      let insertCount = await addComment(
-        pool,
-        input.taskId,
-        input.comment,
-        input.commentBy
+      let result = await tryCatch(
+        addComment(pool, input.taskId, input.comment, input.commentBy)
       );
-      if (insertCount && insertCount > 0) return true;
-      return false;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
   getCommentsByTask: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ taskId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let comments = await getCommentsByTask(pool, input.taskId);
-        return comments as Comment[];
-      } catch (err) {
-        console.log(err);
+      let result = await tryCatch(getCommentsByTask(pool, input.taskId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
       }
+
+      return result.data;
     }),
   getTaskCategoryOptions: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input }) => {
-      let taskCategoryOptions = await getTaskCategoryOptions(
-        pool,
-        input.projectId
+      let result = await tryCatch(
+        getTaskCategoryOptions(pool, input.projectId)
       );
-      return taskCategoryOptions;
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
     }),
   updateTaskCategoryOptions: publicProcedure
     .use(rateLimitMiddleware)
@@ -452,14 +739,28 @@ export const tasksRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log("updating task category options,", input.taskCategoryOptions);
-      let updateCount = await updateTaskCategoryOptions(
-        pool,
-        input.projectId,
-        input.taskCategoryOptions
+      let result = await tryCatch(
+        updateTaskCategoryOptions(
+          pool,
+          input.projectId,
+          input.taskCategoryOptions
+        )
       );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
 
-      if (updateCount && updateCount > 0) return true;
-      return false;
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+
+      return result.data;
     }),
 });

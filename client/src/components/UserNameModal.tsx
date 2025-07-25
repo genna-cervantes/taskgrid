@@ -34,17 +34,6 @@ const UserNameModal = ({
     },
   });
   
-  const insertUserProjectLink = trpc.users.insertUserProjectLink.useMutation({
-    onSuccess: (data) => {
-      setUsernameModal(false);
-      utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
-      console.log("User project link set:", data);
-    },
-    onError: (error) => {
-      console.error("Failed to create user project link:", error.message);
-    },
-  });
-  
   const { data: users } = trpc.users.getUsersInProject.useQuery({
     id: projectId,
   });
@@ -88,9 +77,6 @@ const UserNameModal = ({
       return;
     }
     
-    // insert
-    insertUserProjectLink.mutate({id: projectId, username: name, guestId: userContext.userId})
-
     await sleep(5000);
     setIsLoading(false)
   };
@@ -222,7 +208,7 @@ const UserNameModal = ({
           <button
             onClick={handleSaveName}
             className="w-full bg-green-400 text-white text-sm md:text-base font-semibold py-2 flex justify-center items-center rounded-md cursor-pointer disabled:cursor-not-allowed"
-            disabled={insertUserProjectLink.isLoading || setUsername.isLoading}
+            disabled={setUsername.isLoading}
           >
             {!isLoading ? (
                 "Save"

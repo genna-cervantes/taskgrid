@@ -7,35 +7,40 @@ import {
 import { rateLimitMiddleware } from "../middleware.js";
 import { publicProcedure, router } from "../trpc.js";
 import { pool } from "../router.js";
+import { tryCatch } from "../../lib/utils.js";
+import { TRPCError } from "@trpc/server";
 
 export const workspacesRouter = router({
   getUserWorkspaces: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let workspaces = await getUserWorkspaces(pool, input.guestId);
-        return workspaces as { workspaceId: string; name: string }[];
-      } catch (err) {
-        console.error(err);
-        return [];
+      let result = await tryCatch(getUserWorkspaces(pool, input.guestId));
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get user workspaces",
+          cause: result.error
+        })
       }
+      
+      return result.data;
     }),
   checkWorkspaceId: publicProcedure
     .use(rateLimitMiddleware)
     .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
     .query(async ({ input }) => {
-      try {
-        let exists = await checkWorkspaceId(
-          pool,
-          input.guestId,
-          input.workspaceId
-        );
-        return exists;
-      } catch (err) {
-        console.error(err);
-        return false;
+      
+      let result = await tryCatch(checkWorkspaceId(pool, input.guestId, input.workspaceId))
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to check workspace id",
+          cause: result.error
+        })
       }
+      
+      return result.data // returns workspace name | false -> workspace doesnt exist
     }),
   insertWorkspace: publicProcedure
     .use(rateLimitMiddleware)
@@ -47,14 +52,22 @@ export const workspacesRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      let insertCount = await insertWorkspace(
-        pool,
-        input.userId,
-        input.workspaceId,
-        input.workspaceName
-      );
-      if (insertCount && insertCount > 0)
-        return { workspaceId: input.workspaceId };
-      return false;
+      let result = await tryCatch(insertWorkspace(pool, input.userId, input.workspaceId, input.workspaceName));
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create workspace",
+          cause: result.error
+        })
+      }
+      
+      if (!result.data){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create workspace"
+        })
+      }
+
+      return result.data;
     }),
 });
