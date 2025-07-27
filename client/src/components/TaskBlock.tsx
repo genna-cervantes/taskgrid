@@ -38,9 +38,23 @@ const TaskBlock = ({
   const [subtasks, setSubtasks] = useState(task.subtasks);
 
   const updateTaskSubtasks = trpc.tasks.updateTaskSubtasks.useMutation({
-    onSuccess: () => {
-      utils.tasks.getTaskById.invalidate({ taskId: task.id, projectId: projectId });
-      utils.tasks.getTasks.invalidate({ id: projectId });
+    onSuccess: (updatedTask) => {
+      utils.tasks.getTasks.setData(
+        {id: projectId},
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          const updated = oldData.map((t) => {
+            if (t.id === updatedTask.id.toString()){
+              return {...t, subtasks: updatedTask.subtasks}
+            }else{
+              return t;
+            }
+          })
+
+          return updated;
+        }
+      );
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);

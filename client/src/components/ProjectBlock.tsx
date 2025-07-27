@@ -124,7 +124,7 @@ const ProjectBlock = ({
       {/* <h3 className="text-sm dark:text-midWhite text-midBlack">{p.id}</h3> */}
       {!projectsStatsIsLoading && projectStats && (
         <div className="flex justify-between w-full text-fadedWhite">
-          <div className="flex gap-x-1 text-xxs">
+          <div className="flex gap-x-1 text-xs">
             <span className="flex items-center">
               <ClipboardList className="h-3" />
               <p>{projectStats["backlog"]}</p>
@@ -144,8 +144,6 @@ const ProjectBlock = ({
           </div>
           <Lock className="h-3" />
         </div>
-
-
       )}
     </Link>
   );

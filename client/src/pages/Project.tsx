@@ -22,7 +22,7 @@ const Project = () => {
 
   const [addModal, setAddModal] = useState(false);
   const [showDependencies, setShowDependencies] = useState(false);
-  const [showAllSubtasks, setShowAllSubtasks] = useState(false);
+  const [showAllSubtasks, setShowAllSubtasks] = useState(true);
 
   const {
     username,

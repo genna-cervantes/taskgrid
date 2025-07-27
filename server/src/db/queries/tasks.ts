@@ -513,14 +513,22 @@ export const updateTaskSubTasks = async (
     throw new Error("Bad request missing required fields");
 
   const query =
-    "UPDATE tasks SET subtasks = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE;";
+    "UPDATE tasks SET subtasks = $1 WHERE id = $2 AND project_id = $3 AND is_active = TRUE RETURNING id, subtasks;";
   const res = await pool.query(query, [
     subTasks.slice(0, subTasks.length - 1),
     taskId,
     projectId,
   ]);
 
-  return (res.rowCount ?? 0) === 1 ? true : false;
+  let subtasks: {
+    id: string,
+    subtasks: {
+      title: string,
+      isDone: boolean
+    }[]
+  } = res.rows[0]
+
+  return (res.rowCount ?? 0) === 1 ? subtasks : false;
 };
 
 export const updateTaskOrderBatched = async (

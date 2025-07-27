@@ -16,7 +16,6 @@ import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
 import Mousetrap from "mousetrap";
 import { ActionContext } from "@/contexts/ActionContext";
 import { RecentTaskContext } from "@/contexts/RecentTaskContext";
-import { linkSchema } from "@/components/TaskModal";
 import TaskTitle from "@/components/TaskTitle";
 import TaskDependsOn from "@/components/TaskDependsOn";
 import TaskSubtasks from "@/components/TaskSubtasks";

@@ -183,7 +183,6 @@ const ProjectColumn = ({
               <TaskBlock
                 handleDragStart={handleDragStart}
                 projectId={projectId}
-                showDependencies={showDependencies}
                 showAllSubtasks={showAllSubtasks}
                 col={col}
                 task={task}
