@@ -35,8 +35,6 @@ const TaskBlock = ({
 
   const [showSubtasks, setShowsubtasks] = useState(false);
 
-  const [subtasks, setSubtasks] = useState(task.subtasks);
-
   const updateTaskSubtasks = trpc.tasks.updateTaskSubtasks.useMutation({
     onSuccess: (updatedTask) => {
       utils.tasks.getTasks.setData(
@@ -66,18 +64,13 @@ const TaskBlock = ({
     index: number
   ) => {
     e.stopPropagation();
+    const updated = [...task.subtasks];
+    updated[index] = { ...updated[index], isDone: !updated[index].isDone };
 
-    setSubtasks((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], isDone: !updated[index].isDone };
-
-      updateTaskSubtasks.mutate({
-        projectId,
-        taskId: task.id,
-        subtasks: [...updated, {title: "", isDone: false}],
-      });
-
-      return updated;
+    updateTaskSubtasks.mutate({
+      projectId,
+      taskId: task.id,
+      subtasks: [...updated, {title: "", isDone: false}],
     });
   };
 
@@ -135,7 +128,7 @@ const TaskBlock = ({
                 return display;
               })()}
             </div>
-            {task.subtasks && (
+            {task.subtasks && task.subtasks.length > 0 && (
               <div
                 className="cursor-pointer"
                 onClick={(e) => {
@@ -150,11 +143,11 @@ const TaskBlock = ({
               </div>
             )}
           </div>
-          {(showSubtasks || showAllSubtasks) && subtasks &&  (
+          {(showSubtasks || showAllSubtasks) && task.subtasks && task.subtasks.length > 0 &&  (
             <div className="mt-5 mb-1">
               <div className="h-[1px] w-full bg-faintWhite mt-4 mb-2"></div>
               <div className="flex flex-col gap-y-2">
-                {subtasks.map((s, index) => (
+                {task.subtasks.map((s, index) => (
                   <span className="flex gap-x-2 w-full items-center text-xs">
                     <Checkbox
                       onClick={(e) => handleSubtaskChange(e, index)}
