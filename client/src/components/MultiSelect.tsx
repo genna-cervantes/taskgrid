@@ -12,12 +12,14 @@ type Option = {
 
 const MultiSelect = ({
   isPage = false,
+  isSidebar = false,
   setValue,
   value,
   choices,
   placeholder
 }: {
   isPage?: boolean;
+  isSidebar ?: boolean;
   setValue: React.Dispatch<React.SetStateAction<Option[]>>;
   value: Option[];
   choices: Option[];
@@ -44,7 +46,7 @@ const MultiSelect = ({
         >
           <span
             className={cn(
-              isPage ? "text-base" : "text-sm",
+              isPage ? "text-base" : isSidebar ? "text-xs" : "text-sm",
               value.length === 0 ? "text-faintWhite" : "text-white/90"
             )}
           >

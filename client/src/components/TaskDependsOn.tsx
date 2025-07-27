@@ -7,12 +7,14 @@ const TaskDependsOn = ({
   setTaskDependsOn,
   projectId,
   taskId,
+  error,
   isPage = false,
 }: {
   isPage?: boolean;
   taskId: string;
   projectId: string;
   taskDependsOn: {id: string, title: string}[]|undefined;
+  error: string|undefined;
   setTaskDependsOn: React.Dispatch<React.SetStateAction<{id: string, title: string}[]>>;
 }) => {
   const { data: tasks } = trpc.tasks.getTaskIds.useQuery({
@@ -20,8 +22,6 @@ const TaskDependsOn = ({
   });
 
   let choices = tasks?.filter(t => t.id !== taskId) ?? [];
-
-  console.log('td', taskDependsOn)
 
   return (
     <div className="w-full">
@@ -37,6 +37,11 @@ const TaskDependsOn = ({
         setValue={setTaskDependsOn}
         choices={choices}
       />
+      {error && (
+        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

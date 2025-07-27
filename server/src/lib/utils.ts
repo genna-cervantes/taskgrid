@@ -21,3 +21,19 @@ export async function tryCatch<T, E = Error>(
     return { data: null, error: error as E };
   }
 }
+
+// export const toSnakeCase = (camelCase: string) => {
+//   let camelArr = camelCase.split('');
+
+//   camelArr = camelArr.map((c) => {
+//     if (c === c.toUpperCase()){
+//       return `_${c.toLowerCase()}`
+//     }else{
+//       return c
+//     }
+//   })
+
+//   return camelArr.join('')
+// }
+
+export const toSnakeCase = (str: string) => str.replace(/([A-Z])/g, '_$1').toLowerCase();

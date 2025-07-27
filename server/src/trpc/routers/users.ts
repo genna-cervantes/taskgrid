@@ -119,6 +119,7 @@ export const usersRouter = router({
     .query(async ({ input }) => {
       let result = await tryCatch(getUsername(pool, input.id, input.guestId));
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch username",

@@ -4,7 +4,7 @@ const TaskLayout = () => {
 
   console.log('calling task layout')
 
-  return <div className="w-full h-full">
+  return <div className="w-full h-full overflow-y-hidden">
       <Outlet />
   </div>
 };

@@ -1,18 +1,17 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { ColumnKey, Task } from "../../../server/src/shared/types";
 import TaskPriority from "./TaskPriority";
-import TaskModal from "./TaskModal";
 import TaskMediaCount from "./TaskMedia";
 import TaskCommentCount from "./TaskCommentCount";
 import TaskCategory from "./TaskCategory";
 import { Checkbox } from "./ui/checkbox";
 import { trpc } from "@/utils/trpc";
+import { useNavigate } from "react-router-dom";
 
 const TaskBlock = ({
   col,
   task,
   projectId,
-  showDependencies,
   showAllSubtasks,
   taskCategoryOptions,
   username,
@@ -21,7 +20,6 @@ const TaskBlock = ({
   col: ColumnKey;
   task: Task;
   projectId: string;
-  showDependencies: boolean;
   showAllSubtasks: boolean;
   taskCategoryOptions:
     | {
@@ -33,15 +31,14 @@ const TaskBlock = ({
   handleDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string, progress: string) => void
 }) => {
   const utils = trpc.useUtils();
+  const navigate = useNavigate()
 
-  const [taskDetailsModal, setTaskDetailsModal] = useState(false);
   const [showSubtasks, setShowsubtasks] = useState(false);
 
   const [subtasks, setSubtasks] = useState(task.subtasks);
 
   const updateTaskSubtasks = trpc.tasks.updateTaskSubtasks.useMutation({
-    onSuccess: (data) => {
-      console.log("Task updated:", data);
+    onSuccess: () => {
       utils.tasks.getTaskById.invalidate({ taskId: task.id, projectId: projectId });
       utils.tasks.getTasks.invalidate({ id: projectId });
     },
@@ -73,26 +70,15 @@ const TaskBlock = ({
 
   return (
     <>
-      {taskDetailsModal && (
-        <TaskModal
-          taskCategoryOptionsProp={taskCategoryOptions}
-          username={username}
-          task={task}
-          projectId={projectId}
-          setTaskDetailsModal={setTaskDetailsModal}
-        />
-      )}
       <DropIndicator beforeId={task.id} column={col} />
       <div
         tabIndex={0}
-        role="button"
         draggable={true}
         onDragStart={(e) => handleDragStart(e, task.id, task.progress)}
-        onClick={() => setTaskDetailsModal(true)}
+        onClick={() => navigate(`tasks/${task.id}`)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            setTaskDetailsModal(true);
-            e.currentTarget.blur();
+            navigate(`tasks/${task.id}`)
           }
         }}
         className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-[#1A1A1A] bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
@@ -120,9 +106,9 @@ const TaskBlock = ({
             )}
           </div>
           <div className="flex justify-between text-xxs mt-2">
-            <div title={task.assignedTo.join(" ")}>
+            <div title={task.assignTo.join(" ")}>
               {(() => {
-                const formatted = task.assignedTo
+                const formatted = task.assignTo
                   .map((at) => `${at}${at === username ? " (You)" : ""}`)
                   .join(", ");
 

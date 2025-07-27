@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { UseFormSetValue } from "react-hook-form";
 import { TaskFormData } from "./AddTaskForm";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { ChevronDown } from "lucide-react";

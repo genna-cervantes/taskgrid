@@ -44,7 +44,7 @@ const Projects = () => {
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
     trpc.workspaces.checkWorkspaceId.useQuery(
       { workspaceId: workspaceId!, guestId: userContext.userId! },
-      { enabled: userContext.userId !== "" && workspaceId !== "" }
+      { enabled: !!userContext.userId && !!workspaceId }
     );
 
   const { data: rawData, isLoading } = trpc.tasks.getTasks.useQuery(
@@ -103,9 +103,9 @@ const Projects = () => {
     trpc.users.getUsername.useQuery(
       {
         id: projectId!,
-        guestId: userContext.userId ?? "",
+        guestId: userContext.userId!,
       },
-      { enabled: projectId !== "" }
+      { enabled: !!projectId && !!userContext.userId }
     );
 
   const { data: projectName, isLoading: projectNameIsLoading } = trpc.projects.getProjectNameByKey.useQuery(

@@ -3,13 +3,13 @@ import React from "react";
 const TaskLink = ({
   taskLink,
   setTaskLink,
-  taskLinkError,
+  error,
   isPage = false,
 }: {
   isPage?: boolean;
   taskLink: string | undefined;
   setTaskLink: React.Dispatch<React.SetStateAction<string | undefined>>;
-  taskLinkError: string;
+  error: string|undefined;
 }) => {
   return (
     <div>
@@ -26,10 +26,10 @@ const TaskLink = ({
         onChange={(e) => setTaskLink(e.target.value)}
       />
 
-      {taskLinkError !== "" && (
-        <h4 className={`font-semibold text-xs text-red-400`}>
-          {taskLinkError}
-        </h4>
+      {error && (
+        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+          {error}
+        </p>
       )}
     </div>
   );

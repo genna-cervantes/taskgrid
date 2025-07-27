@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 const BreadCrumbs = ({crumbs}: {crumbs: {name: string, url: string}[]}) => {
   return (
-    <div className="w-full flex gap-x-2 justify-start mb-2 text-sm items-center text-white/80">
+    <div className="w-full flex gap-x-2 justify-start mb-3 mt-1 text-xs items-center text-white/80">
         {crumbs.map((c, index) => (
             <React.Fragment key={index}>
             <Link

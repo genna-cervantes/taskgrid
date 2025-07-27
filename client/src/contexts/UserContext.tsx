@@ -22,7 +22,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userId, setUserId] = useState<string | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false); // 🔑 prevent multiple inits
+  const [hasInitialized, setHasInitialized] = useState(false); 
 
   const insertUserWithWorkspace = trpc.users.insertUserWithWorkspace.useMutation({
     onSuccess: (data) => {
@@ -71,14 +71,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         style: 'lowerCase',
       })}-workspace`;
 
+    const newUsername = () =>
+      `${uniqueNamesGenerator({
+        dictionaries: [adjectives, animals],
+        separator: '-',
+        style: 'lowerCase',
+      })}`;
+
     const init = async () => {
       if (!storedGuestId) {
-        console.log('1')
         const newId = uuidv4();
         const newWorkspaceId = nanoid(10);
         insertUserWithWorkspace.mutate({
           guestId: newId,
-          username: '',
+          username: newUsername(),
           workspaceId: newWorkspaceId,
           workspaceName: newWorkspaceName(),
         });
@@ -92,13 +98,12 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!dbLoading && userData) {
         if (!userData.userExists) {
           console.log(storedGuestId)
-          console.log('2')
           const newId = uuidv4();
           const newWorkspaceId = nanoid(10);
 
           insertUserWithWorkspace.mutate({
             guestId: newId,
-            username: '',
+            username: newUsername(),
             workspaceId: newWorkspaceId,
             workspaceName: newWorkspaceName(),
           });
@@ -112,12 +117,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // User exists
         if (userData.workspaces.length > 0) {
-          console.log('3')
           setUserId(storedGuestId)
           setCurrentWorkspace(userData.workspaces[0]);
           setIsLoading(false);
         } else {
-          console.log('4')
           const newWorkspaceId = nanoid(10);
           insertWorkspace.mutate({
             userId: storedGuestId,

@@ -5,12 +5,13 @@ import {
   InsertableTask,
   Task,
 } from "../../shared/types.js";
+import { toSnakeCase } from "../../lib/utils.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
   const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND is_active = TRUE';
   const res = await pool.query(query, [id]);
 
   const tasks: Task[] = res.rows.map((task) => ({
@@ -54,15 +55,19 @@ export const getTaskById = async (
     throw new Error("Bad request missing required fields");
 
   const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignedTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
   const res = await pool.query(query, [projectId, taskId]);
 
   if (res.rows.length === 0) {
     throw new Error("Task not found");
   }
 
-  const task: Task = {
-    ...res.rows[0],
+  const sanitized = {...Object.fromEntries(
+      Object.entries(res.rows[0]).map(([key, value]) => [key, value === null ? undefined : value])
+    ) } as Partial<Task>
+
+  const task = {
+    ...sanitized,
     id: res.rows[0].id.toString(),
   };
 
@@ -94,7 +99,7 @@ export const insertTask = async (
     task.description,
     task.priority,
     task.progress,
-    task.assignedTo,
+    task.assignTo,
   ]);
 
   let taskId: string = res.rows[0].id.toString();
@@ -314,7 +319,7 @@ export const getFilteredTasks = async (
 
   let query = `
   SELECT id, title, description, link, priority, progress, 
-         assign_to AS "assignedTo", project_task_id AS "projectTaskId", 
+         assign_to AS "assignTo", project_task_id AS "projectTaskId", 
          files, target_start_date AS "targetStartDate", 
          target_end_date AS "targetEndDate", category, 
          depends_on AS "dependsOn", subtasks, index
@@ -559,3 +564,22 @@ export const updateTaskOrderBatched = async (
   const res = await pool.query(query, values);
   return res.rowCount === payload.length ? true : false;
 };
+
+export const updateTask = async (pool: Pool, taskId: string, updates: Partial<Task>) => {
+
+  if (!taskId) throw new Error("Bad request missing required fields")
+
+  const changedKeys = Object.keys(updates) as (keyof Task)[];
+  const changedValues = changedKeys.map((ck) => (ck === "targetEndDate" || ck === "targetStartDate") && updates[ck] ? new Date(updates[ck]) : updates[ck]);
+  let updatedQueries: string[] = []
+
+  changedKeys.forEach((ck, i) => {
+    updatedQueries.push(`${toSnakeCase(ck)} = $${i+1}`)
+  })
+
+  const query = `UPDATE tasks SET ${updatedQueries.join(', ')} WHERE id = $${changedKeys.length + 1}`;
+
+  const res = await pool.query(query, [...changedValues, taskId]);
+
+  return (res.rowCount ?? 0) === 1 ? true : false;
+}

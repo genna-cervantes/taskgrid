@@ -5,8 +5,7 @@ import { trpc } from "@/utils/trpc";
 const TaskSelectMedia = ({
   task,
   projectId,
-  taskMediaError,
-  setTaskMediaError,
+  error,
   previewUrls,
   setPreviewUrls,
   taskImageUrls,
@@ -18,8 +17,7 @@ const TaskSelectMedia = ({
     isPage?: boolean
   task: Task;
   projectId: string;
-  taskMediaError: string;
-  setTaskMediaError: React.Dispatch<React.SetStateAction<string>>;
+  error: string|undefined;
   previewUrls: string[];
   setPreviewUrls: React.Dispatch<React.SetStateAction<string[]>>;
   taskImageUrls: {
@@ -70,9 +68,9 @@ const TaskSelectMedia = ({
     const selectedFiles = Array.from(files).slice(0, 3 - previewUrls.length);
     const validFiles = selectedFiles.filter((file) => {
       if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        setTaskMediaError(
-          `${file.name} is too large (max ${MAX_FILE_SIZE_MB}MB)`
-        );
+        // setTaskMediaError(
+        //   `${file.name} is too large (max ${MAX_FILE_SIZE_MB}MB)`
+        // );
         return false;
       }
       return true;
@@ -264,8 +262,10 @@ const TaskSelectMedia = ({
         )}
       </div>
 
-      {taskMediaError !== "" && (
-        <h4 className="font-semibold text-xs text-red-400">{taskMediaError}</h4>
+      {error && (
+        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+          {error}
+        </p>
       )}
     </div>
   );

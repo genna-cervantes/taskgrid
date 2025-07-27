@@ -6,6 +6,7 @@ const TaskSelectCategory = ({
   setTaskCategory,
   taskCategoryOptions,
   setTaskCategoryOptions,
+  error,
   isPage=false
 }: {
   isPage?: boolean;
@@ -16,6 +17,7 @@ const TaskSelectCategory = ({
     color: string;
 }[]>>
   taskCategoryOptions: { color: string; category: string }[];
+  error: string|undefined
 }) => {
 
   return (
@@ -28,6 +30,7 @@ const TaskSelectCategory = ({
       <div className="flex gap-x-6 w-full">
         <EditableDropdown taskCategory={taskCategory} setTaskCategory={setTaskCategory} taskCategoryOptions={taskCategoryOptions} setTaskCategoryOptions={setTaskCategoryOptions} isPage={isPage} />
       </div>
+      {error && <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">{error}</p>}
     </div>
   );
 };

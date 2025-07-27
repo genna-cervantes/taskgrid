@@ -19,7 +19,7 @@ export const insertUserWithWorkspace = async (
     const insertUserQuery = `
       INSERT INTO users (username, guest_id)
       VALUES ($1, $2)
-      RETURNING guest_id;
+      RETURNING guest_id AS "userId";
     `;
     const userRes = await client.query(insertUserQuery, [username, guestId]);
 
@@ -36,7 +36,7 @@ export const insertUserWithWorkspace = async (
 
     await client.query("COMMIT");
 
-    return workspaceRes.rowCount === 1 && workspaceRes.rowCount === userRes.rowCount ? true : false;
+    return workspaceRes.rowCount === 1 && workspaceRes.rowCount === userRes.rowCount ? {userId: userRes.rows[0].userId, workspaceId} : false;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -106,10 +106,10 @@ export const getUsername = async (pool: Pool, id: string, guestId: string) => {
   if (!guestId || !id) throw new Error("Bad request missing required fields");
 
   const query =
-    "SELECT username FROM user_project_link WHERE project_id = $1 AND guest_id = $2 AND is_active = TRUE";
-  const res = await pool.query(query, [id, guestId]);
+    "SELECT username FROM users WHERE guest_id = $1 AND is_active = TRUE";
+  const res = await pool.query(query, [guestId]);
 
-  if (!res.rows[0]?.username) throw new Error("Bad requeset user does not exist")
+  if (!res.rows[0]?.username) throw new Error("Bad request user does not exist")
 
   return res.rows[0].username as string;
 };

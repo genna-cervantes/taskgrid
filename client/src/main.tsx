@@ -11,9 +11,11 @@ import {
 import { UserProvider } from "./contexts/UserContext";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import superjson from 'superjson'
 
 const queryClient = new QueryClient();
 export const trpcClient = trpc.createClient({
+  transformer: superjson,
   links: [
     httpBatchLink({
       url: import.meta.env.VITE_ENVIRONMENT === 'dev' ? import.meta.env.VITE_TRPC_DEV_URL : import.meta.env.VITE_TRPC_PROD_URL, // Backend API URL

@@ -17,6 +17,7 @@ export const workspacesRouter = router({
     .query(async ({ input }) => {
       let result = await tryCatch(getUserWorkspaces(pool, input.guestId));
       if (result.error != null){
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to get user workspaces",

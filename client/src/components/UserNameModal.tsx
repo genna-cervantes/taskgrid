@@ -105,7 +105,7 @@ const UserNameModal = ({
     localStorage.setItem("guestId", provideGuestId)
     setUsernameModal(false);
     setGuestIdModal(false);
-    utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId ?? "" });
+    // utils.users.getUsername.invalidate({ id: projectId, guestId: userContext.userId! }, {enabled: !!userContext.userId});
   }
   
   if (userContext.isLoading && userContext.userId == null && !userContext.userId){

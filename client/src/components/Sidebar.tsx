@@ -211,7 +211,7 @@ const Sidebar = ({
   const { data: userWorkspaces, isLoading: userWorkspacesIsLoading } =
     trpc.workspaces.getUserWorkspaces.useQuery(
       { guestId: userContext.userId ?? "" },
-      { enabled: userContext.userId !== "" }
+      { enabled: !!userContext.userId }
     );
 
   useEffect(() => {
@@ -291,7 +291,7 @@ const Sidebar = ({
     <div
       className={`transition-all h-full duration-200 pt-4 pb-6 ${
         !toggleSidebar
-          ? "left-0 top-0 w-[3.5rem] flex flex-col items-center"
+          ? "left-0 top-0 w-[3.25rem] flex flex-col items-center"
           : " top-0 l-0 w-64 flex flex-col items-start "
       }`}
     >
@@ -314,7 +314,7 @@ const Sidebar = ({
                   top: indicatorTop, // `${(hoveredIndex ?? activeIndex) * 52}px`,
                 }}
                 transition={{ type: "tween", stiffness: 300, damping: 0 }}
-                style={{ height: "24px" }}
+                style={{ height: "22px" }}
               />
             )}
 
@@ -334,10 +334,10 @@ const Sidebar = ({
                     ref={(el) => {
                       itemRefs.current[index] = el;
                     }}
-                    className="relative w-full flex justify-center h-12 group/nav items focus:ring-0 focus:border-none focus:outline-none"
+                    className="relative w-full flex justify-center h-11 group/nav items focus:ring-0 focus:border-none focus:outline-none"
                   >
                     <Icon
-                      className={`h-5 w-5 transition-colors duration-300 group-hover/nav:text-white group-focus/nav:text-white ${
+                      className={`h-4 w-4 transition-colors duration-300 group-hover/nav:text-white group-focus/nav:text-white ${
                         activeIndex === index ? "text-white" : "text-midWhite"
                       }`}
                       strokeWidth={2}
@@ -373,7 +373,7 @@ const Sidebar = ({
                   top: indicatorTop,
                 }}
                 transition={{ type: "tween", stiffness: 300, damping: 0 }}
-                style={{ height: "24px" }}
+                style={{ height: "22px" }}
               />
             )}
 
@@ -393,21 +393,23 @@ const Sidebar = ({
                       ref={(el) => {
                         itemRefs.current[index] = el;
                       }}
-                      className="relative w-full flex mx-4 h-12 gap-x-2 group/nav"
+                      className="relative w-full flex items-start mx-4 h-11 gap-x-2 group/nav"
                     >
-                      <Icon
-                        className={`h-5 w-5 transition-colors duration-300 group-hover/nav:text-white ${
-                          activeIndex === index ? "text-white" : "text-midWhite"
-                        }`}
-                        strokeWidth={2}
-                      />
-                      <p
-                        className={`text-xs pt-[2px] group-hover/nav:text-white ${
-                          activeIndex === index ? "text-white" : "text-midWhite"
-                        }`}
-                      >
-                        {item.name}
-                      </p>
+                      <div className="flex items-center gap-x-2">
+                        <Icon
+                          className={`h-4 w-4 transition-colors duration-300 group-hover/nav:text-white ${
+                            activeIndex === index ? "text-white" : "text-midWhite"
+                          }`}
+                          strokeWidth={2}
+                        />
+                        <p
+                          className={`text-xs pt-[2px] group-hover/nav:text-white ${
+                            activeIndex === index ? "text-white" : "text-midWhite"
+                          }`}
+                        >
+                          {item.name}
+                        </p>
+                      </div>
                     </button>
 
                     {/* sidebar items depending on whats active */}
@@ -418,6 +420,7 @@ const Sidebar = ({
                             Priority:
                           </p>
                           <MultiSelect
+                            isSidebar={true}
                             value={priorityFilter}
                             setValue={setPriorityFilter}
                             placeholder="Choose priority"
@@ -433,6 +436,7 @@ const Sidebar = ({
                             Assigned To:
                           </p>
                           <MultiSelect
+                            isSidebar={true}
                             value={assignedToFilter}
                             setValue={setAssignedToFilter}
                             placeholder="Choose assigned to"
@@ -452,6 +456,7 @@ const Sidebar = ({
                             Category:
                           </p>
                           <MultiSelect
+                            isSidebar={true}
                             value={categoryFilter}
                             setValue={setCategoryFilter}
                             placeholder="Choose category"
@@ -495,7 +500,7 @@ const Sidebar = ({
                             </p>
                             {/* <Select value={priorityFilter} setValue={setPriorityFilter} placeholder="Choose workspace" choices={userWorkspacesIsLoading || !userWorkspaces ? [] : userWorkspaces.map((w) => ({id: w.workspaceId, title: w.name}))} /> */}
                             <Select>
-                              <SelectTrigger className="w-full border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent">
+                              <SelectTrigger className="w-full text-xs border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent">
                                 Choose a workspace
                               </SelectTrigger>
                               <SelectContent className="flex px-1 flex-col w-[var(--radix-select-trigger-width)] gap-y-1 overflow-y-scroll max-h-60 super-thin-scrollbar py-2 dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">

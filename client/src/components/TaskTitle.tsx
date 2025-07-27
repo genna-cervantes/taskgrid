@@ -4,10 +4,12 @@ const TaskTitle = ({
   taskTitle,
   setTaskTitle,
   isPage = false,
+  error
 }: {
   isPage?: boolean;
   taskTitle: string|undefined;
   setTaskTitle: React.Dispatch<React.SetStateAction<string|undefined>>;
+  error: string|undefined
 }) => {
   return (
     <div>
@@ -22,6 +24,7 @@ const TaskTitle = ({
         value={taskTitle}
         onChange={(e) => setTaskTitle(e.target.value)}
       />
+      {error && <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">{error}</p>}
     </div>
   );
 };

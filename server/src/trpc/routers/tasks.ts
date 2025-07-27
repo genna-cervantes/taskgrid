@@ -15,6 +15,7 @@ import {
   insertTask,
   undoDeleteTask,
   updateAssignedTo,
+  updateTask,
   updateTaskCategory,
   updateTaskCategoryOptions,
   updateTaskDependsOn,
@@ -747,6 +748,31 @@ export const tasksRouter = router({
         )
       );
       if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+          cause: result.error,
+        });
+      }
+      
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch tasks",
+        });
+      }
+      
+      return result.data;
+    }),
+  updateTask: publicProcedure
+    .input(z.object({
+      taskId: z.string(),
+      updates: TaskSchema.partial()
+    }))
+    .mutation(async ({input}) => {
+      let result = await tryCatch(updateTask(pool, input.taskId, input.updates))
+      if (result.error != null){
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch tasks",

@@ -7,7 +7,7 @@ const TaskAssignee = ({
   username,
   taskAssignedTo,
   setTaskAssignedTo,
-  taskAssignedToError,
+  error,
   isPage = false,
 }: {
   isPage?: boolean;
@@ -15,7 +15,7 @@ const TaskAssignee = ({
   username: string | undefined;
   taskAssignedTo: string[];
   setTaskAssignedTo: React.Dispatch<React.SetStateAction<string[]>>;
-  taskAssignedToError: string;
+  error: string | undefined;
 }) => {
   const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
     id: projectId,
@@ -36,10 +36,10 @@ const TaskAssignee = ({
         username={username ?? ""}
         usersInProject={usersInProject ?? []}
       />
-      {taskAssignedToError !== "" && (
-        <h4 className={`font-semibold text-xs text-red-400 mt-1`}>
-          {taskAssignedToError}
-        </h4>
+      {error && (
+        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+          {error}
+        </p>
       )}
     </div>
   );

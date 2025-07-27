@@ -1,6 +1,6 @@
 import React from "react";
 
-const TaskDescription = ({taskDescription, setTaskDescription, isPage = false}: {isPage?: boolean, taskDescription: string|undefined, setTaskDescription: React.Dispatch<React.SetStateAction<string | undefined>>}) => {
+const TaskDescription = ({taskDescription, setTaskDescription, error, isPage = false}: {isPage?: boolean, error: string|undefined, taskDescription: string|undefined, setTaskDescription: React.Dispatch<React.SetStateAction<string | undefined>>}) => {
   return (
     <div>
       <h3
@@ -14,6 +14,7 @@ const TaskDescription = ({taskDescription, setTaskDescription, isPage = false}: 
         value={taskDescription}
         onChange={(e) => setTaskDescription(e.target.value)}
       />
+      {error && <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">{error}</p>}
     </div>
   );
 };

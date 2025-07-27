@@ -39,7 +39,7 @@ const Comment = ({ comment }: { comment: string }) => {
 
 type TaskDiscussionBoardProps = {
   taskId: string;
-  user: string;
+  user: string|undefined;
   isPage?: boolean;
 };
 
@@ -83,7 +83,7 @@ const TaskDiscussionBoardBase = (
         <div
           className={`flex-1 overflow-y-auto super-thin-scrollbar pr-3 ${
             isPage
-              ? "min-h-[36rem] max-h-[36rem]"
+              ? "min-h-[35.75rem] max-h-[35.75rem]"
               : "max-h-[32.5rem] min-h-[32.5rem]"
           }`}
         >
@@ -132,13 +132,13 @@ const TaskDiscussionBoardBase = (
                   addComment.mutate({
                     taskId,
                     comment: insertComment,
-                    commentBy: user,
+                    commentBy: user!,
                   });
                   setInsertComment("");
                 }
               }}
               disabled={
-                addComment.isLoading || insertComment.trim().length === 0
+                !user || addComment.isLoading || insertComment.trim().length === 0
               }
             >
               <SendHorizonal />

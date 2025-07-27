@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
 import { useUserContext } from "../contexts/UserContext";
-import { CheckCircle2, ClipboardList, Eye, Loader2 } from "lucide-react";
+import { CheckCircle2, ClipboardList, EllipsisVertical, Eye, Loader2, Lock } from "lucide-react";
 
 const ProjectBlock = ({
   p,
@@ -59,7 +59,7 @@ const ProjectBlock = ({
       to={`/workspaces/${workspaceId}/projects/${p.id}`}
     >
       <div className="flex justify-between">
-        <h1 className="font-bold truncate text-white/80">
+        <h1 className="font-bold truncate text-sm text-white/80">
           {p.name}
         </h1>
         <div className="relative">
@@ -77,22 +77,7 @@ const ProjectBlock = ({
               }
             }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-ellipsis-vertical"
-            >
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="12" cy="5" r="1" />
-              <circle cx="12" cy="19" r="1" />
-            </svg>
+            <EllipsisVertical className="h-4" />
           </button>
 
           {editProject.projectId === p.id && (
@@ -138,24 +123,29 @@ const ProjectBlock = ({
       </div>
       {/* <h3 className="text-sm dark:text-midWhite text-midBlack">{p.id}</h3> */}
       {!projectsStatsIsLoading && projectStats && (
-        <div className="flex gap-x-2 text-xs text-fadedWhite">
-          <span className="flex gap-x-1 items-center">
-            <ClipboardList className="h-4" />
-            <p>{projectStats["backlog"]}</p>
-          </span>
-          <span className="flex gap-x-1 items-center">
-            <Loader2 className="h-4" />
-            <p>{projectStats["in progress"]}</p>
-          </span>
-          <span className="flex gap-x-1 items-center">
-            <Eye className="h-4" />
-            <p>{projectStats["for checking"]}</p>
-          </span>
-          <span className="flex gap-x-1 items-center">
-            <CheckCircle2 className="h-4" />
-            <p>{projectStats["done"]}</p>
-          </span>
+        <div className="flex justify-between w-full text-fadedWhite">
+          <div className="flex gap-x-1 text-xxs">
+            <span className="flex items-center">
+              <ClipboardList className="h-3" />
+              <p>{projectStats["backlog"]}</p>
+            </span>
+            <span className="flex items-center">
+              <Loader2 className="h-3" />
+              <p>{projectStats["in progress"]}</p>
+            </span>
+            <span className="flex items-center">
+              <Eye className="h-3" />
+              <p>{projectStats["for checking"]}</p>
+            </span>
+            <span className="flex items-center">
+              <CheckCircle2 className="h-3" />
+              <p>{projectStats["done"]}</p>
+            </span>
+          </div>
+          <Lock className="h-3" />
         </div>
+
+
       )}
     </Link>
   );

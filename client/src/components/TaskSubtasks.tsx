@@ -8,10 +8,12 @@ type Subtask = {
 const TaskSubtasks = ({
   taskSubtasks,
   setTaskSubtasks,
+  error,
   isPage = false,
 }: {
   isPage?: boolean;
   taskSubtasks: Subtask[];
+  error: string|undefined;
   setTaskSubtasks: React.Dispatch<React.SetStateAction<Subtask[]>>;
 }) => {
   const handleTitleChange = (index: number, value: string) => {
@@ -44,8 +46,6 @@ const TaskSubtasks = ({
     setTaskSubtasks(updated);
   };
 
-  console.log("st1", taskSubtasks);
-
   return (
     <div className="space-y-2">
       <h3
@@ -73,6 +73,11 @@ const TaskSubtasks = ({
           </div>
         ))}
       </div>
+      {error && (
+        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 };
