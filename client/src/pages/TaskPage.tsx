@@ -26,6 +26,7 @@ import { Controller, useForm } from "react-hook-form";
 import TaskTargetStartDate from "@/components/TaskTargetStartDate";
 import TaskTargetEndDate from "@/components/TaskTargetEndDate";
 import { Loader2 } from "lucide-react";
+import QuillEditor from "@/components/QuillEditor";
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -46,11 +47,11 @@ const TaskSchema = z.object({
   index: z.number(),
 }) satisfies z.ZodType<Task>;
 
-export const TaskUpdateSchema = z
+const TaskUpdateSchema = z
   .object({})
   .merge(TaskSchema.omit({ id: true }).partial());
 
-export type TaskUpdate = z.infer<typeof TaskUpdateSchema>;
+type TaskUpdate = z.infer<typeof TaskUpdateSchema>;
 
 const TaskPage = () => {
   const {
@@ -139,21 +140,6 @@ const TaskPage = () => {
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
     taskCategoryOptionsRes ?? []
   );
-  const [uploadTaskImagesIsLoading, setUploadTaskImagesIsLoading] =
-    useState(false);
-  const [files, setFiles] = useState<File[]>([]); // empty at first talaga
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [taskImageUrls, setTaskImagesUrls] = useState<
-    { url: string; key: string }[]
-  >([]);
-  const [imageModalState, setImageModalState] = useState<{
-    visible: boolean;
-    url: string;
-    index: number;
-    deleteFunction:
-      | ((url: string, index: number) => void)
-      | ((url: string) => void);
-  } | null>(null);
 
   // USE MUTATIONS
   const deleteTask = trpc.tasks.deleteTask.useMutation({
@@ -178,8 +164,6 @@ const TaskPage = () => {
     },
   });
 
-  const getUploadUrls = trpc.tasks.uploadTaskImages.useMutation();
-
   const updateTaskCategoryOptions =
     trpc.tasks.updateTaskCategoryOptions.useMutation({
       onSuccess: (data) => {
@@ -195,42 +179,6 @@ const TaskPage = () => {
       },
     });
 
-  // HANDLE METHODS
-  const handleUpload = async (taskId: string) => {
-    setUploadTaskImagesIsLoading(true);
-    const response = await getUploadUrls.mutateAsync({
-      projectId,
-      taskId,
-      previousKeys: taskImageUrls.map((t) => t.key),
-      files: files.map((file) => ({
-        name: file.name.split(".")[0],
-        type: file.type,
-      })),
-    });
-
-    await Promise.all(
-      response.uploads.map(async ({ url, key }, index) => {
-        const file = files[index];
-
-        // Upload file to S3 using the signed URL
-        const res = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type,
-          },
-          body: file,
-        });
-
-        if (!res.ok) {
-          throw new Error(`Upload failed for ${file.name}`);
-        }
-
-        return { name: file.name, key };
-      })
-    );
-
-    setUploadTaskImagesIsLoading(false);
-  };
 
   const handleDeleteTask = () => {
     if (task == null) return;
@@ -238,7 +186,7 @@ const TaskPage = () => {
     recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
 
     deleteTask.mutate({ taskId: task.id });
-    navigate(`/projects/${projectId}`);
+    navigate(`workspace/${workspaceId}/projects/${projectId}`);
 
     actionContext?.setAction("deleted");
   };
@@ -348,28 +296,16 @@ const TaskPage = () => {
               )}
             />
             <Controller
-              name="description"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <TaskDescription
-                  isPage={true}
-                  taskDescription={field.value}
-                  setTaskDescription={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
               control={form.control}
               name="category"
               render={({ field, fieldState }) => (
                 <TaskSelectCategory
-                  isPage={true}
-                  taskCategoryOptions={taskCategoryOptions}
-                  setTaskCategoryOptions={setTaskCategoryOptions}
-                  taskCategory={field.value}
-                  setTaskCategory={field.onChange}
-                  error={fieldState.error?.message}
+                isPage={true}
+                taskCategoryOptions={taskCategoryOptions}
+                setTaskCategoryOptions={setTaskCategoryOptions}
+                taskCategory={field.value}
+                setTaskCategory={field.onChange}
+                error={fieldState.error?.message}
                 />
               )}
             />
@@ -386,7 +322,7 @@ const TaskPage = () => {
                 />
               )}
             />
-            <div className="flex flex-col gap-y-1 w-full">
+            {/* <div className="flex flex-col gap-y-1 w-full">
               <div className="flex w-full gap-x-6">
                 <Controller
                   control={form.control}
@@ -413,22 +349,34 @@ const TaskPage = () => {
                   )}
                 />
               </div>
-            </div>
+            </div> */}
             <Controller
               control={form.control}
               name="assignTo"
               render={({ field, fieldState }) => (
                 <TaskAssignee
-                  isPage={true}
-                  projectId={projectId}
-                  username={username}
-                  taskAssignedTo={field.value ?? []}
-                  setTaskAssignedTo={field.onChange}
-                  error={fieldState.error?.message}
+                isPage={true}
+                projectId={projectId}
+                username={username}
+                taskAssignedTo={field.value ?? []}
+                setTaskAssignedTo={field.onChange}
+                error={fieldState.error?.message}
                 />
               )}
             />
-            <>
+              <Controller
+                name="description"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <TaskDescription
+                    isPage={true}
+                    taskDescription={field.value}
+                    setTaskDescription={field.onChange}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+            {/* <>
               <Controller
                 control={form.control}
                 name="files"
@@ -460,8 +408,8 @@ const TaskPage = () => {
                   handleDelete={imageModalState.deleteFunction}
                 />
               )}
-            </>
-            <Controller
+            </> */}
+            {/* <Controller
               control={form.control}
               name="link"
               render={({ field, fieldState }) => (
@@ -472,8 +420,8 @@ const TaskPage = () => {
                   error={fieldState.error?.message}
                 />
               )}
-            />
-            <div className="flex items-center gap-x-4">
+            /> */}
+            <div className="flex items-center gap-x-4 my-4">
               <hr className="flex-grow border-t border-faintWhite" />
               <p className="text-xs text-center text-faintWhite whitespace-nowrap">
                 Advanced Task Details
@@ -527,25 +475,17 @@ const TaskPage = () => {
                 form="update-task-form"
                 ref={saveBtnRef}
                 className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
-                disabled={uploadTaskImagesIsLoading}
+                disabled={updateTask.isLoading}
               >
-                {!uploadTaskImagesIsLoading ? (
-                  "Save"
-                ) : (
-                 <Loader2 className="animate-spin" />
-                )}
+                {updateTask.isLoading ? <Loader2 className="animate-spin" /> : "Save"}
               </button>
 
               <button
                 onClick={handleDeleteTask}
                 className="bg-red-400 w-full text-white text-sm py-[0.35rem] font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
-                disabled={deleteTask.isLoading}
+                disabled={deleteTask.isLoading || updateTask.isLoading }
               >
-                {!deleteTask.isLoading ? (
-                  "Delete"
-                ) : (
-                  <Loader2 className="animate-spin" />
-                )}
+                {deleteTask.isLoading || updateTask.isLoading ? <Loader2 className="animate-spin" /> : "Delete"}
               </button>
             </div>
           </form>

@@ -83,6 +83,19 @@ export const getTaskById = async (
   return tasksWithComments as Task;
 };
 
+// {
+//     title: string;
+//     description?: string | undefined;
+//     priority: "low" | "medium" | "high";
+//     assignTo: string[];
+//     progress: string;
+//     link?: string | undefined;
+//     category?: string | undefined;
+//     files: string[];
+//     targetStartDate?: Date | undefined;
+//     targetEndDate?: Date | undefined;
+// }
+
 export const insertTask = async (
   pool: Pool,
   task: InsertableTask,
@@ -91,15 +104,19 @@ export const insertTask = async (
   if (!id || !task) throw new Error("Bad request missing required fields");
 
   const query =
-    "INSERT INTO tasks (project_id, title, link, description, priority, progress, assign_to) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;";
+    "INSERT INTO tasks (project_id, title, description, priority, assign_to, progress, link, category, files, target_start_date, target_end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;";
   const res = await pool.query(query, [
     id,
     task.title,
-    task.link,
     task.description,
     task.priority,
-    task.progress,
     task.assignTo,
+    task.progress,
+    task.link ?? undefined,
+    task.category ?? undefined,
+    task.files ?? [],
+    task.targetStartDate ?? undefined,
+    task.targetEndDate ?? undefined
   ]);
 
   let taskId: string = res.rows[0].id.toString();
@@ -420,9 +437,6 @@ export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
   const query =
     'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = TRUE LIMIT 1;';
   const res = await pool.query(query, [projectId]);
-
-  if (!res.rows[0].taskCategoryOptions)
-    throw new Error("Bad request project does not exist");
 
   return res.rows[0].taskCategoryOptions as {
     category: string;

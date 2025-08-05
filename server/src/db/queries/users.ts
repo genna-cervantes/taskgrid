@@ -34,9 +34,12 @@ export const insertUserWithWorkspace = async (
       userId,
     ]);
 
+    const insertUserWorkspaceLinkQuery = `INSERT INTO workspace_members (workspace_id, guest_id) VALUES ($1, $2);`;
+    const userWorkspaceRes = await client.query(insertUserWorkspaceLinkQuery, [workspaceId, userId]);
+
     await client.query("COMMIT");
 
-    return workspaceRes.rowCount === 1 && workspaceRes.rowCount === userRes.rowCount ? {userId: userRes.rows[0].userId, workspaceId} : false;
+    return userWorkspaceRes.rowCount === 1 && userWorkspaceRes.rowCount === workspaceRes.rowCount && workspaceRes.rowCount === userRes.rowCount ? {userId: userRes.rows[0].userId, workspaceId} : false;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -152,6 +155,7 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
 export const getUsernamesInProject = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
+  // SELECT USER ID JOIN WITH USERS TO GET USERNAME
   const query =
     "SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE";
   const res = await pool.query(query, [id]);
@@ -174,8 +178,8 @@ export const addUserProjectLink = async (
     throw new Error("Bad request missing required fields");
 
   const query =
-    "INSERT INTO user_project_link (project_id, guest_id, username) VALUES ($1, $2, $3);";
-  const res = await pool.query(query, [projectId, guestId, username]);
+    "INSERT INTO user_project_link (project_id, guest_id) VALUES ($1, $2);";
+  const res = await pool.query(query, [projectId, guestId]);
 
   return res.rowCount;
 };

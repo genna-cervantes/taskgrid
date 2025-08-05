@@ -19,7 +19,7 @@ export const TaskSchema = z.object({
   progress: z.string(),
   link: z.string().url().optional(),
   category: z.string().optional(),
-  files: z.array(z.string()),
+  files: z.array(z.string()).optional(),
   projectTaskId: z.number(),
   commentCount: z.number(),
   targetStartDate: z.date().optional(),
@@ -39,7 +39,7 @@ export const CommentSchema = z.object({
 export type Task = z.infer<typeof TaskSchema>;
 export type Comment = z.infer<typeof CommentSchema>;
 
-export type InsertableTask = Omit<Task, "id" | "projectTaskId">;
+export type InsertableTask = Pick<Task, "title" | "description" | "priority" | "assignTo" | "progress" | "link" | "category" | "files" | "targetStartDate" | "targetEndDate">;
 
 export const ProjectSchema = z.object({
   id: z.string(),

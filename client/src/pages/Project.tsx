@@ -5,22 +5,19 @@ import {
   useOutletContext,
   useParams,
 } from "react-router-dom";
-import TaskBLock from "../components/TaskBlock";
-import AddTask from "../components/AddTask";
 import { trpc } from "../utils/trpc";
 import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
 import ClearTask from "../components/ClearTask";
-import { Ellipsis } from "lucide-react";
 import Mousetrap from "mousetrap";
-import Xarrow from "react-xarrows";
 import ProjectColumn from "@/components/ProjectColumn";
+import AddTaskForm from "@/components/AddTaskForm";
 
 const Project = () => {
   const { projectId } = useParams();
   const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
   const utils = trpc.useUtils();
 
-  const [addModal, setAddModal] = useState(false);
+  const [addModal, setAddModal] = useState("");
   const [showDependencies, setShowDependencies] = useState(false);
   const [showAllSubtasks, setShowAllSubtasks] = useState(true);
 
@@ -71,7 +68,7 @@ const Project = () => {
   useEffect(() => {
     Mousetrap.bind("ctrl+alt+n", function (e) {
       e.preventDefault();
-      setAddModal(true);
+      setAddModal("backlog");
     });
 
     Mousetrap.bind("ctrl+alt+d", function (e) {
@@ -108,7 +105,6 @@ const Project = () => {
             <ProjectColumn
               col={col}
               columns={columns}
-              addModal={addModal}
               setAddModal={setAddModal}
               taskCategoryOptions={taskCategoryOptions}
               projectId={projectId}
@@ -117,6 +113,9 @@ const Project = () => {
               showAllSubtasks={showAllSubtasks}
               persistTaskMove={persistTaskMove}
             />
+            {
+              addModal === col && <AddTaskForm username={username} projectId={projectId} col={col} setAddModal={setAddModal} />
+            }
           </React.Fragment>
         ))}
       </div>

@@ -15,7 +15,7 @@ const TaskSelectMedia = ({
   isPage=false
 }: {
     isPage?: boolean
-  task: Task;
+  task?: Task;
   projectId: string;
   error: string|undefined;
   previewUrls: string[];
@@ -50,9 +50,9 @@ const TaskSelectMedia = ({
     useState(false);
 
   const { isLoading: taskImageUrlsIsLoading } = trpc.tasks.getTaskImages.useQuery(
-    { taskId: task.id, projectId, keys: task.files },
+    { taskId: task?.id ?? "", projectId, keys: task?.files ?? [] },
     {
-      enabled: !!task && !taskImagesHasInitialized,
+      enabled: !!task && !!task?.id && !!task?.files && !taskImagesHasInitialized,
       onSuccess: (data) => {
         setTaskImagesUrls(data ?? []);
         setTaskImagesHasInitialized(true);

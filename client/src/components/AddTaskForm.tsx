@@ -6,28 +6,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../utils/trpc";
 import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
-import SelectAssignee from "./SelectAssignee";
 import TaskTitle from "./TaskTitle";
 import TaskDescription from "./TaskDescription";
 import TaskLink from "./TaskLink";
-import TaskPriority from "./TaskPriority";
 import TaskSelectPriority from "./TaskSelectPriority";
 import TaskAssignee from "./TaskAssignee";
 import Mousetrap from "mousetrap";
+import TaskSelectCategory from "./TaskSelectCategory";
+import TaskTargetStartDate from "./TaskTargetStartDate";
+import TaskTargetEndDate from "./TaskTargetEndDate";
+import TaskSelectMedia from "./TaskSelectMedia";
+import TaskImageModal from "./TaskImageModal";
 
-const taskSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+const TaskAddSchema = z.object({
+  title: z.string(),
   description: z.string().optional(),
-  priority: z.enum(["low", "medium", "high"], {
-    required_error: "Priority is required",
-  }),
-  link: z.union([z.string().url("Invalid URL"), z.literal("")]).optional(),
-  assignedTo: z
-    .array(z.string())
-    .min(1, { message: "At least one assignee is required" }),
-});
+  priority: z.enum(["low", "medium", "high"]),
+  assignTo: z.array(z.string()),
+  category: z.string().optional(),
+}) satisfies z.ZodType<
+  Pick<
+    Task,
+    | "title"
+    | "description"
+    | "priority"
+    | "assignTo"
+    | "category"
+  >
+>;
 
-export type TaskFormData = z.infer<typeof taskSchema>;
+type TaskAdd = z.infer<typeof TaskAddSchema>;
 
 export const priorityLevels = ["low", "medium", "high"] as const;
 export type PriorityLevel = (typeof priorityLevels)[number];
@@ -40,50 +48,32 @@ const AddTaskForm = ({
 }: {
   projectId: string;
   col: string;
-  setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setAddModal: React.Dispatch<React.SetStateAction<string>>;
   username: string | undefined;
 }) => {
-  const {
-    control,
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
+  const form = useForm<TaskAdd>({
+    resolver: zodResolver(TaskAddSchema),
+  });
+
+  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
+    id: projectId,
   });
 
   const utils = trpc.useUtils();
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const inputFileRef = useRef<HTMLInputElement>(null);
+  const { data: taskCategoryOptionsRes } =
+    trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
 
-  const [taskAssignedTo, setTaskAssignedTo] = useState<string[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-
-  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
-    id: projectId,
-  });
+  const [taskCategoryOptions, setTaskCategoryOptions] = useState(
+    taskCategoryOptionsRes ?? []
+  );
 
   const insertTask = trpc.tasks.insertTask.useMutation({
     onSuccess: async (data) => {
       console.log("Task created:", data);
-      
-      try{
-        await handleUpload(data.id);
-      }catch(err){
-        console.log(err)
-      }
-
-      recentTaskContext?.setTasks([data as Task]); // keep track of this task for removal later if undone
-      actionContext?.setAction("added");
-      setAddModal(false);
-
-      // files
-
+      setAddModal("");
       utils.tasks.getTasks.invalidate({ id: projectId });
     },
     onError: (error) => {
@@ -91,98 +81,19 @@ const AddTaskForm = ({
     },
   });
 
-  const getUploadUrls = trpc.tasks.uploadTaskImages.useMutation();
-
-  const handleUpload = async (taskId: string) => {
-    
-    const response = await getUploadUrls.mutateAsync({
-      projectId,
-      taskId,
-      previousKeys: [],
-      files: files.map((file) => ({
-        name: file.name.split('.')[0],
-        type: file.type,
-      })),
-    });
-
-    const uploadResults = await Promise.all(
-      response.files.map(async ({ url, key }, index) => {
-        const file = files[index];
-
-        // Upload file to S3 using the signed URL
-        console.log(url)
-        const res = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type
-          },
-          body: file,
-        });
-
-        if (!res.ok) {
-          throw new Error(`Upload failed for ${file.name}`);
-        }
-
-        return { name: file.name, key };
-      })
-    );
-
-    console.log("Upload complete:", uploadResults);
+  const onSubmit = async (data: TaskAdd) => {
+    insertTask.mutate({ id: projectId, task: { ...data, progress: col } }); // empty files array first
   };
-
-  const onSubmit = async (data: TaskFormData) => {
-    insertTask.mutate({ id: projectId, task: { ...data, progress: col, commentCount: 0, files: [] } }); // empty files array first
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const MAX_FILE_SIZE_MB = 2;
-    const files = e.target.files;
-    if (!files) return;
-
-    const selectedFiles = Array.from(files).slice(0, 3 - previewUrls.length);
-    const validFiles = selectedFiles.filter((file) => {
-      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        alert(`${file.name} is too large (max ${MAX_FILE_SIZE_MB}MB)`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length === 0) return;
-
-    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
-
-    setFiles((prev) => [...prev, ...validFiles]);
-    setPreviewUrls((prev) => [...prev, ...newPreviews]);
-    e.target.value = "";
-  };
-
-  const removePreview = (url: string, index: number) => {
-    setPreviewUrls((prev) => prev.filter((u) => u !== url));
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    URL.revokeObjectURL(url);
-  };
-
-  const handleClickUpload = () => {
-    if (previewUrls.length < 3) {
-      inputFileRef.current?.click();
-    } else {
-      alert("Maximum of 3 images allowed.");
-    }
-  };
-
-  const remainingSlots = 3 - previewUrls.length;
-  const selectedPriority = watch("priority");
 
   // keyboard shortcuts
   useEffect(() => {
-    Mousetrap.bind('esc', function(e) {
+    Mousetrap.bind("esc", function (e) {
       e.preventDefault();
-      setAddModal(false)
+      setAddModal("");
     });
-    
+
     return () => {
-      Mousetrap.unbind('esc');
+      Mousetrap.unbind("esc");
     };
   }, []);
 
@@ -193,202 +104,87 @@ const AddTaskForm = ({
         if (insertTask.isLoading) {
           e.stopPropagation();
         } else {
-          setAddModal(false);
+          setAddModal("");
         }
       }} // Close when clicking backdrop
     >
       <div
-        className="dark:bg-backgroundDark bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-[90%] md:w-full max-w-md"
+        className="dark:bg-backgroundDark bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-1/2"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(
+            onSubmit, // Success handler
+            (errors) => {
+              // Error handler
+              console.log("Form validation errors:", errors);
+            }
+          )}
           className="flex flex-col gap-y-4"
         >
-          <span className="w-full flex flex-col">
-            <Controller
-              name="title"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <TaskTitle
-                  isPage={true}
-                  taskTitle={field.value}
-                  setTaskTitle={field.onChange}
-                />
-              )}
-            />
-            {errors.title && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.title.message}
-              </p>
-            )}
-          </span>
-          <span className="w-full flex flex-col">
-            <Controller
-              name="description"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <TaskDescription
-                  isPage={true}
-                  taskDescription={field.value}
-                  setTaskDescription={field.onChange}
-                />
-              )}
-            />
-            {errors.description && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.description.message}
-              </p>
-            )}
-          </span>
-          <span className="w-full flex flex-col">
-            <label htmlFor="description" className="text-xs font-semibold mb-2">
-              Task Media:
-            </label>
-            <span className="flex w-full justify-start h-12">
-              <div className="flex gap-x-2 w-full">
-                {/* Render image previews */}
-                {previewUrls.map((url, idx) => (
-                  <div
-                    key={idx}
-                    className="group/upload relative h-12 w-1/3 overflow-hidden rounded shadow"
-                  >
-                    <img
-                      src={url}
-                      alt={`Preview ${idx}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => removePreview(url, idx)}
-                      className="hidden group-hover/upload:flex absolute top-0 left-0 w-full h-full bg-black/50 text-fadedWhite justify-center items-center text-xs px-1 rounded-bl"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-circle-minus-icon lucide-circle-minus"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M8 12h8" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-
-                {previewUrls.length < 3 && (
-                  <button
-                    type="button"
-                    onClick={handleClickUpload}
-                    className={`border-2 border-midWhite px-4 py-[0.4rem] rounded-lg flex justify-center items-center ${
-                      remainingSlots === 2
-                        ? "w-2/3"
-                        : remainingSlots === 1
-                          ? "w-1/3"
-                          : "w-full"
-                    }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-upload-icon lucide-upload text-midWhite"
-                    >
-                      <path d="M12 3v12" />
-                      <path d="m17 8-5-5-5 5" />
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                ref={inputFileRef}
-                className="hidden"
-                onChange={handleFileChange}
+          <Controller
+            name="title"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <TaskTitle
+                taskTitle={field.value}
+                setTaskTitle={field.onChange}
+                error={fieldState.error?.message}
               />
-            </span>
-            {errors.description && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.description.message}
-              </p>
             )}
-          </span>
-          <span className="w-full flex flex-col">
-            <Controller
-              name="link"
-              control={control}
-              defaultValue=""
-              render={({ field }) => (
-                <TaskLink
-                  isPage={true}
-                  taskLink={field.value}
-                  setTaskLink={field.onChange}
-                  taskLinkError=""
-                />
-              )}
-            />
-            {errors.link && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.link.message}
-              </p>
+          />
+          <Controller
+            control={form.control}
+            name="category"
+            render={({ field, fieldState }) => (
+              <TaskSelectCategory
+                taskCategoryOptions={taskCategoryOptions}
+                setTaskCategoryOptions={setTaskCategoryOptions}
+                taskCategory={field.value}
+                setTaskCategory={field.onChange}
+                error={fieldState.error?.message}
+              />
             )}
-          </span>
-          <span className="w-full flex flex-col">
-            <Controller
-              name="priority"
-              control={control}
-              defaultValue="low"
-              render={({ field }) => (
-                <TaskSelectPriority
-                  isPage={true}
-                  priorityLevels={priorityLevels}
-                  taskPriority={field.value}
-                  setTaskPriority={field.onChange}
-                />
-              )}
-            />
-            {errors.priority && (
-              <p className="text-red-400 text-xs font-semibold mt-1">
-                {errors.priority.message}
-              </p>
+          />
+          <Controller
+            control={form.control}
+            name="priority"
+            render={({ field, fieldState }) => (
+              <TaskSelectPriority
+                priorityLevels={priorityLevels}
+                taskPriority={field.value}
+                setTaskPriority={field.onChange}
+                error={fieldState.error?.message}
+              />
             )}
-          </span>
-          <span className="w-full flex flex-col">
-            <Controller
-              name="assignedTo"
-              control={control}
-              defaultValue={[]}
-              render={({ field }) => (
-                <TaskAssignee
-                  isPage={true}
-                  projectId={projectId}
-                  username={username}
-                  taskAssignedTo={field.value}
-                  setTaskAssignedTo={field.onChange}
-                  taskAssignedToError=""
-                />
-              )}
-            />
-          </span>
+          />
+          <Controller
+            control={form.control}
+            name="assignTo"
+            render={({ field, fieldState }) => (
+              <TaskAssignee
+                projectId={projectId}
+                username={username}
+                taskAssignedTo={field.value ?? []}
+                setTaskAssignedTo={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            name="description"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <TaskDescription
+                taskDescription={field.value}
+                setTaskDescription={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
           <button
             type="submit"
-            className="w-full flex justify-center text-midBlack dark:text-fadedWhite font-semibold bg-lmBackground hover:bg-lmMidBackground dark:bg-green-400 rounded-md py-1 cursor-pointer text-xs md:text-base disabled:cursor-not-allowed disabled:bg-midWhite"
+            className="w-full flex justify-center mt-4 text-midBlack dark:text-fadedWhite font-semibold bg-lmBackground hover:bg-lmMidBackground dark:bg-green-400 rounded-md py-1 cursor-pointer text-xs md:text-base disabled:cursor-not-allowed disabled:bg-midWhite"
             disabled={insertTask.isLoading}
           >
             {!insertTask.isLoading ? (

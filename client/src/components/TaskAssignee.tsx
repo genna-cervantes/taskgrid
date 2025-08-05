@@ -21,6 +21,8 @@ const TaskAssignee = ({
     id: projectId,
   });
 
+  console.log('users in proj', usersInProject);
+
   return (
     <div>
       <h3

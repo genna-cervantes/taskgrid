@@ -105,8 +105,8 @@ const TaskBlock = ({
                 taskCategoryOptions={taskCategoryOptions}
               />
             )}
-            {task.files.length > 1 && (
-              <TaskMediaCount mediaCount={task.files.length} />
+            {(task.files?.length ?? 0) > 1 && (
+              <TaskMediaCount mediaCount={task.files?.length ?? 0} />
             )}
             {task.commentCount > 0 && (
               <TaskCommentCount commentCount={task.commentCount} />

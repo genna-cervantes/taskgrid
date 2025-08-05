@@ -4,11 +4,11 @@ import { Ellipsis } from "lucide-react";
 import AddTask from "./AddTask";
 import TaskBlock, { DropIndicator } from "./TaskBlock";
 import Xarrow from "react-xarrows";
+import AddTaskForm from "./AddTaskForm";
 
 const ProjectColumn = ({
   col,
   columns,
-  addModal,
   setAddModal,
   projectId,
   username,
@@ -19,8 +19,7 @@ const ProjectColumn = ({
 }: {
   col: ColumnKey;
   columns: Columns;
-  addModal: boolean;
-  setAddModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setAddModal: React.Dispatch<React.SetStateAction<string>>;
   projectId: string;
   username: string | undefined;
   showDependencies: boolean;
@@ -154,7 +153,6 @@ const ProjectColumn = ({
           <Ellipsis className="text-faintWhite h-4 hover:text-fadedWhite hover:cursor-pointer" />
           <AddTask
             type=""
-            addModal={addModal}
             setAddModal={setAddModal}
             projectId={projectId}
             col={col}
@@ -207,7 +205,6 @@ const ProjectColumn = ({
         <DropIndicator beforeId="-1" column={col} />
         <AddTask
           type="block"
-          addModal={addModal}
           setAddModal={setAddModal}
           projectId={projectId}
           col={col}

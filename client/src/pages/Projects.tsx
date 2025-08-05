@@ -19,6 +19,7 @@ import LoadingModal from "../components/LoadingModal";
 import { Task } from "../../../server/src/shared/types";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import Mousetrap from "mousetrap";
+import { MessageSquare } from "lucide-react";
 
 const Projects = () => {
   const { workspaceId, projectId } = useParams();
@@ -176,18 +177,25 @@ const Projects = () => {
 
       <div className="h-full flex flex-col w-full">
         {/* bread crumbs */}
-        <BreadCrumbs
-          crumbs={[
-            {
-              name: workspaceName as string,
-              url: `/workspaces/${workspaceId}`,
-            },
-            {
-              name: projectName as string,
-              url: `/workspaces/${workspaceId}/projects/${projectId}`,
-            },
-          ]}
-        />
+        <div className="w-full flex justify-between">
+          <BreadCrumbs
+            crumbs={[
+              {
+                name: workspaceName as string,
+                url: `/workspaces/${workspaceId}`,
+              },
+              {
+                name: projectName as string,
+                url: `/workspaces/${workspaceId}/projects/${projectId}`,
+              },
+            ]}
+          />
+          <button className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
+            {/* <MessageSquare /> */}
+            Try TaskanAI
+          </button>
+        </div>
+
         {Object.keys(columns).length > 0 ? (
           <Outlet context={{ username, columns, taskCategoryOptions }} />
         ) : (

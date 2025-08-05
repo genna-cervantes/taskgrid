@@ -340,7 +340,7 @@ const Sidebar = ({
                       className={`h-4 w-4 transition-colors duration-300 group-hover/nav:text-white group-focus/nav:text-white ${
                         activeIndex === index ? "text-white" : "text-midWhite"
                       }`}
-                      strokeWidth={2}
+                      strokeWidth={3}
                     />
                   </button>
                 );
@@ -400,7 +400,7 @@ const Sidebar = ({
                           className={`h-4 w-4 transition-colors duration-300 group-hover/nav:text-white ${
                             activeIndex === index ? "text-white" : "text-midWhite"
                           }`}
-                          strokeWidth={2}
+                          strokeWidth={3}
                         />
                         <p
                           className={`text-xs pt-[2px] group-hover/nav:text-white ${

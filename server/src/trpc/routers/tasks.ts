@@ -46,7 +46,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to fetch tasks from project id",
           cause: result.error,
         });
       }
@@ -61,7 +61,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to fetch task ids",
           cause: result.error,
         });
       }
@@ -78,7 +78,7 @@ export const tasksRouter = router({
       if (result.error !== null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to fetch single task",
           cause: result.error,
         });
       }
@@ -90,15 +90,16 @@ export const tasksRouter = router({
     .input(
       z.object({
         id: z.string(),
-        task: TaskSchema.omit({ id: true, projectTaskId: true }),
+        task: TaskSchema.pick({ title: true, priority: true, assignTo: true, progress: true, files: true, description: true, link: true, category: true, targetStartDate: true, targetEndDate: true }),
       })
     )
     .mutation(async ({ input }) => {
       let result = await tryCatch(insertTask(pool, input.task, input.id));
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to insert tasks",
           cause: result.error,
         });
       }
@@ -115,7 +116,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task progress",
           cause: result.error,
         });
       }
@@ -123,7 +124,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task progress",
         });
       }
 
@@ -137,7 +138,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to delete task",
           cause: result.error,
         });
       }
@@ -145,7 +146,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to delete task",
         });
       }
 
@@ -161,7 +162,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update assigned to",
           cause: result.error,
         });
       }
@@ -169,7 +170,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update assigned to",
         });
       }
 
@@ -185,7 +186,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task title",
           cause: result.error,
         });
       }
@@ -193,7 +194,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task title",
         });
       }
 
@@ -209,7 +210,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task description",
           cause: result.error,
         });
       }
@@ -217,7 +218,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task description",
         });
       }
 
@@ -233,7 +234,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task link",
           cause: result.error,
         });
       }
@@ -241,7 +242,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task link",
         });
       }
 
@@ -257,7 +258,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task priority",
           cause: result.error,
         });
       }
@@ -265,7 +266,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task priority",
         });
       }
 
@@ -342,7 +343,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task files",
           cause: result.error,
         });
       }
@@ -350,7 +351,7 @@ export const tasksRouter = router({
       if (result.data && !result.data.success) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task files",
         });
       }
 
@@ -388,7 +389,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task target start date",
           cause: result.error,
         });
       }
@@ -396,7 +397,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task target start date",
         });
       }
 
@@ -428,7 +429,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task target end date",
           cause: result.error,
         });
       }
@@ -436,7 +437,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task target end date",
         });
       }
 
@@ -459,7 +460,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task category",
           cause: result.error,
         });
       }
@@ -467,7 +468,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task category",
         });
       }
 
@@ -494,7 +495,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task depends on",
           cause: result.error,
         });
       }
@@ -502,7 +503,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task depends on",
         });
       }
 
@@ -525,7 +526,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task subtasks",
           cause: result.error,
         });
       }
@@ -533,7 +534,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task subtasks",
         });
       }
 
@@ -561,7 +562,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task order",
           cause: result.error,
         });
       }
@@ -569,7 +570,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task order",
         });
       }
 
@@ -584,7 +585,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to delete task by id",
           cause: result.error,
         });
       }
@@ -592,7 +593,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to delete task by id",
         });
       }
 
@@ -607,7 +608,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to undo delete task",
           cause: result.error,
         });
       }
@@ -615,7 +616,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to undo delete task",
         });
       }
 
@@ -644,7 +645,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to fetch filter tasks",
           cause: result.error,
         });
       }
@@ -661,7 +662,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to archive task by column",
           cause: result.error,
         });
       }
@@ -683,7 +684,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to add comment",
           cause: result.error,
         });
       }
@@ -691,7 +692,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to add comment",
         });
       }
 
@@ -705,7 +706,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to get comments by task",
           cause: result.error,
         });
       }
@@ -720,9 +721,10 @@ export const tasksRouter = router({
         getTaskCategoryOptions(pool, input.projectId)
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to get task category options",
           cause: result.error,
         });
       }
@@ -750,7 +752,7 @@ export const tasksRouter = router({
       if (result.error != null) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task category options",
           cause: result.error,
         });
       }
@@ -758,7 +760,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task category options",
         });
       }
       
@@ -775,7 +777,7 @@ export const tasksRouter = router({
         console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task",
           cause: result.error,
         });
       }
@@ -783,7 +785,7 @@ export const tasksRouter = router({
       if (!result.data) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch tasks",
+          message: "Failed to update task",
         });
       }
 
