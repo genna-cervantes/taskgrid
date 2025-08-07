@@ -5,13 +5,14 @@ import {
   addUserProjectLink,
   checkGuestId,
   checkGuestIdAndWorkspaces,
+  checkUsername,
+  editUsername,
   getUsername,
   getUsernamesInProject,
   getUsersInProject,
   insertUser,
   insertUserWithWorkspace,
   kickUserFromProject,
-  setUsername,
 } from "../../db/queries/users.js";
 import { pool } from "../router.js";
 import { tryCatch } from "../../lib/utils.js";
@@ -55,14 +56,14 @@ export const usersRouter = router({
 
       return result.data;
     }),
-  setUsername: publicProcedure
+  editUsername: publicProcedure
     .use(rateLimitMiddleware)
     .input(
-      z.object({ username: z.string(), guestId: z.string(), id: z.string() })
+      z.object({ username: z.string(), guestId: z.string() })
     )
     .mutation(async ({ input }) => {
       let result = await tryCatch(
-        setUsername(pool, input.username, input.guestId, input.id)
+        editUsername(pool, input.username, input.guestId)
       );
       if (result.error != null) {
         throw new TRPCError({
@@ -90,6 +91,23 @@ export const usersRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch guest id",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
+    }),
+  checkUsername: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ username: z.string() }))
+    .query(async ({ input }) => {
+      let result = await tryCatch(
+        checkUsername(pool, input.username)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to check username",
           cause: result.error,
         });
       }

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
 import { useUserContext } from "../contexts/UserContext";
-import { CheckCircle2, ClipboardList, EllipsisVertical, Eye, Loader2, Lock } from "lucide-react";
+import { CheckCircle2, ClipboardList, EllipsisVertical, Eye, Loader2, Lock, LockOpen } from "lucide-react";
 
 const ProjectBlock = ({
   p,
@@ -123,8 +123,8 @@ const ProjectBlock = ({
       </div>
       {/* <h3 className="text-sm dark:text-midWhite text-midBlack">{p.id}</h3> */}
       {!projectsStatsIsLoading && projectStats && (
-        <div className="flex justify-between w-full text-fadedWhite">
-          <div className="flex gap-x-1 text-xs">
+        <div className="flex justify-between w-full items-end text-fadedWhite">
+          <div className="flex gap-x-1 text-xs items-end">
             <span className="flex items-center">
               <ClipboardList className="h-3" />
               <p>{projectStats["backlog"]}</p>
@@ -142,7 +142,9 @@ const ProjectBlock = ({
               <p>{projectStats["done"]}</p>
             </span>
           </div>
-          <Lock className="h-3" />
+          <LockOpen className="h-4" >
+            <title>Public Project</title>
+          </LockOpen>
         </div>
       )}
     </Link>

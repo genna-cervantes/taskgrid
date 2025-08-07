@@ -5,6 +5,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { trpc } from "../utils/trpc";
 import { useUserContext } from "../contexts/UserContext";
+import { useParams } from "react-router-dom";
 
 export const projectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long"),
@@ -27,6 +28,7 @@ const AddProjectForm = ({
 
   const utils = trpc.useUtils();
   const userContext = useUserContext();
+  const {workspaceId} = useParams();
 
   const addProject = trpc.projects.addProject.useMutation({
     onSuccess: (data) => {
@@ -41,13 +43,13 @@ const AddProjectForm = ({
 
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
-    if (userContext.userId === "" || userContext.currentWorkspace === "") return;
+    if (userContext.userId === "" || workspaceId === "") return;
 
     addProject.mutate({
       id,
       name: data.name,
       guestId: userContext.userId ?? "",
-      workspaceId: userContext.currentWorkspace ?? ""
+      workspaceId: workspaceId ?? ""
     });
   };
 

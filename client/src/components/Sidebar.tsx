@@ -34,9 +34,10 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
+  SelectTrigger
 } from "./ui/select";
+import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
+import { nanoid } from "nanoid";
 
 const Sidebar = ({
   toggleSidebar,
@@ -47,6 +48,7 @@ const Sidebar = ({
 }) => {
   const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
+  const utils = trpc.useUtils();
 
   const userContext = useUserContext();
 
@@ -65,8 +67,9 @@ const Sidebar = ({
       name: "Workspaces",
       func: function () {
         // setActiveIndex(0)
-        // navigate(`/projects/${projectId}`)
-        setToggleSidebar((prev) => !prev);
+        navigate(`/workspaces/${workspaceId}`)
+        setActiveIndex(0);
+        if (!toggleSidebar) setToggleSidebar((prev) => !prev);
       },
     },
     {
@@ -75,8 +78,9 @@ const Sidebar = ({
       name: "Profile",
       func: function () {
         // setActiveIndex(0)
-        // navigate(`/projects/${projectId}`)
-        // setToggleSidebar(false)
+        setActiveIndex(1);
+        navigate(`/profile/${userContext.username}`)
+        // setToggleSidebar(())
       },
     },
     {
@@ -89,23 +93,23 @@ const Sidebar = ({
         setToggleSidebar(false);
       },
     },
-    {
-      parent: "projects",
-      icon: Calendar,
-      name: "Calendar",
-      func: function () {
-        setActiveIndex(1);
-        navigate(
-          `workspaces/${workspaceId}/projects/${projectId}?view=Calendar`
-        );
-      },
-    },
+    // {
+    //   parent: "projects",
+    //   icon: Calendar,
+    //   name: "Calendar",
+    //   func: function () {
+    //     setActiveIndex(1);
+    //     navigate(
+    //       `workspaces/${workspaceId}/projects/${projectId}?view=Calendar`
+    //     );
+    //   },
+    // },
     {
       parent: "projects",
       icon: Funnel,
       name: "Filter",
       func: function () {
-        setActiveIndex(2);
+        setActiveIndex(1);
         if (!toggleSidebar) setToggleSidebar(true)
       },
     },
@@ -118,17 +122,17 @@ const Sidebar = ({
         navigate(`/ai/${projectId}`);
       },
     },
-    {
-      parent: "projects",
-      icon: Blocks,
-      name: "Integrations",
-      func: function () {
-        setActiveIndex(4);
-        navigate(
-          `workspaces/${workspaceId}/projects/${projectId}?view=Integrations`
-        );
-      },
-    },
+    // {
+    //   parent: "projects",
+    //   icon: Blocks,
+    //   name: "Integrations",
+    //   func: function () {
+    //     setActiveIndex(4);
+    //     navigate(
+    //       `workspaces/${workspaceId}/projects/${projectId}?view=Integrations`
+    //     );
+    //   },
+    // },
     {
       parent: "projects",
       icon: ExternalLink,
@@ -146,13 +150,21 @@ const Sidebar = ({
   const [searchParams, setSearchParams] = useSearchParams();
 
   // default set to location // if may serach params
-  const view = searchParams.get("view") ?? "kanban";
+  const view = isInProject ? searchParams.get("view") ?? "kanban" : path.split('/')[1];
+
+  useEffect(() => {
+    setActiveIndex(navItems.findIndex((n) =>
+      // isInProject
+        n.name.toLowerCase() === view.toLowerCase()
+        // : n.name.toLowerCase() === parent
+    ))
+  }, [path])
 
   const [activeIndex, setActiveIndex] = useState(
     navItems.findIndex((n) =>
-      isInProject
-        ? n.name.toLowerCase() === view.toLowerCase()
-        : n.name.toLowerCase() === parent
+      // isInProject
+        n.name.toLowerCase() === view.toLowerCase()
+        // : n.name.toLowerCase() === parent
     )
   );
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -198,6 +210,8 @@ const Sidebar = ({
       : []
   );
 
+  // queries
+
   const { data: usersInProject, isLoading: usersInProjectIsLoading } =
     trpc.users.getUsersInProject.useQuery(
       { id: projectId ?? "" },
@@ -213,6 +227,16 @@ const Sidebar = ({
       { guestId: userContext.userId ?? "" },
       { enabled: !!userContext.userId }
     );
+
+  // mutations
+  const insertWorkspace = trpc.workspaces.insertWorkspace.useMutation({
+    onSuccess: (data) => {
+      // update user context
+
+      utils.workspaces.getUserWorkspaces.invalidate()
+      navigate(`/workspaces/${data.workspaceId}`);
+    }
+  });
 
   useEffect(() => {
     const index = hoveredIndex ?? activeIndex;
@@ -275,6 +299,29 @@ const Sidebar = ({
     setIsActive(item.name);
     item.func();
   };
+
+
+  const handleAddWorkspace = () => {
+    if (!userContext.userId) return;
+
+    const newWorkspaceName = () =>
+      `${uniqueNamesGenerator({
+        dictionaries: [adjectives, animals],
+        separator: '-',
+        style: 'lowerCase',
+      })}-workspace`;
+    const newWorkspaceId = nanoid(10);
+    
+    insertWorkspace.mutate({
+      userId: userContext.userId ?? "",
+      workspaceId: newWorkspaceId,
+      workspaceName: newWorkspaceName(),
+    });
+  }
+
+  const handleChangeWorkspace = (workspaceId: string) => {
+    navigate(`/workspaces/${workspaceId}`);
+  }
 
   useEffect(() => {
     Mousetrap.bind("esc", function (e) {
@@ -498,22 +545,22 @@ const Sidebar = ({
                             <p className="text-xs font-rubik text-midWhite">
                               Workspace:
                             </p>
-                            {/* <Select value={priorityFilter} setValue={setPriorityFilter} placeholder="Choose workspace" choices={userWorkspacesIsLoading || !userWorkspaces ? [] : userWorkspaces.map((w) => ({id: w.workspaceId, title: w.name}))} /> */}
-                            <Select>
+                            <Select onValueChange={handleChangeWorkspace}>
                               <SelectTrigger className="w-full text-xs border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent">
                                 Choose a workspace
                               </SelectTrigger>
                               <SelectContent className="flex px-1 flex-col w-[var(--radix-select-trigger-width)] gap-y-1 overflow-y-scroll max-h-60 super-thin-scrollbar py-2 dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
-                                {userWorkspaces?.map((w) => (
+                              {/* userWorkspacesIsLoading */}
+                                {userWorkspacesIsLoading ? <p>Loading...</p> : userWorkspaces?.map((w) => (
                                   <SelectItem
                                     key={w.workspaceId}
                                     value={w.workspaceId}
-                                    className="hover:bg-light w-full hover:cursor-pointer px-1"
+                                    className={`hover:bg-light w-full hover:cursor-pointer px-1 ${workspaceId === w.workspaceId ? "bg-light" : ""}`}
                                   >
                                     {w.name}
                                   </SelectItem>
                                 ))}
-                                <button className="px-1 py-2 hover:bg-light rounded-md w-full mt-3">+ Add Workspace</button>
+                                <button onClick={handleAddWorkspace} className="px-1 py-2 hover:bg-light rounded-md w-full mt-3">+ Add Workspace</button>
                               </SelectContent>
                             </Select>
                           </div>

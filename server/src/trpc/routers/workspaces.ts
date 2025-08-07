@@ -1,8 +1,11 @@
 import { z } from "zod";
 import {
   checkWorkspaceId,
+  deleteWorkspace,
   getUserWorkspaces,
   insertWorkspace,
+  leaveWorkspace,
+  updateWorkspaceName,
 } from "../../db/queries/workspaces.js";
 import { rateLimitMiddleware } from "../middleware.js";
 import { publicProcedure, router } from "../trpc.js";
@@ -71,4 +74,71 @@ export const workspacesRouter = router({
 
       return result.data;
     }),
+  updateWorkspaceName: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ workspaceId: z.string(), workspaceName: z.string() }))
+    .mutation(async ({ input }) => {
+      let result = await tryCatch(updateWorkspaceName(pool, input.workspaceId, input.workspaceName));
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update workspace name",
+          cause: result.error
+        })
+      }
+
+      if (!result.data){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update workspace name"
+        })
+      }
+
+      return result.data;
+    }),
+  deleteWorkspace: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ workspaceId: z.string()}))
+    .mutation(async ({ input }) => {
+      let result = await tryCatch(deleteWorkspace(pool, input.workspaceId));
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete workspace",
+          cause: result.error
+        })
+      }
+
+      if (!result.data){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete workspace"
+        })
+      }
+
+      return result.data;
+    }),
+  leaveWorkspace: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ workspaceId: z.string(), userId: z.string()}))
+    .mutation(async ({ input }) => {
+      let result = await tryCatch(leaveWorkspace(pool, input.workspaceId, input.userId));
+      if (result.error != null){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to leave workspace",
+          cause: result.error
+        })
+      }
+
+      if (!result.data){
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to leave workspace"
+        })
+      }
+
+      return result.data;
+    }),
+
 });

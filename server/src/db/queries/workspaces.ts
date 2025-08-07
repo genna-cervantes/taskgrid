@@ -3,14 +3,14 @@ import { Pool } from "pg";
 export const getUserWorkspaces = async (pool: Pool, guestId: string) => {
   if (!guestId) throw new Error("Bad request missing required fields");
 
-  const query = `SELECT w.workspace_id AS "workspaceId", w.name 
+  const query = `SELECT w.workspace_id AS "workspaceId", w.name, w.user_id::text = $1::text AS "isOwner"
   FROM workspace_members AS wm 
   LEFT JOIN workspaces AS w 
   ON wm.workspace_id = w.workspace_id 
   WHERE wm.guest_id = $1 AND w.is_active = TRUE AND wm.is_active = TRUE;`;
   const res = await pool.query(query, [guestId]);
 
-  return res.rows as { workspaceId: string; name: string }[];
+  return res.rows as { workspaceId: string; name: string, isOwner: boolean }[];
 };
 
 export const checkWorkspaceId = async (
@@ -61,7 +61,7 @@ export const insertWorkspace = async (
 
     return userWorkspaceRes.rowCount === 1 &&
       userWorkspaceRes.rowCount === workspaceRes.rowCount
-      ? workspaceId
+      ? {workspaceId: workspaceId}
       : false;
 
   } catch (err) {
@@ -71,3 +71,36 @@ export const insertWorkspace = async (
     client.release();
   }
 };
+
+export const updateWorkspaceName = async (
+  pool: Pool,
+  workspaceId: string,
+  workspaceName: string
+) => {
+  if (!workspaceId || !workspaceName)
+    throw new Error("Bad request missing required fields");
+
+  const query = `UPDATE workspaces SET name = $1 WHERE workspace_id = $2 AND is_active = TRUE;`;
+  const res = await pool.query(query, [workspaceName, workspaceId]);
+
+  return res.rowCount === 1 ? true : false;
+};
+
+export const deleteWorkspace = async (pool: Pool, workspaceId: string) => {
+  if (!workspaceId) throw new Error("Bad request missing required fields");
+
+  const query = 'UPDATE workspaces SET is_active = FALSE WHERE workspace_id = $1;';
+  const res = await pool.query(query, [workspaceId]);
+
+  return (res.rowCount ?? 0) === 1 ? true : false;
+}
+
+export const leaveWorkspace = async (pool: Pool, workspaceId: string, userId: string) => {
+  if (!workspaceId) throw new Error("Bad request missing required fields");
+  
+  const query = 'UPDATE workspaces SET is_active = FALSE WHERE workspace_id = $1 AND guest_id = $2;';
+  const res = await pool.query(query, [workspaceId, userId]);
+  
+  return (res.rowCount ?? 0) === 1 ? true : false;
+
+}

@@ -48,17 +48,16 @@ export const insertUserWithWorkspace = async (
   }
 };
 
-export const setUsername = async (
+export const editUsername = async (
   pool: Pool,
   username: string,
-  guestId: string,
-  id: string
+  guestId: string
 ) => {
-  if (!guestId || !id) throw new Error("Bad request missing required fields");
+  if (!guestId || !username) throw new Error("Bad request missing required fields");
 
   const query =
-    "UPDATE user_project_link SET username = $1 WHERE guest_id = $2 AND project_id = $3 AND is_active = TRUE;";
-  const res = await pool.query(query, [username, guestId, id]);
+    "UPDATE users SET username = $1 WHERE guest_id = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [username, guestId]);
 
   return (res.rowCount ?? 0) === 1 ? true : false;
 };
@@ -72,6 +71,15 @@ export const checkGuestId = async (pool: Pool, guestId: string) => {
 
   return parseInt(res.rows[0].count) === 1 ? true : false;
 };
+
+export const checkUsername = async (pool: Pool, username: string): Promise<number> => {
+  if (!username) throw new Error('Bad request missing required fields');
+
+  const query = 'SELECT COUNT(*) FROM users WHERE username = $1 AND is_active = TRUE;';
+  const res = await pool.query(query, [username])
+
+  return Number(res.rows[0].count ?? 0);
+}
 
 export const checkGuestIdAndWorkspaces = async (
   pool: Pool,
@@ -87,8 +95,11 @@ export const checkGuestIdAndWorkspaces = async (
     const checkUserQuery =
       "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";
     const userRes = await client.query(checkUserQuery, [guestId]);
+    
+    const getUsernameQuery = 'SELECT username FROM users WHERE guest_id = $1 AND is_active = TRUE LIMIT 1;';
+    const usernameRes = await client.query(getUsernameQuery, [guestId]);
 
-    const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE;`;
+    const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE ORDER BY last_accessed DESC;`;
     const workspaceRes = await client.query(getWorkspacesQuery, [guestId]);
 
     await client.query("COMMIT");
@@ -96,6 +107,7 @@ export const checkGuestIdAndWorkspaces = async (
     return {
       userExists: parseInt(userRes.rows[0].count) === 1,
       workspaces: workspaceRes.rows.map((w) => w.workspace_id as string),
+      username: usernameRes.rows[0].username
     };
   } catch (err) {
     await client.query("ROLLBACK");

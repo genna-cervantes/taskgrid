@@ -83,7 +83,7 @@ const Home = () => {
 
   // no provided workspace id
   if (!workspaceId || workspaceId === "" || !workspaceName){
-    return <Navigate to={`/workspaces/${userContext.currentWorkspace}`} replace />;
+    return <Navigate to={`/`} replace />;
   }
 
   return (

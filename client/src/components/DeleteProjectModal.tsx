@@ -11,7 +11,7 @@ const DeleteProjectModal = ({
     projectId: string;
     projectName: string;
   };
-  setEditProject: React.Dispatch<
+  setEditProject?: React.Dispatch<
     React.SetStateAction<{
       projectId: string;
       projectName: string;
@@ -27,10 +27,12 @@ const DeleteProjectModal = ({
       console.log("Project created:", data);
       utils.projects.getUserWorkspaceProjects.invalidate();
       setDeleteProjectModal(false);
-      setEditProject({
-        projectId: "",
-        projectName: "",
-      });
+      if (setEditProject){
+          setEditProject({
+          projectId: "",
+          projectName: "",
+        });
+      }
     },
     onError: (error) => {
       console.error("Failed to create task:", error.message);
@@ -39,10 +41,12 @@ const DeleteProjectModal = ({
 
   const handleClickOutside = () => {
     setDeleteProjectModal(false);
-    setEditProject({
-      projectId: "",
-      projectName: "",
-    });
+    if (setEditProject){
+      setEditProject({
+        projectId: "",
+        projectName: "",
+      });
+    }
   };
 
   const handleLeave = () => {

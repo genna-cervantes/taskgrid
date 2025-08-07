@@ -12,6 +12,7 @@ import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generato
 
 type UserContextType = {
   userId: string | null;
+  username: string | null; 
   isLoading: boolean;
   currentWorkspace: string | null;
 };
@@ -20,6 +21,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [userId, setUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [currentWorkspace, setCurrentWorkspace] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false); 
@@ -82,14 +84,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!storedGuestId) {
         const newId = uuidv4();
         const newWorkspaceId = nanoid(10);
+        const username = newUsername();
         insertUserWithWorkspace.mutate({
           guestId: newId,
-          username: newUsername(),
           workspaceId: newWorkspaceId,
+          username,
           workspaceName: newWorkspaceName(),
         });
         localStorage.setItem("guestId", newId);
         setUserId(newId)
+        setUsername(username)
         setCurrentWorkspace(newWorkspaceId)
         setHasInitialized(true);
         return;
@@ -97,19 +101,20 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       if (!dbLoading && userData) {
         if (!userData.userExists) {
-          console.log(storedGuestId)
           const newId = uuidv4();
+          const username = newUsername();
           const newWorkspaceId = nanoid(10);
-
+          
           insertUserWithWorkspace.mutate({
             guestId: newId,
-            username: newUsername(),
+            username: username,
             workspaceId: newWorkspaceId,
             workspaceName: newWorkspaceName(),
           });
-
+          
           localStorage.setItem("guestId", newId);
           setUserId(newId)
+          setUsername(username)
           setCurrentWorkspace(newWorkspaceId)
           setHasInitialized(true);
           return;
@@ -118,6 +123,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // User exists
         if (userData.workspaces.length > 0) {
           setUserId(storedGuestId)
+          setUsername(userData.username)
           setCurrentWorkspace(userData.workspaces[0]);
           setIsLoading(false);
         } else {
@@ -128,6 +134,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             workspaceName: newWorkspaceName(),
           });
           setUserId(storedGuestId)
+          setUsername(userData.username)
           setCurrentWorkspace(newWorkspaceId);
         }
         setHasInitialized(true);
@@ -144,10 +151,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     insertWorkspace,
   ]);
 
-  console.log(userId)
-
   return (
-    <UserContext.Provider value={{ userId, currentWorkspace, isLoading }}>
+    <UserContext.Provider value={{ username, userId, currentWorkspace, isLoading }}>
       {children}
     </UserContext.Provider>
   );
