@@ -5,30 +5,38 @@ export const addProject = async (
   pool: Pool,
   projectId: string,
   name: string,
-  guestId: string,
+  username: string,
   workspaceId: string
 ) => {
-  if (!projectId || !guestId || !workspaceId)
+  if (!projectId || !username || !workspaceId)
     throw new Error("Bad request missing required fields");
-
+  
   const client = await pool.connect();
-
+  
   try {
     await client.query("BEGIN");
+    
+    const userQuery = `SELECT id AS "userId" FROM users WHERE username = $1;`;
+    const userRes = await pool.query(userQuery, [username])
+    
+    const userId = userRes.rows[0]?.userId;
+    if (!userId){
+      throw new Error("Bad request user does not exist");
+    }
 
     const query =
-      "INSERT INTO projects (id, name, guest_id, workspace_id) VALUES ($1, $2, $3, $4)";
+      "INSERT INTO projects (id, name, user_id, workspace_id) VALUES ($1, $2, $3, $4)";
     const res = await pool.query(query, [
       projectId,
       name,
-      guestId,
+      userId,
       workspaceId,
     ]);
 
-    const insertUserProjectLinkQuery = `INSERT INTO project_members (project_id, guest_id) VALUES ($1, $2);`;
+    const insertUserProjectLinkQuery = `INSERT INTO project_members (project_id, user_id) VALUES ($1, $2);`;
     const userProjectsRes = await client.query(insertUserProjectLinkQuery, [
       projectId,
-      guestId,
+      userId,
     ]);
 
     await client.query("COMMIT");
@@ -49,12 +57,16 @@ export const getProjectOwner = async (pool: Pool, projectId: string) => {
   if (!projectId) throw new Error("Bad request missing required fields");
 
   const query =
-    "SELECT guest_id FROM projects WHERE id = $1 AND is_active = TRUE;";
+    `SELECT username 
+    FROM users AS u
+    LEFT JOIN projects AS p 
+    ON p.user_id = u.id
+    WHERE p.id = $1 AND p.is_active = TRUE;`;
   const res = await pool.query(query, [projectId]);
 
   if ((res.rowCount ?? 0) < 1) throw new Error("Project not found");
 
-  return res.rows[0].guest_id as string;
+  return res.rows[0]?.username as string;
 };
 
 export const getProjectStats = async (pool: Pool, projectId: string) => {
@@ -128,16 +140,23 @@ export const deleteProject = async (
 
 export const getUserWorkspaceProjects = async (
   pool: Pool,
-  guestId: string,
+  username: string,
   workspaceId: string
 ) => {
-  if (!guestId || !workspaceId)
+  if (!username || !workspaceId)
     throw new Error("Bad request missing required fields");
+
+  const userQuery = `SELECT id AS "userId" FROM users WHERE username = $1;`
+  const userRes = await pool.query(userQuery, [username])
+
+  const userId = userRes.rows[0]?.userId;
+
+  if (!userId) throw new Error("Bad request user does not exist");
 
   const query = `SELECT p.id, p.name FROM projects AS p 
   LEFT JOIN project_members AS pm ON p.id = pm.project_id 
-  WHERE p.workspace_id = $1 AND pm.guest_id = $2;`;
-  const res = await pool.query(query, [workspaceId, guestId]);
+  WHERE p.workspace_id = $1 AND pm.user_id = $2;`;
+  const res = await pool.query(query, [workspaceId, userId]);
 
   return res.rows as Project[];
 };

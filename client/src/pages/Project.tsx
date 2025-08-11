@@ -34,7 +34,7 @@ const Project = () => {
   if (!rawColumns) {
     return (
       <p className="text-sm opacity-50 text-center mt-8">
-        Loading your taskan boards...
+        Loading your taskan board...
       </p>
     );
   }

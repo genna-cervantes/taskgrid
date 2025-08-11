@@ -2,10 +2,9 @@ import { z } from "zod";
 import { rateLimitMiddleware } from "../middleware.js";
 import { publicProcedure, router } from "../trpc.js";
 import {
-  addUserProjectLink,
   checkGuestId,
-  checkGuestIdAndWorkspaces,
   checkUsername,
+  checkUsernameAndWorkspaces,
   editUsername,
   getUsername,
   getUsernamesInProject,
@@ -24,7 +23,6 @@ export const usersRouter = router({
     .input(
       z.object({
         username: z.string(),
-        guestId: z.string(),
         workspaceId: z.string(),
         workspaceName: z.string(),
       })
@@ -34,20 +32,21 @@ export const usersRouter = router({
         insertUserWithWorkspace(
           pool,
           input.username,
-          input.guestId,
           input.workspaceId,
           input.workspaceName
         )
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create user and workspace",
           cause: result.error,
         });
       }
-
+      
       if (!result.data) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create user and workspace",
@@ -59,11 +58,11 @@ export const usersRouter = router({
   editUsername: publicProcedure
     .use(rateLimitMiddleware)
     .input(
-      z.object({ username: z.string(), guestId: z.string() })
+      z.object({ username: z.string(), editedUsername: z.string() })
     )
     .mutation(async ({ input }) => {
       let result = await tryCatch(
-        editUsername(pool, input.username, input.guestId)
+        editUsername(pool, input.username, input.editedUsername)
       );
       if (result.error != null) {
         throw new TRPCError({
@@ -114,17 +113,18 @@ export const usersRouter = router({
 
       return result.data;
     }),
-  checkGuestIdAndWorkspaces: publicProcedure
+  checkUsernameAndWorkspaces: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ guestId: z.string() }))
+    .input(z.object({ username: z.string() }))
     .query(async ({ input }) => {
       let result = await tryCatch(
-        checkGuestIdAndWorkspaces(pool, input.guestId)
+        checkUsernameAndWorkspaces(pool, input.username)
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch guest id and workspaces",
+          message: "Failed to fetch username and workspaces",
           cause: result.error,
         });
       }
@@ -177,6 +177,7 @@ export const usersRouter = router({
     .query(async ({ input }) => {
       let result = await tryCatch(getUsersInProject(pool, input.id));
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch users in project",

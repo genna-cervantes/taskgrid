@@ -21,7 +21,6 @@ import {
 // pls rewrite this omg
 const ProfilePage = () => {
   const { username } = useParams();
-  const { userId } = useUserContext();
 
   const utils = trpc.useUtils();
 
@@ -42,14 +41,14 @@ const ProfilePage = () => {
 
   const { data: workspaces, isLoading } =
     trpc.workspaces.getUserWorkspaces.useQuery(
-      { guestId: userId ?? "" },
-      { enabled: !!userId && userId != "" }
+      { username: username ?? "" },
+      { enabled: !!username }
     );
 
   // mutations
   const editUsername = trpc.users.editUsername.useMutation({
     onSuccess: () => {
-      utils.users.checkGuestIdAndWorkspaces.invalidate();
+      utils.users.checkUsernameAndWorkspaces.invalidate();
       window.location.reload();
     },
   });
@@ -67,11 +66,11 @@ const ProfilePage = () => {
   };
 
   const handleSave = () => {
-    if (!userId || !editedUsername) return;
+    if (!username || !editedUsername) return;
 
     editUsername.mutate({
-      guestId: userId,
-      username: editedUsername,
+      username: username,
+      editedUsername: editedUsername,
     });
     setEditMode(false);
   };
@@ -96,7 +95,7 @@ const ProfilePage = () => {
   }, [editMode]);
 
   const handleAddWorkspace = () => {
-    if (!userId) return;
+    if (!username) return;
 
     const newWorkspaceName = () =>
       `${uniqueNamesGenerator({
@@ -107,7 +106,7 @@ const ProfilePage = () => {
     const newWorkspaceId = nanoid(10);
 
     insertWorkspace.mutate({
-      userId: userId ?? "",
+      username: username ?? "",
       workspaceId: newWorkspaceId,
       workspaceName: newWorkspaceName(),
     });
@@ -178,7 +177,7 @@ const ProfilePage = () => {
             ) : (workspaces?.length ?? 0) > 0 ? (
               workspaces?.map((w) => (
                 <React.Fragment key={w.workspaceId}>
-                  <WorkspaceRow userId={userId ?? ""} id={w.workspaceId} name={w.name} isOwner={w.isOwner} />
+                  <WorkspaceRow username={username ?? ""} id={w.workspaceId} name={w.name} isOwner={w.isOwner} />
                 </React.Fragment>
               ))
             ) : (
@@ -199,7 +198,7 @@ const ProfilePage = () => {
   );
 };
 
-const WorkspaceRow = ({ userId, id, name, isOwner }: { userId: string, id: string; name: string, isOwner: boolean }) => {
+const WorkspaceRow = ({ username, id, name, isOwner }: { username: string, id: string; name: string, isOwner: boolean }) => {
   const utils = trpc.useUtils();
 
   const [editMode, setEditMode] = useState(false);
@@ -259,9 +258,9 @@ const WorkspaceRow = ({ userId, id, name, isOwner }: { userId: string, id: strin
     if (isOwner){
         deleteWorkspace.mutate({workspaceId: id})
     }else{
-        if (!userId) return;
+        if (!username) return;
 
-        leaveWorkspace.mutate({workspaceId: id, userId})
+        leaveWorkspace.mutate({workspaceId: id, username})
     }
   }
 

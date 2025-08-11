@@ -43,22 +43,22 @@ const AddProjectForm = ({
 
   const onSubmit = async (data: ProjectFormData) => {
     const id = uuidv4() as string;
-    if (userContext.userId === "" || workspaceId === "") return;
+    if (userContext.username === "" || workspaceId === "") return;
 
     addProject.mutate({
       id,
       name: data.name,
-      guestId: userContext.userId ?? "",
+      username: userContext.username ?? "",
       workspaceId: workspaceId ?? ""
     });
   };
 
   if (
     userContext.isLoading &&
-    userContext.userId == null &&
-    !userContext.userId
+    userContext.username == null &&
+    !userContext.username
   ) {
-    return <>Loading Guest ID...</>;
+    return <>Loading user details...</>;
   }
 
   return (

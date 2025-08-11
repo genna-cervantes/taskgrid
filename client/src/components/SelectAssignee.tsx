@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { UseFormSetValue } from "react-hook-form";
-import { TaskFormData } from "./AddTaskForm";
+import { type TaskAdd } from "./AddTaskForm";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 import { ChevronDown } from "lucide-react";
@@ -17,7 +17,7 @@ const SelectAssignee = ({
 }: {
   isPage?: boolean
   setTaskAssignedTo: React.Dispatch<React.SetStateAction<string[]>>;
-  setValue?: UseFormSetValue<TaskFormData>;
+  setValue?: UseFormSetValue<TaskAdd>;
   taskAssignedTo: string[];
   username: string;
   usersInProject: string[];
@@ -33,7 +33,7 @@ const SelectAssignee = ({
 
     setTaskAssignedTo(updated);
     if (setValue) {
-      setValue("assignedTo", updated, { shouldValidate: true });
+      setValue("assignTo", updated, { shouldValidate: true });
     }
   };
 

@@ -35,7 +35,7 @@ const TaskAddSchema = z.object({
   >
 >;
 
-type TaskAdd = z.infer<typeof TaskAddSchema>;
+export type TaskAdd = z.infer<typeof TaskAddSchema>;
 
 export const priorityLevels = ["low", "medium", "high"] as const;
 export type PriorityLevel = (typeof priorityLevels)[number];
@@ -63,7 +63,7 @@ const AddTaskForm = ({
   const actionContext = useContext(ActionContext);
   const recentTaskContext = useContext(RecentTaskContext);
 
-  const { data: taskCategoryOptionsRes } =
+  const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } =
     trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
 
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
@@ -139,6 +139,7 @@ const AddTaskForm = ({
             render={({ field, fieldState }) => (
               <TaskSelectCategory
                 taskCategoryOptions={taskCategoryOptions}
+                taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
                 setTaskCategoryOptions={setTaskCategoryOptions}
                 taskCategory={field.value}
                 setTaskCategory={field.onChange}
@@ -165,6 +166,7 @@ const AddTaskForm = ({
               <TaskAssignee
                 projectId={projectId}
                 username={username}
+                usersInProj={usersInProject ?? []}
                 taskAssignedTo={field.value ?? []}
                 setTaskAssignedTo={field.onChange}
                 error={fieldState.error?.message}

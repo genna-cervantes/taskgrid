@@ -9,9 +9,6 @@ import { priorityLevels } from "@/components/AddTaskForm";
 import { Task } from "../../../server/src/shared/types";
 import TaskAssignee from "@/components/TaskAssignee";
 import { useUserContext } from "@/contexts/UserContext";
-import TaskSelectMedia from "@/components/TaskSelectMedia";
-import TaskImageModal from "@/components/TaskImageModal";
-import TaskLink from "@/components/TaskLink";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
 import Mousetrap from "mousetrap";
 import { ActionContext } from "@/contexts/ActionContext";
@@ -23,10 +20,7 @@ import BreadCrumbs from "@/components/BreadCrumbs";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import TaskTargetStartDate from "@/components/TaskTargetStartDate";
-import TaskTargetEndDate from "@/components/TaskTargetEndDate";
 import { Loader2 } from "lucide-react";
-import QuillEditor from "@/components/QuillEditor";
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -83,24 +77,23 @@ const TaskPage = () => {
 
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
     trpc.workspaces.checkWorkspaceId.useQuery(
-      { workspaceId: workspaceId!, guestId: userContext.userId! },
-      { enabled: !!userContext.userId && !!workspaceId }
+      { workspaceId: workspaceId!},
+      { enabled: !!workspaceId }
     );
 
-  // -- should be in user context
-  const { data: username } =
-    trpc.users.getUsername.useQuery(
-      {
-        id: projectId,
-        guestId: userContext.userId!,
-      },
-      {
-        enabled: !!userContext.userId,
-      }
-    );
+  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
+      id: projectId,
+    });
+  
 
-  const { data: taskCategoryOptionsRes } =
+  const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } =
     trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
+
+  useEffect(() => {
+    if (taskCategoryOptionsRes && !taskCategoryOptionsIsLoading){
+      setTaskCategoryOptions(taskCategoryOptionsRes)
+    }
+  }, [taskCategoryOptionsRes])
 
   const { data, isLoading: taskDataIsLoading } =
     trpc.tasks.getTaskById.useQuery({
@@ -155,6 +148,7 @@ const TaskPage = () => {
   const updateTask = trpc.tasks.updateTask.useMutation({
     onSuccess: () => {
       utils.tasks.getTaskById.invalidate();
+      utils.tasks.getTaskCategoryOptions.invalidate();
       form.reset(form.getValues()); // what does this do
     },
     onError: (err) => {
@@ -183,10 +177,10 @@ const TaskPage = () => {
   const handleDeleteTask = () => {
     if (task == null) return;
 
-    recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
+    // recentTaskContext?.setTasks([task]); // keep track of this task for insertion later if undone
 
     deleteTask.mutate({ taskId: task.id });
-    navigate(`workspace/${workspaceId}/projects/${projectId}`);
+    navigate(`/workspaces/${workspaceId}/projects/${projectId}`);
 
     actionContext?.setAction("deleted");
   };
@@ -302,6 +296,7 @@ const TaskPage = () => {
                 <TaskSelectCategory
                 isPage={true}
                 taskCategoryOptions={taskCategoryOptions}
+                taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
                 setTaskCategoryOptions={setTaskCategoryOptions}
                 taskCategory={field.value}
                 setTaskCategory={field.onChange}
@@ -357,7 +352,8 @@ const TaskPage = () => {
                 <TaskAssignee
                 isPage={true}
                 projectId={projectId}
-                username={username}
+                usersInProj={usersInProject ?? []}
+                username={userContext.username ?? undefined}
                 taskAssignedTo={field.value ?? []}
                 setTaskAssignedTo={field.onChange}
                 error={fieldState.error?.message}
@@ -482,7 +478,7 @@ const TaskPage = () => {
 
               <button
                 onClick={handleDeleteTask}
-                className="bg-red-400 w-full text-white text-sm py-[0.35rem] font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
+                className="bg-red-400 w-full text-white text-sm py-[0.35rem] flex justify-center font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
                 disabled={deleteTask.isLoading || updateTask.isLoading }
               >
                 {deleteTask.isLoading || updateTask.isLoading ? <Loader2 className="animate-spin" /> : "Delete"}
@@ -494,7 +490,7 @@ const TaskPage = () => {
           <TaskDiscussionBoard
             ref={joinDiscussionRef}
             isPage={true}
-            user={username}
+            user={userContext.username ?? undefined}
             taskId={task.id}
           />
         </div>

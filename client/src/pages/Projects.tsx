@@ -2,13 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import {
   Navigate,
   Outlet,
-  useLocation,
-  useNavigate,
   useOutletContext,
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import UserNameModal from "../components/UserNameModal";
 import LinkCopiedModal from "../components/LinkCopiedModal";
 import TaskActionToast from "../components/TaskActionToast";
 import { ActionContext } from "../contexts/ActionContext";
@@ -19,7 +16,6 @@ import LoadingModal from "../components/LoadingModal";
 import { Task } from "../../../server/src/shared/types";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import Mousetrap from "mousetrap";
-import { MessageSquare } from "lucide-react";
 
 const Projects = () => {
   const { workspaceId, projectId } = useParams();
@@ -44,8 +40,8 @@ const Projects = () => {
   // check if workspace exists
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
     trpc.workspaces.checkWorkspaceId.useQuery(
-      { workspaceId: workspaceId!, guestId: userContext.userId! },
-      { enabled: !!userContext.userId && !!workspaceId }
+      { workspaceId: workspaceId!},
+      { enabled: !!workspaceId }
     );
 
   const { data: rawData, isLoading } = trpc.tasks.getTasks.useQuery(
@@ -100,15 +96,6 @@ const Projects = () => {
     ? groupTasksByColumn(data)
     : {};
 
-  const { data: username, isLoading: usernameIsLoading } =
-    trpc.users.getUsername.useQuery(
-      {
-        id: projectId!,
-        guestId: userContext.userId!,
-      },
-      { enabled: !!projectId && !!userContext.userId }
-    );
-
   const { data: projectName, isLoading: projectNameIsLoading } = trpc.projects.getProjectNameByKey.useQuery(
     {
       id: projectId!,
@@ -142,8 +129,8 @@ const Projects = () => {
   // need loading screen
   if (
     userContext.isLoading &&
-    userContext.userId == null &&
-    !userContext.userId &&
+    userContext.username == null &&
+    !userContext.username &&
     workspaceExistsIsLoading
   ) {
     console.log('return from this')
@@ -163,7 +150,6 @@ const Projects = () => {
 
   return (
     <>
-      {usernameIsLoading && <LoadingModal />}
       {linkCopiedModal && (
         <LinkCopiedModal setLinkCopiedModal={setLinkCopiedModal} />
       )}
@@ -197,7 +183,7 @@ const Projects = () => {
         </div>
 
         {Object.keys(columns).length > 0 ? (
-          <Outlet context={{ username, columns, taskCategoryOptions }} />
+          <Outlet context={{ username: userContext.username, columns, taskCategoryOptions }} />
         ) : (
           <p className="text-sm opacity-50 text-center mt-8">
             Loading your tasks...

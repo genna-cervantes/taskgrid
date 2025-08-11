@@ -56,10 +56,10 @@ const Home = () => {
   }, []);
 
   // check if workspace exists
-  const { data: workspaceName, isLoading: workspaceExistsIsLoading } = trpc.workspaces.checkWorkspaceId.useQuery({workspaceId: workspaceId!, guestId: userContext.userId ?? ""}, {enabled: !!userContext.userId && !!workspaceId})
+  const { data: workspaceName, isLoading: workspaceExistsIsLoading } = trpc.workspaces.checkWorkspaceId.useQuery({workspaceId: workspaceId!}, {enabled: !!workspaceId})
 
   const { data: projects, isLoading: projectsIsLoading } =
-    trpc.projects.getUserWorkspaceProjects.useQuery({ guestId: userContext.userId ?? "", workspaceId: workspaceId! }, {enabled: !!userContext.userId && !!workspaceId});
+    trpc.projects.getUserWorkspaceProjects.useQuery({ username: userContext.username ?? "", workspaceId: workspaceId! }, {enabled: !!userContext.username && !!workspaceId});
 
   // keyboard shortcuts
   useEffect(() => {
@@ -74,7 +74,7 @@ const Home = () => {
   }, []);
 
   // need loading screen
-  if (userContext.isLoading && userContext.userId == null && !userContext.userId) {
+  if (userContext.isLoading && userContext.username == null && !userContext.username) {
     return <>Loading Guest ID...</>;
   }
   if (workspaceExistsIsLoading && !workspaceName) {

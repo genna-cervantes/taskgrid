@@ -1,21 +1,15 @@
 import {
   Link,
-  NavLink,
   useLocation,
   useNavigate,
   useParams,
   useSearchParams,
 } from "react-router-dom";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Blocks,
-  Calendar,
   CircleUserRound,
   ExternalLink,
   FolderClosed,
   Funnel,
-  House,
   LucideProps,
   MessageSquare,
   SidebarClose,
@@ -224,8 +218,8 @@ const Sidebar = ({
     );
   const { data: userWorkspaces, isLoading: userWorkspacesIsLoading } =
     trpc.workspaces.getUserWorkspaces.useQuery(
-      { guestId: userContext.userId ?? "" },
-      { enabled: !!userContext.userId }
+      { username: userContext.username ?? "" },
+      { enabled: !!userContext.username }
     );
 
   // mutations
@@ -302,7 +296,7 @@ const Sidebar = ({
 
 
   const handleAddWorkspace = () => {
-    if (!userContext.userId) return;
+    if (!userContext.username) return;
 
     const newWorkspaceName = () =>
       `${uniqueNamesGenerator({
@@ -313,13 +307,14 @@ const Sidebar = ({
     const newWorkspaceId = nanoid(10);
     
     insertWorkspace.mutate({
-      userId: userContext.userId ?? "",
+      username: userContext.username,
       workspaceId: newWorkspaceId,
       workspaceName: newWorkspaceName(),
     });
   }
 
   const handleChangeWorkspace = (workspaceId: string) => {
+    userContext.setCurrentWorkspace(workspaceId)
     navigate(`/workspaces/${workspaceId}`);
   }
 
@@ -406,10 +401,10 @@ const Sidebar = ({
 
       {toggleSidebar && (
         <div className="transition-all duration-200 w-full">
-          <button className="h-6 w-6 mb-6 flex gap-x-3 mx-4" title="share">
+          <Link to='/' className="h-6 w-6 mb-6 flex gap-x-3 mx-4" title="share">
             <img src={kanifyLogo} />
             <p>Taskan</p>
-          </button>
+          </Link>
 
           <div className="relative flex flex-col items-start w-full">
             {/* Sliding indicator */}

@@ -72,10 +72,10 @@ const ManageProjectModal = ({
         <div className="flex flex-col gap-y-2 px-4">
           {usersInProjectIsLoading && <p>Loading users...</p>}
           {usersInProject?.map((u) => (
-            <div className="flex justify-between" key={u.guestId}>
+            <div className="flex justify-between" key={u.username}>
               <h1>{u.username}</h1>
               <button
-                onClick={() => handleKick(u.guestId)}
+                onClick={() => handleKick(u.username)}
                 className="bg-red-400 px-4 text-white text-xs md:text-sm font-semibold py-1 rounded-md cursor-pointer disabled:cursor-not-allowed"
                 disabled={kickUser.isLoading}
               >

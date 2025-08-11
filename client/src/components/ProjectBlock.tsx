@@ -36,7 +36,7 @@ const ProjectBlock = ({
 }) => {
   // check if owner
   const userContext = useUserContext();
-  const { data: ownerGuestId } = trpc.projects.getProjectOwner.useQuery({ id: p.id });
+  const { data: ownerUsername } = trpc.projects.getProjectOwner.useQuery({ id: p.id });
 
   const { data: projectStats, isLoading: projectsStatsIsLoading } =
     trpc.projects.getProjectStats.useQuery({ projectId: p.id }) as {
@@ -51,7 +51,7 @@ const ProjectBlock = ({
       isLoading: boolean;
     };
 
-  const isOwner = Boolean(ownerGuestId) && userContext?.userId === ownerGuestId;
+  const isOwner = Boolean(ownerUsername) && userContext?.username === ownerUsername;
 
   return (
     <Link

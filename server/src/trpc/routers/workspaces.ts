@@ -16,9 +16,9 @@ import { TRPCError } from "@trpc/server";
 export const workspacesRouter = router({
   getUserWorkspaces: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ guestId: z.string() }))
+    .input(z.object({ username: z.string() }))
     .query(async ({ input }) => {
-      let result = await tryCatch(getUserWorkspaces(pool, input.guestId));
+      let result = await tryCatch(getUserWorkspaces(pool, input.username));
       if (result.error != null){
         console.error(result.error)
         throw new TRPCError({
@@ -32,10 +32,10 @@ export const workspacesRouter = router({
     }),
   checkWorkspaceId: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
+    .input(z.object({ workspaceId: z.string() }))
     .query(async ({ input }) => {
       
-      let result = await tryCatch(checkWorkspaceId(pool, input.guestId, input.workspaceId))
+      let result = await tryCatch(checkWorkspaceId(pool, input.workspaceId))
       if (result.error != null){
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -50,13 +50,13 @@ export const workspacesRouter = router({
     .use(rateLimitMiddleware)
     .input(
       z.object({
-        userId: z.string(),
+        username: z.string(),
         workspaceId: z.string(),
         workspaceName: z.string(),
       })
     )
     .mutation(async ({ input }) => {
-      let result = await tryCatch(insertWorkspace(pool, input.userId, input.workspaceId, input.workspaceName));
+      let result = await tryCatch(insertWorkspace(pool, input.username, input.workspaceId, input.workspaceName));
       if (result.error != null){
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -120,9 +120,9 @@ export const workspacesRouter = router({
     }),
   leaveWorkspace: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ workspaceId: z.string(), userId: z.string()}))
+    .input(z.object({ workspaceId: z.string(), username: z.string()}))
     .mutation(async ({ input }) => {
-      let result = await tryCatch(leaveWorkspace(pool, input.workspaceId, input.userId));
+      let result = await tryCatch(leaveWorkspace(pool, input.workspaceId, input.username));
       if (result.error != null){
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

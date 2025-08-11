@@ -21,13 +21,13 @@ export const projectsRouter = router({
       z.object({
         id: z.string(),
         name: z.string(),
-        guestId: z.string(),
+        username: z.string(),
         workspaceId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
       let result = await tryCatch(
-        addProject(pool, input.id, input.name, input.guestId, input.workspaceId)
+        addProject(pool, input.id, input.name, input.username, input.workspaceId)
       );
       if (result.error != null) {
         throw new TRPCError({
@@ -52,6 +52,7 @@ export const projectsRouter = router({
     .query(async ({ input }) => {
       let result = await tryCatch(getProjectOwner(pool, input.id));
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch project owner",
@@ -139,15 +140,16 @@ export const projectsRouter = router({
     }),
   getUserWorkspaceProjects: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ guestId: z.string(), workspaceId: z.string() }))
+    .input(z.object({ username: z.string(), workspaceId: z.string() }))
     .query(async ({ input }) => {
       let result = await tryCatch(
-        getUserWorkspaceProjects(pool, input.guestId, input.workspaceId)
+        getUserWorkspaceProjects(pool, input.username, input.workspaceId)
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch project",
+          message: "Failed to fetch workspace projects",
           cause: result.error,
         });
       }

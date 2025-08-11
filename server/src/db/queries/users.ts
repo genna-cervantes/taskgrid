@@ -4,11 +4,10 @@ import { Pool } from "pg";
 export const insertUserWithWorkspace = async (
   pool: Pool,
   username: string,
-  guestId: string,
   workspaceId: string,
   workspaceName: string
 ) => {
-  if (!guestId || !workspaceId || !workspaceName)
+  if (!workspaceId || !workspaceName)
     throw new Error("Bad request missing required fields");
 
   const client = await pool.connect();
@@ -17,29 +16,32 @@ export const insertUserWithWorkspace = async (
     await client.query("BEGIN");
 
     const insertUserQuery = `
-      INSERT INTO users (username, guest_id)
-      VALUES ($1, $2)
-      RETURNING guest_id AS "userId";
+      INSERT INTO users (username)
+      VALUES ($1)
+      RETURNING id AS "userId";
     `;
-    const userRes = await client.query(insertUserQuery, [username, guestId]);
+    const userRes = await client.query(insertUserQuery, [username]);
 
+    const userId = userRes.rows[0]?.userId; // fallback if not auto ID
+    
+    if (!userId) throw new Error("User does not exist");
+    
     const insertWorkspaceQuery = `
       INSERT INTO workspaces (workspace_id, name, user_id)
       VALUES ($1, $2, $3);
     `;
-    const userId = userRes.rows[0].guest_id || guestId; // fallback if not auto ID
     const workspaceRes = await client.query(insertWorkspaceQuery, [
       workspaceId,
       workspaceName,
       userId,
     ]);
 
-    const insertUserWorkspaceLinkQuery = `INSERT INTO workspace_members (workspace_id, guest_id) VALUES ($1, $2);`;
+    const insertUserWorkspaceLinkQuery = `INSERT INTO workspace_members (workspace_id, user_id) VALUES ($1, $2);`;
     const userWorkspaceRes = await client.query(insertUserWorkspaceLinkQuery, [workspaceId, userId]);
 
     await client.query("COMMIT");
 
-    return userWorkspaceRes.rowCount === 1 && userWorkspaceRes.rowCount === workspaceRes.rowCount && workspaceRes.rowCount === userRes.rowCount ? {userId: userRes.rows[0].userId, workspaceId} : false;
+    return userWorkspaceRes.rowCount === 1 && userWorkspaceRes.rowCount === workspaceRes.rowCount && workspaceRes.rowCount === userRes.rowCount ? {username: username, workspaceId} : false;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;
@@ -51,13 +53,13 @@ export const insertUserWithWorkspace = async (
 export const editUsername = async (
   pool: Pool,
   username: string,
-  guestId: string
+  editedUsername: string
 ) => {
-  if (!guestId || !username) throw new Error("Bad request missing required fields");
+  if (!editedUsername || !username) throw new Error("Bad request missing required fields");
 
   const query =
-    "UPDATE users SET username = $1 WHERE guest_id = $2 AND is_active = TRUE;";
-  const res = await pool.query(query, [username, guestId]);
+    "UPDATE users SET username = $1 WHERE username = $2 AND is_active = TRUE;";
+  const res = await pool.query(query, [editedUsername, username]);
 
   return (res.rowCount ?? 0) === 1 ? true : false;
 };
@@ -81,11 +83,11 @@ export const checkUsername = async (pool: Pool, username: string): Promise<numbe
   return Number(res.rows[0].count ?? 0);
 }
 
-export const checkGuestIdAndWorkspaces = async (
+export const checkUsernameAndWorkspaces = async (
   pool: Pool,
-  guestId: string
+  username: string
 ) => {
-  if (!guestId) throw new Error("Bad request missing required fields");
+  if (!username) throw new Error("Bad request missing required fields");
 
   const client = await pool.connect();
 
@@ -93,21 +95,28 @@ export const checkGuestIdAndWorkspaces = async (
     await client.query("BEGIN");
 
     const checkUserQuery =
-      "SELECT COUNT(*) FROM users WHERE guest_id = $1 AND is_active = TRUE;";
-    const userRes = await client.query(checkUserQuery, [guestId]);
-    
-    const getUsernameQuery = 'SELECT username FROM users WHERE guest_id = $1 AND is_active = TRUE LIMIT 1;';
-    const usernameRes = await client.query(getUsernameQuery, [guestId]);
+      `SELECT id AS "userId" FROM users WHERE username = $1 AND is_active = TRUE LIMIT 1;`;
+    const userRes = await client.query(checkUserQuery, [username]);
+
+    const userId = userRes.rows[0]?.userId;
+
+    if (!userId){
+      return {
+        userExists: false,
+        workspaces: [],
+        username
+      };
+    }
 
     const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE ORDER BY last_accessed DESC;`;
-    const workspaceRes = await client.query(getWorkspacesQuery, [guestId]);
+    const workspaceRes = await client.query(getWorkspacesQuery, [userId]);
 
     await client.query("COMMIT");
 
     return {
-      userExists: parseInt(userRes.rows[0].count) === 1,
+      userExists: !!userId,
       workspaces: workspaceRes.rows.map((w) => w.workspace_id as string),
-      username: usernameRes.rows[0].username
+      username
     };
   } catch (err) {
     await client.query("ROLLBACK");
@@ -147,7 +156,11 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
   const query =
-    "SELECT username, guest_id AS guestId FROM user_project_link WHERE project_id = $1 AND is_active = TRUE;";
+    `SELECT username 
+    FROM users AS u
+    LEFT JOIN project_members AS pm
+    ON u.id = pm.user_id
+    WHERE project_id = $1 AND pm.is_active = TRUE AND u.is_active = TRUE;`;
   const res = await pool.query(query, [id]);
 
   if (res.rowCount === 0) {
@@ -156,8 +169,7 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
 
   let users = res.rows.map((r) => {
     return {
-      username: r.username,
-      guestId: r.guestid,
+      username: r.username
     };
   });
 
@@ -169,7 +181,11 @@ export const getUsernamesInProject = async (pool: Pool, id: string) => {
 
   // SELECT USER ID JOIN WITH USERS TO GET USERNAME
   const query =
-    "SELECT username FROM user_project_link WHERE project_id = $1 AND is_active = TRUE";
+    `SELECT username 
+    FROM users AS u
+    LEFT JOIN project_members AS pm
+    ON u.id = pm.user_id 
+    WHERE pm.project_id = $1 AND pm.is_active = TRUE AND u.is_active = TRUE`;
   const res = await pool.query(query, [id]);
 
   if (res.rowCount === 0) {
