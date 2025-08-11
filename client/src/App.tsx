@@ -9,8 +9,8 @@ import Project from "./pages/Project";
 import TaskLayout from "./pages/TaskLayout";
 import TaskPage from "./pages/TaskPage";
 import WorkspaceRedirector from "./redirectors/WorkspaceRedirector";
-import ProfileRedictor from "./redirectors/ProfileRedictor";
 import ProfilePage from "./pages/ProfilePage";
+import Login from "./pages/Login";
 
 const App = () => {
 
@@ -22,6 +22,9 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<WorkspaceRedirector />} />
+
+            {/* auth */}
+            <Route path="login" element={<Login />} />
 
             {/* defaults */}
             <Route path="workspaces" element={<WorkspaceRedirector />} />
@@ -39,8 +42,7 @@ const App = () => {
             </Route>
 
             {/* profile */}
-            <Route path="profile" element={<ProfileRedictor />} />
-            <Route path="profile/:username" element={<ProfilePage />} />
+            <Route path="profile" element={<ProfilePage />} />
 
             <Route path="contact" element={<Contact />} />
             <Route path="*" element={<NoPage />} />

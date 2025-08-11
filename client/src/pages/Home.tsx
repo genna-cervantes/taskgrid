@@ -18,8 +18,9 @@ const Home = () => {
   
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const { setToggleSidebar } = useOutletContext<{
+  const { setToggleSidebar, setToggleAIChat } = useOutletContext<{
       setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+      setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
     }>();
 
   const [editProject, setEditProject] = useState({

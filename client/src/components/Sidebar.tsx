@@ -73,7 +73,7 @@ const Sidebar = ({
       func: function () {
         // setActiveIndex(0)
         setActiveIndex(1);
-        navigate(`/profile/${userContext.username}`)
+        navigate(`/profile`)
         // setToggleSidebar(())
       },
     },

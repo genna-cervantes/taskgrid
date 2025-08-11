@@ -12,6 +12,9 @@ const Layout = () => {
       <div className="ml-[0.35rem] bg-faintBlack mr-3 my-3 rounded-md px-4 py-3 flex flex-col overflow-x-hidden w-full">
         <Outlet context={{ setToggleSidebar }} />
       </div>
+      {/* <div className="w-[390px]">
+
+      </div> */}
     </main>
   );
 };

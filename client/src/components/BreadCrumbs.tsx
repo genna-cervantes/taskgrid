@@ -1,7 +1,7 @@
 import { trpc } from "@/utils/trpc";
 import { Pen } from "lucide-react";
 import React, { useRef, useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useOutletContext, useParams } from "react-router-dom";
 
 const BreadCrumbs = ({
   crumbs,

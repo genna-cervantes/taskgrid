@@ -15,12 +15,14 @@ export const insertUserWithWorkspace = async (
   try {
     await client.query("BEGIN");
 
+    const email = `${username}@guest.local`
+
     const insertUserQuery = `
-      INSERT INTO users (username)
-      VALUES ($1)
+      INSERT INTO users (username, email, is_guest)
+      VALUES ($1, $2, $3)
       RETURNING id AS "userId";
     `;
-    const userRes = await client.query(insertUserQuery, [username]);
+    const userRes = await client.query(insertUserQuery, [username, email, true]);
 
     const userId = userRes.rows[0]?.userId; // fallback if not auto ID
     
@@ -95,26 +97,29 @@ export const checkUsernameAndWorkspaces = async (
     await client.query("BEGIN");
 
     const checkUserQuery =
-      `SELECT id AS "userId" FROM users WHERE username = $1 AND is_active = TRUE LIMIT 1;`;
+      `SELECT id AS "userId", is_guest AS "isGuest" FROM users WHERE username = $1 AND is_active = TRUE LIMIT 1;`;
     const userRes = await client.query(checkUserQuery, [username]);
 
     const userId = userRes.rows[0]?.userId;
+    const isGuest: boolean = userRes.rows[0]?.isGuest ?? true;
 
     if (!userId){
       return {
         userExists: false,
+        isGuest: false,
         workspaces: [],
         username
       };
     }
-
+    
     const getWorkspacesQuery = `SELECT workspace_id FROM workspaces WHERE user_id = $1 AND is_active = TRUE ORDER BY last_accessed DESC;`;
     const workspaceRes = await client.query(getWorkspacesQuery, [userId]);
 
     await client.query("COMMIT");
-
+    
     return {
       userExists: !!userId,
+      isGuest: isGuest,
       workspaces: workspaceRes.rows.map((w) => w.workspace_id as string),
       username
     };
