@@ -6,6 +6,7 @@ import {
   Task,
 } from "../../shared/types.js";
 import { toSnakeCase } from "../../lib/utils.js";
+import {OpenAi } from "../../lib/openai.js"
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
@@ -83,19 +84,6 @@ export const getTaskById = async (
   return tasksWithComments as Task;
 };
 
-// {
-//     title: string;
-//     description?: string | undefined;
-//     priority: "low" | "medium" | "high";
-//     assignTo: string[];
-//     progress: string;
-//     link?: string | undefined;
-//     category?: string | undefined;
-//     files: string[];
-//     targetStartDate?: Date | undefined;
-//     targetEndDate?: Date | undefined;
-// }
-
 export const insertTask = async (
   pool: Pool,
   task: InsertableTask,
@@ -103,27 +91,53 @@ export const insertTask = async (
 ) => {
   if (!id || !task) throw new Error("Bad request missing required fields");
 
-  const query =
-    "INSERT INTO tasks (project_id, title, description, priority, assign_to, progress, link, category, files, target_start_date, target_end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;";
-  const res = await pool.query(query, [
-    id,
-    task.title,
-    task.description,
-    task.priority,
-    task.assignTo,
-    task.progress,
-    task.link ?? undefined,
-    task.category ?? undefined,
-    task.files ?? [],
-    task.targetStartDate ?? undefined,
-    task.targetEndDate ?? undefined
-  ]);
+  const client = await pool.connect();
 
-  let taskId: string = res.rows[0].id.toString();
+  try {
+    await client.query("BEGIN");
 
-  if (!taskId) throw new Error("Bad request query retuned no id");
+    const query =
+      "INSERT INTO tasks (project_id, title, description, priority, assign_to, progress, link, category, files, target_start_date, target_end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;";
+    const res = await pool.query(query, [
+      id,
+      task.title,
+      task.description,
+      task.priority,
+      task.assignTo,
+      task.progress,
+      task.link ?? undefined,
+      task.category ?? undefined,
+      task.files ?? [],
+      task.targetStartDate ?? undefined,
+      task.targetEndDate ?? undefined
+    ]);
+  
+    let taskId: string = res.rows[0].id.toString();
+    
+    if (!taskId) throw new Error("Bad request query retuned no id");
 
-  return taskId;
+    // process embedding
+    const embedResult = await OpenAi.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: JSON.stringify(task)
+    })
+    const embedding = embedResult.data[0].embedding;
+    const vectorString = `[${embedding.join(',')}]`;
+
+    const embeddingQuery = 'UPDATE tasks SET embedding = $1 WHERE id = $2 AND is_active = TRUE;';
+    const embeddingRes = await pool.query(embeddingQuery, [vectorString, taskId]);
+
+    if ((embeddingRes?.rowCount ?? 0) !== 1) throw new Error("Error creating task unable to insert embedding")
+    
+    await client.query("COMMIT");
+    return taskId;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+
 };
 
 export const updateTaskProgress = async (
@@ -444,6 +458,36 @@ export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
   }[];
 };
 
+export const addTaskCategoryOptions = async (pool: Pool, projectId: string, taskCategoryOption: {category: string, color: string}) => {
+  if (!projectId) throw new Error("Bad request missing required fields")
+
+    const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+    
+    // 
+    const query = "UPDATE projects SET task_category_options = COALESCE(task_category_options, '[]'::jsonb) || $1 WHERE id = $2 AND is_active = TRUE;";
+    const res = await pool.query(query, [JSON.stringify([taskCategoryOption]), projectId]);
+
+    console.log(JSON.stringify([taskCategoryOption]))
+
+    await client.query("COMMIT");
+  
+    if (res?.rowCount === 1){
+      return taskCategoryOption
+    }
+  
+    return false;
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+
+}
+
 export const updateTaskCategoryOptions = async (
   pool: Pool,
   projectId: string,
@@ -604,4 +648,20 @@ export const updateTask = async (pool: Pool, taskId: string, updates: Partial<Ta
   const res = await pool.query(query, [...changedValues, taskId]);
 
   return (res.rowCount ?? 0) === 1 ? true : false;
+}
+
+export const getSimilarTasks = async (pool: Pool, projectId: string, embedding: string): Promise<{
+  title: string, 
+  description: string|undefined,
+  priority: "low"|"medium"|"high",
+  assign_to: string[]
+}|null> => {
+  if (!projectId || !embedding) throw new Error("Bad request missing required fields")
+
+  const query = `SELECT title, description, priority, assign_to, 1 - (embedding <=> $2) AS cosine_similarity
+    FROM tasks WHERE project_id = $1 AND (1 - (embedding <=> $2)) >= 0.84 AND is_active = TRUE ORDER BY embedding <=> $2 LIMIT 1;`
+
+  const res = await pool.query(query, [projectId, embedding]);
+  
+  return res?.rows[0] ?? null
 }

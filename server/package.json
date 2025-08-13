@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node --max-old-space-size=2048 ./node_modules/typescript/bin/tsc",
-    "dev": "nodemon --exec node --loader ts-node/esm src/index.ts"
+    "dev": "nodemon --exec node --trace-warnings --loader ts-node/esm src/index.ts"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +25,7 @@
     "kysely": "^0.28.5",
     "nanoid": "^5.1.5",
     "nodemon": "^3.1.9",
+    "openai": "^5.12.2",
     "pg": "^8.15.6",
     "superjson": "^2.2.1",
     "typescript": "^5.7.3",

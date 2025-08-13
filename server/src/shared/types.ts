@@ -29,6 +29,19 @@ export const TaskSchema = z.object({
   index: z.number()
 });
 
+export const AddTaskSchema = z.object({
+  title: z.string(),
+  description: z.string().optional().nullable(),
+  priority: z.enum(["low", "medium", "high"]),
+  assignTo: z.array(z.string()),
+  progress: z.string(),
+  category: z.string().optional().nullable(), // has to be nullable unfortunately cause ai sdk sort of forces JSON just post process after
+  dependsOn: z.array(z.object({id: z.string(), title: z.string()})),
+  subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()}))
+})
+
+export type AddTask = z.infer<typeof AddTaskSchema>;
+
 export const CommentSchema = z.object({
   commentId: z.string(),
   comment: z.string(),

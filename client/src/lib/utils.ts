@@ -12,12 +12,3 @@ export const pickRandomColor = (taskCategoryOptions: {color: string, category: s
 
   return availColors[Math.floor(Math.random() * availColors.length)]
 }
-
-export const taskCategoryOptionsAreEqual = (a: any, b: any) => {
-  if (a == null && b == null) return false;
-  if (a?.length ?? 0 !== b?.length ?? 0) return false;
-  return a.every((item: any, idx: any) => 
-    item.category === b[idx].category && item.color === b[idx].color
-  );
-};
-
