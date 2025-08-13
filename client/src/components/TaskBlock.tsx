@@ -88,7 +88,7 @@ const TaskBlock = ({
             navigate(`tasks/${task.id}`)
           }
         }}
-        className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-[#1A1A1A] bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
+        className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-inherit bg-lmLightBackground rounded-md dark:border-faintWhite cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
         <h1 className="text-xs line-clamp-2 font-jetbrains" title={task.title}>
           <span className="font-semibold text-midWhite">

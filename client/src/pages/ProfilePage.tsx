@@ -120,12 +120,17 @@ const ProfilePage = () => {
     });
   };
 
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    await signOut();
+
     userContext.setUsername(null);
     userContext.setCurrentWorkspace(null);
     userContext.setIsGuest(true);
+    userContext.setIsLoading(true);
+    userContext.setHasInitialized(false);
+  
     navigate("/workspaces");
+    window.location.reload();
   };
 
   // keyboard shortcuts
@@ -140,7 +145,7 @@ const ProfilePage = () => {
     };
   }, []);
 
-  console.log(userContext)
+  console.log(userContext);
 
   if (!userContext.username && !userContext.isLoading) {
     // so they get assigned a username if user doesnt exist
@@ -176,20 +181,19 @@ const ProfilePage = () => {
             )}
           </div>
           {userContext.isGuest ? (
-            <div className="flex gap-x-2 items-center">
-              <Link
-                to="/login"
-                className="bg-purple-300 px-2 py-1 rounded-md text-backgroundDark text-sm font-semibold "
-              >
-                Log In
-              </Link>
+            <div className="flex gap-x-2 items-center">  
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-5 text-midWhite" />
+                    <Link
+                      to="/login"
+                      className="bg-purple-300 px-2 py-1 rounded-md text-backgroundDark text-sm font-semibold "
+                    >
+                      Log In
+                    </Link>
                   </TooltipTrigger>
                   <TooltipContent className="bg-backgroundDark text-fadedWhite">
-                    <p>Add to library</p>
+                    <p>more perks ahead!</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -224,12 +228,34 @@ const ProfilePage = () => {
             )}
           </div>
           <div className="w-full flex justify-center mt-6">
-            <button
-              onClick={handleAddWorkspace}
-              className="px-4 py-2 rounded-md bg-green-300 text-backgroundDark font-semibold text-xs"
-            >
-              Add Workspace
-            </button>
+            {userContext.isGuest ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleAddWorkspace}
+                      className="px-4 py-2 rounded-md bg-green-300 text-backgroundDark font-semibold text-xs disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                      disabled={
+                        userContext.isGuest && (workspaces?.length ?? 0) >= 1
+                      }
+                    >
+                      Add Workspace
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-backgroundDark text-fadedWhite mb-1">
+                    <p>Guests get 1 workspace only</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <button
+                onClick={handleAddWorkspace}
+                className="px-4 py-2 rounded-md bg-green-300 text-backgroundDark font-semibold text-xs"
+                disabled={userContext.isGuest && (workspaces?.length ?? 0) >= 2}
+              >
+                Add Workspace
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -24,21 +24,30 @@ import MultiSelect from "./MultiSelect";
 import { priorityLevels } from "./AddTaskForm";
 import { trpc } from "@/utils/trpc";
 import { useUserContext } from "@/contexts/UserContext";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger
-} from "./ui/select";
-import { uniqueNamesGenerator, adjectives, animals } from 'unique-names-generator';
+  uniqueNamesGenerator,
+  adjectives,
+  animals,
+} from "unique-names-generator";
 import { nanoid } from "nanoid";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 const Sidebar = ({
   toggleSidebar,
+  toggleAIChat,
   setToggleSidebar,
+  setToggleAIChat,
 }: {
   toggleSidebar: boolean;
+  toggleAIChat: boolean;
   setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+  setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>
 }) => {
   const { workspaceId, projectId } = useParams();
   const navigate = useNavigate();
@@ -61,7 +70,7 @@ const Sidebar = ({
       name: "Workspaces",
       func: function () {
         // setActiveIndex(0)
-        navigate(`/workspaces/${workspaceId}`)
+        navigate(`/workspaces/${workspaceId}`);
         setActiveIndex(0);
         if (!toggleSidebar) setToggleSidebar((prev) => !prev);
       },
@@ -73,7 +82,7 @@ const Sidebar = ({
       func: function () {
         // setActiveIndex(0)
         setActiveIndex(1);
-        navigate(`/profile`)
+        navigate(`/profile`);
         // setToggleSidebar(())
       },
     },
@@ -104,16 +113,16 @@ const Sidebar = ({
       name: "Filter",
       func: function () {
         setActiveIndex(1);
-        if (!toggleSidebar) setToggleSidebar(true)
+        if (!toggleSidebar) setToggleSidebar(true);
       },
     },
     {
       parent: "projects",
       icon: MessageSquare,
-      name: "KanifyAI",
+      name: "Taskan AI",
       func: function () {
-        setActiveIndex(3);
-        navigate(`/ai/${projectId}`);
+        setActiveIndex(2);
+        setToggleAIChat((prev) => !prev); 
       },
     },
     // {
@@ -144,21 +153,27 @@ const Sidebar = ({
   const [searchParams, setSearchParams] = useSearchParams();
 
   // default set to location // if may serach params
-  const view = isInProject ? searchParams.get("view") ?? "kanban" : path.split('/')[1];
+  const view = isInProject
+    ? searchParams.get("view") ?? "kanban"
+    : path.split("/")[1];
 
   useEffect(() => {
-    setActiveIndex(navItems.findIndex((n) =>
-      // isInProject
-        n.name.toLowerCase() === view.toLowerCase()
+    setActiveIndex(
+      navItems.findIndex(
+        (n) =>
+          // isInProject
+          n.name.toLowerCase() === view.toLowerCase()
         // : n.name.toLowerCase() === parent
-    ))
-  }, [path])
+      )
+    );
+  }, [path]);
 
   const [activeIndex, setActiveIndex] = useState(
-    navItems.findIndex((n) =>
-      // isInProject
+    navItems.findIndex(
+      (n) =>
+        // isInProject
         n.name.toLowerCase() === view.toLowerCase()
-        // : n.name.toLowerCase() === parent
+      // : n.name.toLowerCase() === parent
     )
   );
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -227,9 +242,9 @@ const Sidebar = ({
     onSuccess: (data) => {
       // update user context
 
-      utils.workspaces.getUserWorkspaces.invalidate()
+      utils.workspaces.getUserWorkspaces.invalidate();
       navigate(`/workspaces/${data.workspaceId}`);
-    }
+    },
   });
 
   useEffect(() => {
@@ -294,29 +309,28 @@ const Sidebar = ({
     item.func();
   };
 
-
   const handleAddWorkspace = () => {
     if (!userContext.username) return;
 
     const newWorkspaceName = () =>
       `${uniqueNamesGenerator({
         dictionaries: [adjectives, animals],
-        separator: '-',
-        style: 'lowerCase',
+        separator: "-",
+        style: "lowerCase",
       })}-workspace`;
     const newWorkspaceId = nanoid(10);
-    
+
     insertWorkspace.mutate({
       username: userContext.username,
       workspaceId: newWorkspaceId,
       workspaceName: newWorkspaceName(),
     });
-  }
+  };
 
   const handleChangeWorkspace = (workspaceId: string) => {
-    userContext.setCurrentWorkspace(workspaceId)
+    userContext.setCurrentWorkspace(workspaceId);
     navigate(`/workspaces/${workspaceId}`);
-  }
+  };
 
   useEffect(() => {
     Mousetrap.bind("esc", function (e) {
@@ -401,10 +415,10 @@ const Sidebar = ({
 
       {toggleSidebar && (
         <div className="transition-all duration-200 w-full">
-          <Link to='/' className="h-6 w-6 mb-6 flex gap-x-3 mx-4" title="share">
+          <button onClick={() => navigate("/")} className="h-6 w-6 mb-6 flex gap-x-3 mx-4 hover:cursor-pointer" title="home">
             <img src={kanifyLogo} />
-            <p>Taskan</p>
-          </Link>
+            <p className="font-bold">Taskan</p>
+          </button>
 
           <div className="relative flex flex-col items-start w-full">
             {/* Sliding indicator */}
@@ -440,13 +454,17 @@ const Sidebar = ({
                       <div className="flex items-center gap-x-2">
                         <Icon
                           className={`h-4 w-4 transition-colors duration-300 group-hover/nav:text-white ${
-                            activeIndex === index ? "text-white" : "text-midWhite"
+                            activeIndex === index
+                              ? "text-white"
+                              : "text-midWhite"
                           }`}
                           strokeWidth={3}
                         />
                         <p
                           className={`text-xs pt-[2px] group-hover/nav:text-white ${
-                            activeIndex === index ? "text-white" : "text-midWhite"
+                            activeIndex === index
+                              ? "text-white"
+                              : "text-midWhite"
                           }`}
                         >
                           {item.name}
@@ -545,17 +563,43 @@ const Sidebar = ({
                                 Choose a workspace
                               </SelectTrigger>
                               <SelectContent className="flex px-1 flex-col w-[var(--radix-select-trigger-width)] gap-y-1 overflow-y-scroll max-h-60 super-thin-scrollbar py-2 dark:bg-[#1A1A1A] font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none">
-                              {/* userWorkspacesIsLoading */}
-                                {userWorkspacesIsLoading ? <p>Loading...</p> : userWorkspaces?.map((w) => (
-                                  <SelectItem
-                                    key={w.workspaceId}
-                                    value={w.workspaceId}
-                                    className={`hover:bg-light w-full hover:cursor-pointer px-1 ${workspaceId === w.workspaceId ? "bg-light" : ""}`}
-                                  >
-                                    {w.name}
-                                  </SelectItem>
-                                ))}
-                                <button onClick={handleAddWorkspace} className="px-1 py-2 hover:bg-light rounded-md w-full mt-3">+ Add Workspace</button>
+                                {/* userWorkspacesIsLoading */}
+                                {userWorkspacesIsLoading ? (
+                                  <p>Loading...</p>
+                                ) : (
+                                  userWorkspaces?.map((w) => (
+                                    <SelectItem
+                                      key={w.workspaceId}
+                                      value={w.workspaceId}
+                                      className={`hover:bg-light w-full hover:cursor-pointer px-1 ${
+                                        workspaceId === w.workspaceId
+                                          ? "bg-light"
+                                          : ""
+                                      }`}
+                                    >
+                                      {w.name}
+                                    </SelectItem>
+                                  ))
+                                )}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={handleAddWorkspace}
+                                        disabled={
+                                          userContext.isGuest &&
+                                          (userWorkspaces?.length ?? 0) >= 1
+                                        }
+                                        className="px-1 py-2 hover:bg-light rounded-md w-full mt-3 disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        + Add Workspace
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-backgroundDark text-fadedWhite mb-1">
+                                      <p>Guests get 1 workspace only</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </SelectContent>
                             </Select>
                           </div>

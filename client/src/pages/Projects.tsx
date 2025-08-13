@@ -23,8 +23,9 @@ const Projects = () => {
   const userContext = useUserContext();
   const actionContext = useContext(ActionContext);
 
-  const { setToggleSidebar } = useOutletContext<{
+  const { setToggleSidebar, setToggleAIChat } = useOutletContext<{
     setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+    setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
   }>();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -121,6 +122,11 @@ const Projects = () => {
       setToggleSidebar((prev) => !prev);
     });
 
+    Mousetrap.bind("ctrl+alt+b", function (e) {
+      e.preventDefault();
+      setToggleAIChat((prev) => !prev);
+    });
+
     return () => {
       Mousetrap.unbind("ctrl+b");
     };
@@ -176,7 +182,7 @@ const Projects = () => {
               },
             ]}
           />
-          <button className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
+          <button onClick={() => setToggleAIChat(true)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
             {/* <MessageSquare /> */}
             Try TaskanAI
           </button>

@@ -7,6 +7,7 @@ import { appRouter } from "../trpc/router.js";
 import { createContext } from "../trpc/trpc.js";
 import { auth } from "../lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
+import { chatRouter } from "../trpc/routers/chat.js";
 
 dotenv.config();
 
@@ -44,6 +45,8 @@ app.use(
     createContext,
   })
 );
+
+app.use("/ai-chat", chatRouter)
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 app.listen(PORT, "0.0.0.0", () => {

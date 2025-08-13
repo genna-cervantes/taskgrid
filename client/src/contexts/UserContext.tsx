@@ -22,6 +22,8 @@ type UserContextType = {
   setCurrentWorkspace: React.Dispatch<React.SetStateAction<string | null>>;
   isGuest: boolean;
   setIsGuest: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasInitialized: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -193,7 +195,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
   return (
     <UserContext.Provider
-      value={{ username, setUsername, currentWorkspace, setCurrentWorkspace, isLoading, isGuest, setIsGuest }}
+      value={{ username, setUsername, currentWorkspace, setCurrentWorkspace, isLoading, setHasInitialized, setIsLoading, isGuest, setIsGuest }}
     >
       {children}
     </UserContext.Provider>
