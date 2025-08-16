@@ -23,7 +23,8 @@ const Projects = () => {
   const userContext = useUserContext();
   const actionContext = useContext(ActionContext);
 
-  const { setToggleSidebar, setToggleAIChat } = useOutletContext<{
+  const { setToggleSidebar, setToggleAIChat, toggleAIChat } = useOutletContext<{
+    toggleAIChat: boolean;
     setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
     setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
   }>();
@@ -167,7 +168,7 @@ const Projects = () => {
         />
       )} */}
 
-      <div className="h-full flex flex-col w-full">
+      <div className="h-full flex flex-col w-full super-thin-scrollbar">
         {/* bread crumbs */}
         <div className="w-full flex justify-between">
           <BreadCrumbs
@@ -182,9 +183,9 @@ const Projects = () => {
               },
             ]}
           />
-          <button onClick={() => setToggleAIChat(true)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
+          <button onClick={() => setToggleAIChat((prev) => !prev)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
             {/* <MessageSquare /> */}
-            Try TaskanAI
+            {toggleAIChat ? 'Close AI Assistant' : 'Try TasKan AI Assistant'}
           </button>
         </div>
 

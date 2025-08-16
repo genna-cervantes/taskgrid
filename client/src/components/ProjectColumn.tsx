@@ -138,7 +138,7 @@ const ProjectColumn = ({
   return (
     <div
       key={col}
-      className="flex-1 py-3 text-white/90 rounded-md group/column "
+      className="flex-1 text-white/90 rounded-md group/column "
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2">

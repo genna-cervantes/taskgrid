@@ -28,7 +28,7 @@ export const chatRouter = express.Router();
 // enhance prompt as well
 const inferRequest = async ({ prompt }: { prompt: string }) => {
   const result = await generateObject({
-    model: openai("gpt-4o-mini"),
+    model: openai("gpt-4o"),
     prompt,
     system: INFER_REQUEST_SYSTEM_PROMPT,
     schemaName: "requestType",
@@ -114,7 +114,8 @@ chatRouter.post("/", async (req, res) => {
 
   let tomsg = ''
   if (inference.type === "GENERATE_TASK") {
-    
+    console.log('generating')
+
     // add necessary context
     messages.push(...(await Promise.all([getCategoryOptionsMessage(projectId), getAssignableUsersMessage(projectId), getPreviousTasksMessage(projectId)])))
     

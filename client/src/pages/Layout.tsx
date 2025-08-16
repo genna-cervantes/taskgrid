@@ -4,10 +4,15 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Info } from "lucide-react";
 import { trpc } from "@/utils/trpc";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const Layout = () => {
   const { projectId } = useParams();
-  const utils = trpc.useUtils()
+  const utils = trpc.useUtils();
 
   const [toggleSidebar, setToggleSidebar] = useState<boolean>(false);
   const [toggleAIChat, setToggleAIChat] = useState<boolean>(false);
@@ -38,7 +43,7 @@ const Layout = () => {
 
     const message = await res.json();
     setMessages((prev) => [...prev, message.message]);
-    utils.tasks.getTasks.invalidate()
+    utils.tasks.getTasks.invalidate();
   };
 
   return (
@@ -49,49 +54,64 @@ const Layout = () => {
         toggleAIChat={toggleAIChat}
         setToggleAIChat={setToggleAIChat}
       />
-      <div className="ml-[0.35rem] bg-faintBlack mr-3 my-3 rounded-md px-4 py-3 flex flex-col overflow-x-hidden w-full">
-        <Outlet context={{ setToggleSidebar, setToggleAIChat }} />
-      </div>
-      {toggleAIChat && (
-        <div
-          className={`transition-all h-full duration-200 pt-4 pb-4 flex flex-col justify-between mr-3 ${
-            !toggleAIChat ? "top-0 w-[5rem]" : "top-0 w-[22rem]"
-          }`}
-        >
-          <div className="w-full">
-            {messages.map((m) => {
-              return m.role === "ai" ? (
-                <span className="text-xs flex text-fadedWhite max-w-[80%] px-2 py-2 mb-3 bg-faintBlack rounded-md">
-                  {String(m.content)}
-                </span>
-              ) : (
-                <div className="flex justify-end w-full">
-                  <span className="text-xs text-fadedWhite max-w-[80%] px-2 py-2 mb-3 text-right bg-faintBlack rounded-md">
-                    {m.content}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="flex flex-col gap-y-1">
-            <span className="flex items-center text-midWhite">
-              <Info className="h-3" />
-              <p className="text-xxs italic">click enter to send prompt</p>
-            </span>
-            <Textarea
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  sendPrompt();
-                }
-              }}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Type your message here."
-              className="super-thin-scrollbar focus:ring-0 active:border-none active:ring-0 active:outline-none focus:border-none focus:outline-none bg-faintBlack !border-none text-sm text-fadedWhite placeholder:text-sm placeholder:text-faintWhite"
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="w-full h-full py-3 pl-1 pr-3"
+      >
+        <ResizablePanel defaultSize={toggleAIChat ? 80 : 100} className="min-w-[60%]">
+          <div className="h-full bg-faintBlack rounded-md px-4 py-3 flex flex-col overflow-x-hidden w-full">
+            <Outlet
+              context={{ setToggleSidebar, setToggleAIChat, toggleAIChat }}
             />
           </div>
-        </div>
-      )}
+        </ResizablePanel>
+        {toggleAIChat && <ResizableHandle className="mx-1" withHandle />}
+        {toggleAIChat && (
+          <ResizablePanel defaultSize={20} className="min-w-80">
+            <div
+              className={`transition-all w-full pr-2 h-full duration-200 pt-4 flex flex-col justify-between ${
+                !toggleAIChat ? "top-0 w-[5rem]" : "top-0 w-[22rem]"
+              }`}
+            >
+              <div className="w-full">
+                {messages.map((m) => {
+                  return m.role === "ai" ? (
+                    <span className="text-xs flex text-fadedWhite max-w-[80%] px-2 py-2 mb-3 bg-faintBlack rounded-md">
+                      {String(m.content)}
+                    </span>
+                  ) : (
+                    <div className="flex justify-end w-full">
+                      <span className="text-xs text-fadedWhite max-w-[80%] px-2 py-2 mb-3 text-right bg-faintBlack rounded-md">
+                        {m.content}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex flex-col gap-y-1 w-full">
+                <span className="flex items-center text-midWhite">
+                  <Info className="h-3" />
+                  <p className="text-xxs italic">press enter to send prompt</p>
+                </span>
+                <Textarea
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      sendPrompt();
+                    }
+                  }}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Type your message here."
+                  className="super-thin-scrollbar w-full focus:ring-0 active:border-none active:ring-0 active:outline-none focus:border-none focus:outline-none bg-faintBlack !border-none text-sm text-fadedWhite placeholder:text-sm placeholder:text-faintWhite"
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+        )}
+      </ResizablePanelGroup>
+
+      {/* {toggleAIChat && (
+      )} */}
     </main>
   );
 };
