@@ -3,7 +3,6 @@ import Sidebar from "../components/Sidebar";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Info } from "lucide-react";
-import { trpc } from "@/utils/trpc";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,38 +11,103 @@ import {
 
 const Layout = () => {
   const { projectId } = useParams();
-  const utils = trpc.useUtils();
 
   const [toggleSidebar, setToggleSidebar] = useState<boolean>(false);
   const [toggleAIChat, setToggleAIChat] = useState<boolean>(false);
-
-  const [prompt, setPrompt] = useState<string>("");
   const [messages, setMessages] = useState<{ content: string; role: string }[]>(
     []
   );
+  const [prompt, setPrompt] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const sendPrompt = async () => {
-    setPrompt("");
-    setMessages((prev) => [...prev, { role: "user", content: prompt }]);
+    if (!prompt.trim() || isStreaming) return;
 
-    const res = await fetch("http://localhost:3000/ai-chat", {
+    const userMessage = { role: "user", content: prompt };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsStreaming(true);
+    setPrompt("");
+
+    const assistantMessage = { role: "ai", content: "" };
+    setMessages((prev) => [...prev, assistantMessage]);
+
+    const response = await fetch("http://localhost:3000/ai-chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        projectId,
-        prompt,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId, prompt }),
     });
 
-    if (!res.ok) {
-      throw new Error(`Error creating tasks: ${res.statusText}`);
-    }
+    if (response && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-    const message = await res.json();
-    setMessages((prev) => [...prev, message.message]);
-    utils.tasks.getTasks.invalidate();
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataContent = line.slice(6); // Remove 'data: ' and whitespace
+            if (dataContent && dataContent !== "[DONE]") {
+              try {
+                const content = JSON.parse(dataContent); 
+
+                setMessages((prev) => {
+                  const lastMessage = prev[prev.length - 1];
+
+                  // Update the last message
+                  if (lastMessage && lastMessage.role === "ai") {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                      ...lastMessage,
+                      content: lastMessage.content + content,
+                    };
+                    return newMessages;
+                  }
+                  return prev;
+                });
+              } catch (err) {
+                setMessages((prev) => {
+                  const lastMessage = prev[prev.length - 1];
+
+                  // Update the last message
+                  if (lastMessage && lastMessage.role === "ai") {
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                      ...lastMessage,
+                      content: lastMessage.content + `\n\n ${err}`,
+                    };
+                    return newMessages;
+                  }
+                  return prev;
+                });
+              }
+            }
+          }
+        }
+      }
+    } else {
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+
+        // Update the last message
+        if (lastMessage && lastMessage.role === "ai") {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1] = {
+            ...lastMessage,
+            content:
+              lastMessage.content +
+              "\n\n An error has occured, unable to process request",
+          };
+          return newMessages;
+        }
+        return prev;
+      });
+    }
   };
 
   return (
@@ -58,7 +122,10 @@ const Layout = () => {
         direction="horizontal"
         className="w-full h-full py-3 pl-1 pr-3"
       >
-        <ResizablePanel defaultSize={toggleAIChat ? 80 : 100} className="min-w-[60%]">
+        <ResizablePanel
+          defaultSize={toggleAIChat ? 80 : 100}
+          className="min-w-[60%]"
+        >
           <div className="h-full bg-faintBlack rounded-md px-4 py-3 flex flex-col overflow-x-hidden w-full">
             <Outlet
               context={{ setToggleSidebar, setToggleAIChat, toggleAIChat }}
@@ -69,21 +136,21 @@ const Layout = () => {
         {toggleAIChat && (
           <ResizablePanel defaultSize={20} className="min-w-80">
             <div
-              className={`transition-all w-full pr-2 h-full duration-200 pt-4 flex flex-col justify-between ${
+              className={`transition-all w-full px-2 h-full duration-200 pt-4 flex flex-col justify-between ${
                 !toggleAIChat ? "top-0 w-[5rem]" : "top-0 w-[22rem]"
               }`}
             >
-              <div className="w-full">
+              <div className="w-full overflow-y-auto super-thin-scrollbar flex-1">
                 {messages.map((m) => {
                   return m.role === "ai" ? (
-                    <span className="text-xs flex text-fadedWhite max-w-[80%] px-2 py-2 mb-3 bg-faintBlack rounded-md">
-                      {String(m.content)}
-                    </span>
+                    <div className="text-xs whitespace-pre-wrap text-fadedWhite max-w-[80%] w-fit px-2 py-2 mb-3 bg-faintBlack rounded-md">
+                      {m.content}
+                    </div>
                   ) : (
                     <div className="flex justify-end w-full">
-                      <span className="text-xs text-fadedWhite max-w-[80%] px-2 py-2 mb-3 text-right bg-faintBlack rounded-md">
+                      <div className="text-xs text-fadedWhite max-w-[80%] px-2 py-2 mb-3 text-right bg-faintBlack rounded-md">
                         {m.content}
-                      </span>
+                      </div>
                     </div>
                   );
                 })}
@@ -95,7 +162,11 @@ const Layout = () => {
                 </span>
                 <Textarea
                   onKeyDown={(e) => {
+                    if (e.shiftKey) {
+                      return;
+                    }
                     if (e.key === "Enter") {
+                      e.preventDefault();
                       sendPrompt();
                     }
                   }}
