@@ -630,6 +630,7 @@ export const tasksRouter = router({
         assignedTo: z.string(),
         id: z.string(),
         category: z.string(),
+        projectTaskIds: z.string(),
       })
     )
     .query(async ({ input }) => {
@@ -639,10 +640,12 @@ export const tasksRouter = router({
           input.priority,
           input.assignedTo,
           input.category,
+          input.projectTaskIds,
           input.id
         )
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch filter tasks",

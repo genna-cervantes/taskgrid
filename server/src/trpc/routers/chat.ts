@@ -1,13 +1,30 @@
 import express, { Response } from "express";
 import { openai } from "@ai-sdk/openai";
-import { ModelMessage, generateObject, generateText, stepCountIs, streamObject, streamText, tool } from "ai";
+import {
+  ModelMessage,
+  UIMessage,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  generateObject,
+  generateText,
+  pipeUIMessageStreamToResponse,
+  stepCountIs,
+  streamObject,
+  streamText,
+  tool,
+} from "ai";
 import { z } from "zod";
 import {
   GENERATE_TASK_MESSAGE_SYSTEM_PROMPT,
   GENERATE_TASK_SYSTEM_PROMPT,
   INFER_REQUEST_SYSTEM_PROMPT,
   MAKE_PLAN_SYSTEM_PROMPT,
+  QUERY_TASK_MESSAGE_SYSTEM_PROMPT,
+  QUERY_TASKS_SYSTEM_PROMPT,
   TASKAN_SYSTEM_PROMPT,
+  UPDATE_TASK_MESSAGE_SYSTEM_PROMPT,
+  UPDATE_TASKS_SYSTEM_PROMPT,
 } from "../../lib/prompts.js";
 import {
   addTaskCategoryOptions,
@@ -15,25 +32,43 @@ import {
   getTaskCategoryOptions,
   getTasksFromProjectId,
   insertTask,
+  updateTask,
 } from "../../db/queries/tasks.js";
 import { pool } from "../router.js";
 import { getUsersInProject } from "../../db/queries/users.js";
 import { tryCatch } from "../../lib/utils.js";
 import { AddTask } from "../../shared/types.js";
 import { OpenAi } from "../../lib/openai.js";
+import { randomUUID } from "crypto";
 
-// cant stream if trpc 
+// cant stream if trpc
 
 export const chatRouter = express.Router();
 
 // understand prompt
-const makePlan = async ({prompt, res}: {prompt: string, res: any}) => {
-
-  let jobQueue: {type: string, context: string}[] = []
-
-  const {textStream} = streamText({
+const makePlan = async ({
+  messages,
+  jobQueue,
+  writer,
+}: {
+  messages: UIMessage[];
+  writer: any;
+  jobQueue: {
+    GENERATE_TASK: {
+      context: string;
+    }[];
+    UPDATE_TASK: {
+      context: string;
+    }[];
+    QUERY_TASK: {
+      context: string;
+    }[];
+  };
+}) => {
+  const modelMessages = convertToModelMessages(messages);
+  const result = streamText({
     model: openai("gpt-4o"),
-    prompt,
+    messages: modelMessages,
     system: MAKE_PLAN_SYSTEM_PROMPT,
     tools: {
       queueGenerateTask: tool({
@@ -43,14 +78,13 @@ const makePlan = async ({prompt, res}: {prompt: string, res: any}) => {
         inputSchema: z.object({
           context: z.string(),
         }),
-        execute: async ({context}) => {
-          jobQueue.push({
-            type: "generateTask",
-            context
-          })
+        execute: async ({ context }) => {
+          jobQueue["GENERATE_TASK"].push({
+            context,
+          });
 
           return true;
-        }
+        },
       }),
       queueQueryTask: tool({
         description: `Tool for querying about ONE OR MORE tasks, used when the user prompt indicates querying or asking about ONE OR MORE tasks.
@@ -59,14 +93,13 @@ const makePlan = async ({prompt, res}: {prompt: string, res: any}) => {
         inputSchema: z.object({
           context: z.string(),
         }),
-        execute: async ({context}) => {
-          jobQueue.push({
-            type: "queryTask",
-            context
-          })
+        execute: async ({ context }) => {
+          jobQueue["QUERY_TASK"].push({
+            context,
+          });
 
           return true;
-        }
+        },
       }),
       queueUpdateTask: tool({
         description: `Tool for updating ONE OR MORE tasks, used when the user prompt indicates updating ONE OR MORE tasks.
@@ -75,54 +108,102 @@ const makePlan = async ({prompt, res}: {prompt: string, res: any}) => {
         inputSchema: z.object({
           context: z.string(),
         }),
-        execute: async ({context}) => {
-          jobQueue.push({
-            type: "updateTask",
-            context
-          })
-          
+        execute: async ({ context }) => {
+          jobQueue["UPDATE_TASK"].push({
+            context,
+          });
+
           return true;
-        }
-      })
+        },
+      }),
     },
-    stopWhen: stepCountIs(10) // possible multiple tasks eh
-  })
-
-  for await (const delta of textStream) {
-    res.write(`data: ${JSON.stringify(delta)}\n\n`); 
-  }
-
-  return jobQueue;
-}
-
-// enhance prompt as well
-const inferRequest = async ({ prompt, res }: { prompt: string, res: any }) => {
-  const {partialObjectStream} = await streamObject({
-    model: openai("gpt-4o"),
-    prompt,
-    system: INFER_REQUEST_SYSTEM_PROMPT,
-    schemaName: "requestType",
-    schemaDescription: "the types of request a user is requesting",
-    schema: z.object({
-      type: z.enum([
-        "GENERATE_TASK",
-        "QUERY_TASK",
-        "UPDATE_TASK",
-        "NOT_HANDLED",
-      ]),
-      prompt: z.string(),
-    }),
+    stopWhen: stepCountIs(10), // possible multiple tasks eh
   });
-  
-  for await (const partialObject of partialObjectStream) {
-    res.write(`data: ${JSON.stringify(partialObject)}\n\n`); 
+
+  const ui = result.toUIMessageStream();
+  for await (const uiEvent of ui) {
+    writer.write(uiEvent); // forward planner tokens to the client
   }
 };
 
-const generateTask = async ({ messages, projectId }: { messages: ModelMessage[], projectId: string }) => {
-  const {text, steps} = await generateText({
+const updateTasks = async ({ messages }: { messages: UIMessage[] }) => {
+  const modelMessages = convertToModelMessages(messages);
+
+  const result = await generateObject({
     model: openai("gpt-4o"),
-    messages,
+    messages: modelMessages,
+    system: UPDATE_TASKS_SYSTEM_PROMPT,
+    schemaName: "Update_Tasks_Schema",
+    schemaDescription: `The scema for updating tasks given a users prompt.  An object which contains an array of objects 
+    with parameters originalTaskId: string which is the original task id and updatedTask which is an object containing 
+    the updated parameters of that specific task`,
+    schema: z.object({
+      skippedUpdates: z.array(
+        z.object({ originalTaskId: z.string(), reason: z.string() })
+      ),
+      updatedTasks: z.array(
+        z.object({
+          originalTaskId: z.string(),
+          updatedTask: z.object({
+            title: z.string().nullable(),
+            priority: z.enum(["low", "medium", "high"]).nullable(),
+            assignTo: z.array(z.string()).nullable(),
+            progress: z
+              .enum(["backlog", "in progress", "for checking", "done"])
+              .nullable(),
+            dependsOn: z
+              .object({
+                id: z.string(),
+                title: z.string(),
+              })
+              .nullable(),
+            subtasks: z
+              .object({
+                title: z.string(),
+                isDone: z.boolean(),
+              })
+              .nullable(),
+            description: z.string().optional().nullable(),
+            category: z.string().optional().nullable(),
+          }),
+        })
+      ),
+    }),
+  });
+
+  return result.object;
+};
+
+const queryTask = async ({ messages }: { messages: UIMessage[] }) => {
+  const modelMessages = convertToModelMessages(messages);
+
+  const result = await generateObject({
+    model: openai("gpt-4o"),
+    messages: modelMessages,
+    system: QUERY_TASKS_SYSTEM_PROMPT,
+    schemaName: "Filtered_Tasks_Array",
+    schemaDescription: `The return schema for filtering tasks based on the user query.  It is a single object with a parameter
+    filteredTaskIds which is an array of task projectTaskIds which are numbers`,
+    schema: z.object({
+      filteredTaskIds: z.array(z.number()),
+    }),
+  });
+
+  return result.object;
+};
+
+const generateTask = async ({
+  messages,
+  projectId,
+}: {
+  messages: UIMessage[];
+  projectId: string;
+}) => {
+  const modelMessages = convertToModelMessages(messages);
+
+  const { text, steps } = await generateText({
+    model: openai("gpt-4o"),
+    messages: modelMessages,
     system: GENERATE_TASK_SYSTEM_PROMPT,
     tools: {
       createCategoryOption: tool({
@@ -139,198 +220,626 @@ const generateTask = async ({ messages, projectId }: { messages: ModelMessage[],
         inputSchema: z.object({
           categoryOption: z.object({
             category: z.string(),
-            color: z.enum(['red', 'orange', 'lime', 'yellow', 'green', 'teal', 'blue', 'indigo', 'purple', 'pink', 'rose'])
-          })
+            color: z.enum([
+              "red",
+              "orange",
+              "lime",
+              "yellow",
+              "green",
+              "teal",
+              "blue",
+              "indigo",
+              "purple",
+              "pink",
+              "rose",
+            ]),
+          }),
         }),
-        execute: async ({categoryOption}) => {
-          const result = await tryCatch(addTaskCategoryOptions(pool, projectId, categoryOption))
-          if (result.error){
+        execute: async ({ categoryOption }) => {
+          const result = await tryCatch(
+            addTaskCategoryOptions(pool, projectId, categoryOption)
+          );
+          if (result.error) {
             return {
-              error: `unable to add category option due to ${result.error}`
-            }
+              error: `unable to add category option due to ${result.error}`,
+            };
           }
-          if (!result.data){
+          if (!result.data) {
             return {
-              error: `unable to add category option due to ${result.error}`
-            }
+              error: `unable to add category option due to ${result.error}`,
+            };
           }
 
-          return result.data
-        }
-      })
+          return result.data;
+        },
+      }),
     },
-    stopWhen: stepCountIs(10) // possible multiple tasks eh
+    stopWhen: stepCountIs(10), // possible multiple tasks eh
   });
 
-  return {text, steps};
+  return { text, steps };
 };
 
-const generateTaskMessage = async ({messages}: {messages: ModelMessage[]}) => {
-  const text = generateText({
-    model: openai('gpt-4o-mini'),
-    messages,
-    system: GENERATE_TASK_MESSAGE_SYSTEM_PROMPT
-  })
+const updateTaskMessage = async ({
+  messages,
+  writer,
+}: {
+  messages: UIMessage[];
+  writer: any;
+}) => {
+  const modelMessages = convertToModelMessages(messages);
+  const result = streamText({
+    model: openai("gpt-4o-mini"),
+    messages: modelMessages,
+    system: UPDATE_TASK_MESSAGE_SYSTEM_PROMPT,
+  });
 
-  return text;
-}
+  const ui = result.toUIMessageStream();
+  for await (const uiEvent of ui) {
+    writer.write(uiEvent); // forward planner tokens to the client
+  }
+};
 
-const messages: ModelMessage[] = [];
+const generateTaskMessage = async ({
+  messages,
+  writer,
+}: {
+  messages: UIMessage[];
+  writer: any;
+}) => {
+  const modelMessages = convertToModelMessages(messages);
+  const result = streamText({
+    model: openai("gpt-4o-mini"),
+    messages: modelMessages,
+    system: GENERATE_TASK_MESSAGE_SYSTEM_PROMPT,
+  });
+
+  const ui = result.toUIMessageStream();
+  for await (const uiEvent of ui) {
+    writer.write(uiEvent); // forward planner tokens to the client
+  }
+};
+
+const queryTaskMessage = async ({
+  messages,
+  writer,
+}: {
+  messages: UIMessage[];
+  writer: any;
+}) => {
+  const modelMessages = convertToModelMessages(messages);
+  const result = streamText({
+    model: openai("gpt-4o-mini"),
+    messages: modelMessages,
+    system: QUERY_TASK_MESSAGE_SYSTEM_PROMPT,
+  });
+
+  const ui = result.toUIMessageStream();
+  for await (const uiEvent of ui) {
+    writer.write(uiEvent); // forward planner tokens to the client
+  }
+};
+
+// const messages: ModelMessage[] = [];
 
 chatRouter.post("/", async (req, res) => {
-
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   // get necessary data
+  let jobQueue: {
+    GENERATE_TASK: { context: string }[];
+    UPDATE_TASK: { context: string }[];
+    QUERY_TASK: { context: string }[];
+  } = {
+    GENERATE_TASK: [],
+    UPDATE_TASK: [],
+    QUERY_TASK: [],
+  };
   const projectId = req.body.projectId;
-  const prompt = req.body.prompt;
 
-  const jobQueue = await makePlan({ prompt, res });
-  console.log(jobQueue);
-  res.end();
+  // server
+  const { messages }: { messages: UIMessage[] } = req.body;
+  // messages.push({ role: "user", content: prompt });
 
-  res.on('close', () => {
-      console.log('client dropped me');
-      res.end();
+  const uiMessageStream = createUIMessageStream({
+    async execute({ writer }) {
+      try {
+
+        if (!projectId) throw new Error("Missing project id")
+
+        await makePlan({ messages, writer, jobQueue });
+        writer.write({
+          id: Math.random().toString(),
+          type: "data-text",
+          data: { text: "\n\n" },
+        });
+
+        console.log(jobQueue);
+
+        let totalGenerateContext = "";
+        for (let i = 0; i < jobQueue["GENERATE_TASK"].length; i++) {
+          let jq = jobQueue["GENERATE_TASK"][i];
+
+          totalGenerateContext += `\nSnippet ${i}: ${jq.context}`;
+        }
+
+        if (totalGenerateContext.trim() !== "") {
+          messages.push({
+            id: Math.random.toString(),
+            role: "system",
+            parts: [
+              {
+                type: "text",
+                text: `This message contains the CONTEXT for GENERATING tasks.  The following is a collection of relevant snippets from the users prompt regarding GENERATING tasks
+              
+              Context:
+              ${totalGenerateContext.trim()}`,
+              },
+            ],
+          });
+
+          let executingGenerateId = Math.random().toString();
+          writer.write({
+            id: executingGenerateId,
+            type: "data-state",
+            data: {
+              visible: true,
+              text: "Generating Tasks",
+              id: `execute-span-${executingGenerateId}`,
+            },
+          });
+
+          try {
+            await runGenerateTask({
+              messages,
+              projectId,
+              writer,
+              executingGenerateId,
+            });
+          } catch (err) {
+            console.error(err);
+          }
+
+          writer.write({
+            id: Math.random().toString(),
+            type: "data-text",
+            data: { text: "" },
+          });
+          await generateTaskMessage({ messages, writer });
+        }
+
+        let totalUpdateContext = "";
+        for (let i = 0; i < jobQueue["UPDATE_TASK"].length; i++) {
+          let jq = jobQueue["UPDATE_TASK"][i];
+
+          totalUpdateContext += `\nSnippet ${i}: ${jq.context}`;
+        }
+
+        if (totalUpdateContext.trim() !== "") {
+          messages.push({
+            id: Math.random.toString(),
+            role: "system",
+            parts: [
+              {
+                type: "text",
+                text: `This message contains the CONTEXT for UPDATING tasks.  The following is a collection of relevant snippets from the users prompt regarding UPDATING tasks
+              
+              Context:
+              ${totalUpdateContext.trim()}`,
+              },
+            ],
+          });
+
+          let executingUpdateId = Math.random().toString();
+          writer.write({
+            id: executingUpdateId,
+            type: "data-state",
+            data: {
+              visible: true,
+              text: "Updating Tasks",
+              id: `execute-span-${executingUpdateId}`,
+            },
+          });
+
+          await runUpdateTask({
+            messages,
+            projectId,
+            writer,
+            executingUpdateId,
+          });
+
+          writer.write({
+            id: Math.random().toString(),
+            type: "data-text",
+            data: { text: "" },
+          });
+          await updateTaskMessage({ messages, writer });
+        }
+
+        let totalQueryContext = "";
+        for (let i = 0; i < jobQueue["QUERY_TASK"].length; i++) {
+          let jq = jobQueue["QUERY_TASK"][i];
+
+          totalQueryContext += `\nSnippet ${i}: ${jq.context}`;
+        }
+
+        if (totalQueryContext.trim() !== totalQueryContext) {
+          messages.push({
+            id: Math.random.toString(),
+            role: "system",
+            parts: [
+              {
+                type: "text",
+                text: `This message contains the CONTEXT for QUERYING tasks.  The following is a collection of relevant snippets from the users prompt regarding QUERYING tasks
+              
+              Context:
+              ${totalQueryContext.trim()}`,
+              },
+            ],
+          });
+
+          let executingQueryId = Math.random().toString();
+          writer.write({
+            id: executingQueryId,
+            type: "data-state",
+            data: {
+              visible: true,
+              text: "Querying Tasks",
+              id: `execute-span-${executingQueryId}`,
+            },
+          });
+
+          await runQueryTask({
+            messages,
+            projectId,
+            writer,
+            executingQueryId,
+          });
+
+          writer.write({
+            id: Math.random().toString(),
+            type: "data-text",
+            data: { text: "" },
+          });
+          await queryTaskMessage({ messages, writer });
+        }
+      } catch (err) {
+        writer.write({
+          id: Math.random().toString(),
+          type: "data-text",
+          data: { text: "" },
+        });
+        writer.write({
+          id: Math.random().toString(),
+          type: "data-error",
+          data: {
+            text: "Oops an error occured, we couldnt process your request, pls try again.",
+          },
+        });
+
+        console.error(err)
+        throw new Error("Server Error");
+      }
+    },
+    onError: (error: any) => `Custom error: ${error.message}`,
+    onFinish: ({ messages, isContinuation, responseMessage }) => {
+      console.log("Stream finished with messages:", messages);
+      console.log(JSON.stringify(messages[0].parts));
+    },
   });
-})
 
-// chatRouter.post("/", async (req, res) => {
-//   const projectId = req.body.projectId;
-//   const prompt = req.body.prompt;
+  pipeUIMessageStreamToResponse({
+    response: res,
+    status: 200,
+    statusText: "OK",
+    headers: {
+      "Cache-Control": "no-cache",
+      "Content-Type": "text/event-stream",
+      Connection: "keep-alive",
+    },
+    stream: uiMessageStream,
+  });
+});
 
-//   const inference = await inferRequest({ prompt });
-//   messages.push({ role: "user", content: prompt });
+const runUpdateTask = async ({
+  messages,
+  projectId,
+  writer,
+  executingUpdateId,
+}: {
+  messages: UIMessage[];
+  projectId: string;
+  writer: any;
+  executingUpdateId: string;
+}) => {
+  // add context
+  messages.push(
+    ...(await Promise.all([
+      getPreviousTasksMessage(projectId),
+      getCategoryOptionsMessage(projectId),
+      getAssignableUsersMessage(projectId),
+    ]))
+  );
 
-//   if (inference.type === "GENERATE_TASK") {
-//     console.log('generating')
+  // generate object
+  // find task id(s) to be updated
+  // generate updated task object (properties only)
+  const tasksToUpdate = await updateTasks({ messages });
 
-//     // add necessary context
-//     messages.push(...(await Promise.all([getCategoryOptionsMessage(projectId), getAssignableUsersMessage(projectId), getPreviousTasksMessage(projectId)])))
-    
-//     // get task object from llm call
-//     let {text: returnText, steps} = await generateTask({ messages, projectId });
-//     // console.log('steps', JSON.stringify(steps))
-//     let parsedText = JSON.parse(returnText);
-//     let tasksToAdd: AddTask[] = parsedText.tasks
-    
-//     // post process tasks from generate task
-//     const postprocessedTasks = tasksToAdd.map((t) => ({
-//         ...t,
-//         category: t.category === null ? undefined : t.category,
-//         description: t.description === null ? undefined : t.description
-//     }))
+  // loop thru all and update
+  for (let i = 0; i < tasksToUpdate.updatedTasks.length; i++) {
+    let ut = tasksToUpdate.updatedTasks[i];
 
-//     let duplicateTasks: {
-//       skippedTask: {
-//           title: string;
-//           description: string | undefined;
-//           priority: "low" | "medium" | "high";
-//           assign_to: string[];
-//       },
-//       duplicateTaskTitle: string
-//     }[] = []
-//     const uniqueTasks = (
-//       await Promise.all(postprocessedTasks.map(async (ppt) => {
-//         const embedResult = await OpenAi.embeddings.create({
-//           model: 'text-embedding-3-small',
-//           input: JSON.stringify(ppt)
-//         });
-//         const embedding = embedResult.data[0].embedding;
-//         const vectorString = `[${embedding.join(',')}]`;
+    // remove nulls
+    const cleaned = Object.fromEntries(
+      Object.entries(ut.updatedTask).filter(([_, v]) => v !== null)
+    );
 
-//         console.log(ppt.title)
-//         console.log(vectorString)
+    await updateTask(pool, ut.originalTaskId, cleaned);
+  }
 
-//         const duplicateTask = await getSimilarTasks(pool, projectId, vectorString);
-//         if (duplicateTask){
-//           duplicateTasks.push({skippedTask: duplicateTask, duplicateTaskTitle: duplicateTask.title})
-//         }else{
-//           return ppt
-//         }
-//       }))
-//     ).filter(result => !!result);
+  // message to the user
+  messages.push({
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `The following are the task updates.
+                
+        Task updates:
+        ${JSON.stringify(tasksToUpdate.updatedTasks)}
+        `,
+      },
+    ],
+  });
+  messages.push({
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `The following are the task updates skipped because they are not doable.  This includes the task id and the 
+        reason why it was not updated.
+                
+        Skipped updates:
+        ${JSON.stringify(tasksToUpdate.skippedUpdates)}
+        `,
+      },
+    ],
+  });
 
-//     // insert to database
-//     await Promise.all(uniqueTasks.map((ppt) => (
-//         insertTask(pool, ppt, projectId)
-//     )))
+  // set loading to false
+  writer.write({
+    id: Math.random().toString(),
+    type: "data-state",
+    data: {
+      visible: false,
+      text: "Updating Tasks",
+      id: `execute-span-${executingUpdateId}`,
+    },
+  });
+};
 
-//     // message to the user
-//     messages.push({
-//       role: "system",
-//       content: `The following are the tasks skipped because they have existing very similar tasks on the board.  The structure
-//       is {skippedTask: duplicateTask, duplicateTaskTitle: duplicateTask.title} where skippedTask is the skipped task and 
-//       duplicateTaskTitle is the title of the already existing similar task on the board.  If this is empty this means there are
-//       no skipped tasks.
+const runQueryTask = async ({
+  messages,
+  projectId,
+  writer,
+  executingQueryId,
+}: {
+  messages: UIMessage[];
+  projectId: string;
+  writer: any;
+  executingQueryId: string;
+}) => {
+  // add context
+  messages.push(await getPreviousTasksMessage(projectId));
+
+  const filteredTaskIds = await queryTask({ messages });
+  writer.write({
+    id: Math.random().toString(),
+    type: "data-query",
+    data: { ...filteredTaskIds },
+  });
+
+  messages.push({
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `The following is the total number of queried tasks: ${filteredTaskIds.filteredTaskIds.length}`,
+      },
+    ],
+  });
+
+  writer.write({
+    id: Math.random().toString(),
+    type: "data-state",
+    data: {
+      visible: false,
+      text: "Querying Tasks",
+      id: `execute-span-${executingQueryId}`,
+    },
+  });
+};
+
+const runGenerateTask = async ({
+  messages,
+  projectId,
+  writer,
+  executingGenerateId,
+}: {
+  messages: UIMessage[];
+  projectId: string;
+  writer: any;
+  executingGenerateId: string;
+}) => {
+  // add context
+  messages.push(
+    ...(await Promise.all([
+      getCategoryOptionsMessage(projectId),
+      getAssignableUsersMessage(projectId),
+      getPreviousTasksMessage(projectId),
+    ]))
+  );
+
+  // get task object from llm call
+  let { text: returnText } = await generateTask({ messages, projectId });
+  let parsedText = JSON.parse(returnText);
+  let tasksToAdd: AddTask[] = parsedText.tasks;
+
+  // post process tasks from generate task
+  const postprocessedTasks = tasksToAdd.map((t) => ({
+    ...t,
+    category: t.category === null ? undefined : t.category,
+    description: t.description === null ? undefined : t.description,
+  }));
+
+  let duplicateTasks: {
+    skippedTask: {
+      title: string;
+      description: string | undefined;
+      priority: "low" | "medium" | "high";
+      assign_to: string[];
+    };
+    duplicateTaskTitle: string;
+  }[] = [];
+
+  const uniqueTasks = (
+    await Promise.all(
+      postprocessedTasks.map(async (ppt) => {
+        const embedResult = await OpenAi.embeddings.create({
+          model: "text-embedding-3-small",
+          input: JSON.stringify(ppt),
+        });
+        const embedding = embedResult.data[0].embedding;
+        const vectorString = `[${embedding.join(",")}]`;
+
+        const duplicateTask = await getSimilarTasks(
+          pool,
+          projectId,
+          vectorString
+        );
+        if (duplicateTask) {
+          duplicateTasks.push({
+            skippedTask: duplicateTask,
+            duplicateTaskTitle: duplicateTask.title,
+          });
+        } else {
+          return ppt;
+        }
+      })
+    )
+  ).filter((result) => !!result);
+
+  // insert to database
+  await Promise.all(uniqueTasks.map((ppt) => insertTask(pool, ppt, projectId)));
+
+  // message to the user
+  messages.push({
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `The following are the tasks skipped because they have existing very similar tasks on the board.  The structure
+                is {skippedTask: duplicateTask, duplicateTaskTitle: duplicateTask.title} where skippedTask is the skipped task and 
+                duplicateTaskTitle is the title of the already existing similar task on the board.  If this is empty this means there are
+                no skipped tasks.
+                
+                Skipped tasks:
+                ${JSON.stringify(duplicateTasks)}
+                `,
+      },
+    ],
+  });
+
+  messages.push({
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `The following are the tasks added to the board.
+              
+              Added tasks:
+              ${JSON.stringify(uniqueTasks)}
+              `,
+      },
+    ],
+  });
+
+  writer.write({
+    id: Math.random().toString(),
+    type: "data-state",
+    data: {
+      visible: false,
+      text: "Generating Tasks",
+      id: `execute-span-${executingGenerateId}`,
+    },
+  });
+};
+
+// get project specifications to inject to query
+const getCategoryOptionsMessage = async (
+  projectId: string
+): Promise<UIMessage> => {
+  const categoryOptions = await getTaskCategoryOptions(pool, projectId);
+  return {
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `Here are the category options of this project, if this is empty DO NOT invent new ones for the tasks.  
       
-//       Skipped tasks:
-//       ${JSON.stringify(duplicateTasks)}
-//       `
-//     })
+      Category options:
+      ${categoryOptions ? JSON.stringify(categoryOptions) : []}
+      `,
+      },
+    ],
+  };
+};
 
-//     messages.push({
-//       role: "system",
-//       content: `The following are the tasks added to the board.
+// get assignable users
+const getAssignableUsersMessage = async (
+  projectId: string
+): Promise<UIMessage> => {
+  const assignableUsers = await getUsersInProject(pool, projectId);
+  return {
+    id: Math.random.toString(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `Here are the members and possible assignees of this project, if this is empty DO NOT invent new ones for the tasks.  
       
-//       Added tasks:
-//       ${JSON.stringify(uniqueTasks)}
-//       `
-//     })
+      Possible assignees:
+      ${JSON.stringify(assignableUsers)}
+      `,
+      },
+    ],
+  };
+};
 
-//     const message = await generateTaskMessage({messages})
-//     messages.push({
-//       role: "assistant",
-//       content: message
-//     });    
-//   }
-
-//   res.send({
-//     message: {role: "ai", content: messages[messages.length - 1].content},
-//   });
-// });
-
-// // get project specifications to inject to query
-// const getCategoryOptionsMessage = async (projectId: string): Promise<ModelMessage> => {
-//   const categoryOptions = await getTaskCategoryOptions(pool, projectId);
-//   return {
-//     role: "system",
-//     content: `Here are the category options of this project, if this is empty DO NOT invent new ones for the tasks.  
+// get all previous tasks
+const getPreviousTasksMessage = async (
+  projectId: string
+): Promise<UIMessage> => {
+  const tasks = await getTasksFromProjectId(pool, projectId);
+  return {
+    id: randomUUID(),
+    role: "system",
+    parts: [
+      {
+        type: "text",
+        text: `Here are all the previous tasks of this project, if this is empty DO NOT invent new ones. Try to follow the structure of these tasks.
       
-//       Category options:
-//       ${categoryOptions ? JSON.stringify(categoryOptions) : []}
-//       `,
-//   };
-// }
+      Previous tasks in project:
+      ${JSON.stringify(tasks)}
+      `,
+      },
+    ],
+  };
+};
 
-// // get assignable users
-// const getAssignableUsersMessage = async (projectId: string): Promise<ModelMessage> => {
-//   const assignableUsers = await getUsersInProject(pool, projectId);
-//   return{
-//     role: "system",
-//     content: `Here are the members and possible assignees of this project, if this is empty DO NOT invent new ones for the tasks.  
-      
-//       Possible assignees:
-//       ${JSON.stringify(assignableUsers)}
-//       `,
-//   };
-// }
-
-// // get all previous tasks
-// const getPreviousTasksMessage = async (projectId: string): Promise<ModelMessage> => {
-//   const tasks = await getTasksFromProjectId(pool, projectId);
-//   return {
-//     role: "system",
-//     content: `Here are all the previous tasks of this project, if this is empty DO NOT invent new ones. Try to follow the structure of these tasks.
-      
-//       Previous tasks in project:
-//       ${JSON.stringify(tasks)}
-//       `,
-//   };
-// }
-
-// // how to structure
+// how to structure

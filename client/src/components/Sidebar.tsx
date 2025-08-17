@@ -11,6 +11,8 @@ import {
   FolderClosed,
   Funnel,
   LucideProps,
+  Mail,
+  MailPlus,
   MessageSquare,
   SidebarClose,
   SidebarOpen,
@@ -96,35 +98,35 @@ const Sidebar = ({
         setToggleSidebar(false);
       },
     },
-    // {
-    //   parent: "projects",
-    //   icon: Calendar,
-    //   name: "Calendar",
-    //   func: function () {
-    //     setActiveIndex(1);
-    //     navigate(
-    //       `workspaces/${workspaceId}/projects/${projectId}?view=Calendar`
-    //     );
-    //   },
-    // },
+    {
+      parent: "projects",
+      icon: MailPlus,
+      name: "Inbox",
+      func: function () {
+        setActiveIndex(1);
+        // navigate(
+        //   `workspaces/${workspaceId}/projects/${projectId}?view=Calendar`
+        // );
+      },
+    },
     {
       parent: "projects",
       icon: Funnel,
       name: "Filter",
       func: function () {
-        setActiveIndex(1);
+        setActiveIndex(2);
         if (!toggleSidebar) setToggleSidebar(true);
       },
     },
-    {
-      parent: "projects",
-      icon: MessageSquare,
-      name: "Taskan AI",
-      func: function () {
-        setActiveIndex(2);
-        setToggleAIChat((prev) => !prev); 
-      },
-    },
+    // {
+    //   parent: "projects",
+    //   icon: MessageSquare,
+    //   name: "Taskan AI",
+    //   func: function () {
+    //     setActiveIndex(3);
+    //     setToggleAIChat(prev => !prev)
+    //   },
+    // },
     // {
     //   parent: "projects",
     //   icon: Blocks,
@@ -141,7 +143,7 @@ const Sidebar = ({
       icon: ExternalLink,
       name: "Share",
       func: function () {
-        setActiveIndex(5);
+        setActiveIndex(3);
       },
     },
   ];

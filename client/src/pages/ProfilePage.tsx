@@ -280,6 +280,8 @@ const WorkspaceRow = ({
   const [editedWorkspaceName, setEditedWorkspaceName] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [manageMode, setManageMode] = useState(false)
+
   // mutations
   const updateWorkspaceName = trpc.workspaces.updateWorkspaceName.useMutation({
     onSuccess: () => {
@@ -347,45 +349,50 @@ const WorkspaceRow = ({
 
   return (
     <>
-      <div className="flex justify-between w-full border border-faintWhite rounded-md px-4 py-2 items-center">
-        <div className="flex gap-x-1 items-center text-xs">
-          {editMode ? (
-            <input
-              ref={inputRef}
-              type="text"
-              className="w-fit bg-transparent  outline-none text-white"
-              value={editedWorkspaceName}
-              onChange={(e) => setEditedWorkspaceName(e.target.value)}
-              onBlur={handleSave}
-              onKeyDown={handleKeyDown}
-            />
-          ) : (
-            <h1>{name}</h1>
-          )}
-          {!editMode && (
-            <button
-              onClick={handleEdit}
-              disabled={deleteWorkspace.isLoading || leaveWorkspace.isLoading}
-              className="disabled:cursor-not-allowed"
+      <div className="w-full flex flex-col border border-faintWhite rounded-md px-4 py-2 items-center">
+        <div className="flex justify-between w-full">
+          <div className="flex gap-x-1 items-center text-xs">
+            {editMode ? (
+              <input
+                ref={inputRef}
+                type="text"
+                className="w-fit bg-transparent  outline-none text-white"
+                value={editedWorkspaceName}
+                onChange={(e) => setEditedWorkspaceName(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={handleKeyDown}
+              />
+            ) : (
+              <h1>{name}</h1>
+            )}
+            {!editMode && (
+              <button
+                onClick={handleEdit}
+                disabled={deleteWorkspace.isLoading || leaveWorkspace.isLoading}
+                className="disabled:cursor-not-allowed"
+              >
+                <Pencil className="h-4 text-fadedWhite hover:text-white" />
+              </button>
+            )}
+          </div>
+          <div className="text-xs font-semibold text-backgroundDark flex gap-x-3">
+            {isOwner && <button
+              onClick={() => setManageMode(prev => !prev)}
+              className="px-2 py-1 bg-fadedWhite text-[#1a1a1a] rounded-md"
             >
-              <Pencil className="h-4 text-fadedWhite hover:text-white" />
-            </button>
-          )}
+              Manage
+            </button>}
+            <Link
+              to={`/workspaces/${id}`}
+              className="px-2 py-1 bg-purple-300 rounded-md"
+            >
+              Go to
+            </Link>
+          </div>
         </div>
-        <div className="text-xs font-semibold text-backgroundDark flex gap-x-3">
-          <button
-            onClick={handleLeaveOrDelete}
-            className="px-2 py-1 bg-red-400 rounded-md"
-          >
-            {isOwner ? "Delete" : "Leave"}
-          </button>
-          <Link
-            to={`/workspaces/${id}`}
-            className="px-2 py-1 bg-purple-300 rounded-md"
-          >
-            Go to
-          </Link>
-        </div>
+        {manageMode && <div>
+          manage
+        </div>}
       </div>
     </>
   );

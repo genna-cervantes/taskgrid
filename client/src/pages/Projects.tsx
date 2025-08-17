@@ -29,15 +29,16 @@ const Projects = () => {
     setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
   }>();
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const priority = searchParams.get("priority") || "";
   const assignedTo = searchParams.get("assignedTo") || "";
   const category = searchParams.get("category") || "";
+  const projectTaskIds = searchParams.get("projectTaskIds") || "";
 
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
 
   const isFilterEnabled =
-    priority !== "" || assignedTo !== "" || category !== "";
+    priority !== "" || assignedTo !== "" || category !== "" || projectTaskIds !== "";
 
   // check if workspace exists
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
@@ -60,6 +61,7 @@ const Projects = () => {
         priority,
         assignedTo,
         category,
+        projectTaskIds,
       },
       {
         enabled: isFilterEnabled && projectId !== "",
@@ -125,7 +127,7 @@ const Projects = () => {
 
     Mousetrap.bind("ctrl+alt+b", function (e) {
       e.preventDefault();
-      setToggleAIChat((prev) => !prev);
+      setToggleAIChat(prev => !prev);
     });
 
     return () => {
@@ -183,7 +185,7 @@ const Projects = () => {
               },
             ]}
           />
-          <button onClick={() => setToggleAIChat((prev) => !prev)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
+          <button onClick={() => setToggleAIChat(prev => !prev)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
             {/* <MessageSquare /> */}
             {toggleAIChat ? 'Close AI Assistant' : 'Try TasKan AI Assistant'}
           </button>

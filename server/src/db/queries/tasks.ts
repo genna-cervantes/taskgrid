@@ -340,6 +340,7 @@ export const getFilteredTasks = async (
   priority: string,
   assignedTo: string,
   category: string,
+  projectTaskIds: string,
   projectId: string
 ) => {
   if (!projectId) throw new Error("Bad request missing required fields");
@@ -347,6 +348,7 @@ export const getFilteredTasks = async (
   let priorityFilters = priority.split(",");
   let assignedToFilters = assignedTo.split(",");
   let categoryFitlers = category.split(",");
+  let projectTaskIdFilters = projectTaskIds.split(",");
 
   let query = `
   SELECT id, title, description, link, priority, progress, 
@@ -382,6 +384,13 @@ export const getFilteredTasks = async (
     paramIndex++;
   }
 
+  // Add project task id fitler
+  if (projectTaskIds !== "" && projectTaskIds.length > 0) {
+    query += ` AND project_task_id = ANY($${paramIndex})`;
+    values.push(projectTaskIdFilters.map((ptf) => Number(ptf)));
+    paramIndex++;
+  }
+  
   const res = await pool.query(query, values);
 
   const tasks: Task[] = res.rows.map((task) => ({

@@ -20,7 +20,7 @@ const Home = () => {
 
   const { setToggleSidebar, setToggleAIChat } = useOutletContext<{
       setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
-      setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
+      setToggleAIChat: () => void;
     }>();
 
   const [editProject, setEditProject] = useState({
