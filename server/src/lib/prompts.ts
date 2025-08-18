@@ -358,6 +358,7 @@ Rules:
 6. Do not include any text outside of the object. Do not add explanations.
 7. If all tasks are already on the board return an object with parameter tasks with value empty array.
 8. DO NOT RESPOND IN MARKDOWN ONLY RETURN THE OBJECT
+9. If you are given a very broad task to generate, try and break it down to more specific pieces.
 
 You will be given:
 - Context of the user's request related to generating tasks which will be a collection of snippets from the original prompt in natural language.

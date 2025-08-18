@@ -16,6 +16,22 @@ import LoadingModal from "../components/LoadingModal";
 import { Task } from "../../../server/src/shared/types";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import Mousetrap from "mousetrap";
+import { Funnel } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ProjectQuickActions from "@/components/ProjectQuickActions";
 
 const Projects = () => {
   const { workspaceId, projectId } = useParams();
@@ -38,12 +54,15 @@ const Projects = () => {
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
 
   const isFilterEnabled =
-    priority !== "" || assignedTo !== "" || category !== "" || projectTaskIds !== "";
+    priority !== "" ||
+    assignedTo !== "" ||
+    category !== "" ||
+    projectTaskIds !== "";
 
   // check if workspace exists
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
     trpc.workspaces.checkWorkspaceId.useQuery(
-      { workspaceId: workspaceId!},
+      { workspaceId: workspaceId! },
       { enabled: !!workspaceId }
     );
 
@@ -100,18 +119,20 @@ const Projects = () => {
     ? groupTasksByColumn(data)
     : {};
 
-  const { data: projectName, isLoading: projectNameIsLoading } = trpc.projects.getProjectNameByKey.useQuery(
-    {
-      id: projectId!,
-    },
-    { enabled: projectId !== "" }
-  );
+  const { data: projectName, isLoading: projectNameIsLoading } =
+    trpc.projects.getProjectNameByKey.useQuery(
+      {
+        id: projectId!,
+      },
+      { enabled: projectId !== "" }
+    );
 
   // task category options
-  const { data: taskCategoryOptions } = trpc.tasks.getTaskCategoryOptions.useQuery(
-    { projectId: projectId! },
-    { enabled: projectId !== "" }
-  );
+  const { data: taskCategoryOptions } =
+    trpc.tasks.getTaskCategoryOptions.useQuery(
+      { projectId: projectId! },
+      { enabled: projectId !== "" }
+    );
 
   // helper functions
   const handleShare = async () => {
@@ -127,7 +148,7 @@ const Projects = () => {
 
     Mousetrap.bind("ctrl+alt+b", function (e) {
       e.preventDefault();
-      setToggleAIChat(prev => !prev);
+      setToggleAIChat((prev) => !prev);
     });
 
     return () => {
@@ -142,18 +163,18 @@ const Projects = () => {
     !userContext.username &&
     workspaceExistsIsLoading
   ) {
-    console.log('return from this')
+    console.log("return from this");
     return <LoadingModal />;
   }
-  
+
   if (
     !projectId ||
-    projectId === "" || 
+    projectId === "" ||
     !workspaceId ||
     workspaceId === "" ||
     (!projectName && !projectNameIsLoading) ||
     (!workspaceExistsIsLoading && !workspaceName)
-  ) {   
+  ) {
     return <Navigate to="/" replace />;
   }
 
@@ -185,14 +206,26 @@ const Projects = () => {
               },
             ]}
           />
-          <button onClick={() => setToggleAIChat(prev => !prev)} className="text-xs my-0 h-6 bg-purple-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark ">
+          <button
+            onClick={() => setToggleAIChat((prev) => !prev)}
+            className="text-xs my-0 h-6 bg-gradient-to-r from-purple-300 to-pink-300 flex-shrink-0 rounded-md px-4 font-bold leading-none py-0 text-backgroundDark "
+          >
             {/* <MessageSquare /> */}
-            {toggleAIChat ? 'Close AI Assistant' : 'Try TasKan AI Assistant'}
+            {toggleAIChat ? "Close AI Assistant" : "Try TasKan AI Assistant"}
           </button>
         </div>
 
+        {/* quick actions */}
+        <ProjectQuickActions taskCategoryOptions={taskCategoryOptions} />
+
         {Object.keys(columns).length > 0 ? (
-          <Outlet context={{ username: userContext.username, columns, taskCategoryOptions }} />
+          <Outlet
+            context={{
+              username: userContext.username,
+              columns,
+              taskCategoryOptions,
+            }}
+          />
         ) : (
           <p className="text-sm opacity-50 text-center mt-8">
             Loading your tasks...

@@ -109,15 +109,15 @@ const Sidebar = ({
         // );
       },
     },
-    {
-      parent: "projects",
-      icon: Funnel,
-      name: "Filter",
-      func: function () {
-        setActiveIndex(2);
-        if (!toggleSidebar) setToggleSidebar(true);
-      },
-    },
+    // {
+    //   parent: "projects",
+    //   icon: Funnel,
+    //   name: "Filter",
+    //   func: function () {
+    //     setActiveIndex(2);
+    //     if (!toggleSidebar) setToggleSidebar(true);
+    //   },
+    // },
     // {
     //   parent: "projects",
     //   icon: MessageSquare,
@@ -143,7 +143,7 @@ const Sidebar = ({
       icon: ExternalLink,
       name: "Share",
       func: function () {
-        setActiveIndex(3);
+        setActiveIndex(2);
       },
     },
   ];
@@ -222,17 +222,6 @@ const Sidebar = ({
   );
 
   // queries
-
-  const { data: usersInProject, isLoading: usersInProjectIsLoading } =
-    trpc.users.getUsersInProject.useQuery(
-      { id: projectId ?? "" },
-      { enabled: !!projectId }
-    );
-  const { data: taskCategoryOptions, isLoading: taskCategoryOptionsIsLoading } =
-    trpc.tasks.getTaskCategoryOptions.useQuery(
-      { projectId: projectId ?? "" },
-      { enabled: !!projectId }
-    );
   const { data: userWorkspaces, isLoading: userWorkspacesIsLoading } =
     trpc.workspaces.getUserWorkspaces.useQuery(
       { username: userContext.username ?? "" },
@@ -474,85 +463,7 @@ const Sidebar = ({
                       </div>
                     </button>
 
-                    {/* sidebar items depending on whats active */}
-                    {isActive === "Filter" && item.name === "Filter" && (
-                      <div className="w-full flex flex-col gap-y-3 mb-6 px-5">
-                        <div className="w-full flex flex-col">
-                          <p className="text-xs font-rubik text-midWhite">
-                            Priority:
-                          </p>
-                          <MultiSelect
-                            isSidebar={true}
-                            value={priorityFilter}
-                            setValue={setPriorityFilter}
-                            placeholder="Choose priority"
-                            choices={priorityLevels.map((v) => ({
-                              id: v,
-                              title: v,
-                            }))}
-                          />
-                        </div>
-
-                        <div className="w-full flex flex-col">
-                          <p className="text-xs font-rubik text-midWhite">
-                            Assigned To:
-                          </p>
-                          <MultiSelect
-                            isSidebar={true}
-                            value={assignedToFilter}
-                            setValue={setAssignedToFilter}
-                            placeholder="Choose assigned to"
-                            choices={
-                              usersInProjectIsLoading || !usersInProject
-                                ? []
-                                : usersInProject.map((u) => ({
-                                    id: u.username,
-                                    title: u.username,
-                                  }))
-                            }
-                          />
-                        </div>
-
-                        <div className="w-full flex flex-col">
-                          <p className="text-xs font-rubik text-midWhite">
-                            Category:
-                          </p>
-                          <MultiSelect
-                            isSidebar={true}
-                            value={categoryFilter}
-                            setValue={setCategoryFilter}
-                            placeholder="Choose category"
-                            choices={
-                              taskCategoryOptionsIsLoading ||
-                              !taskCategoryOptions
-                                ? []
-                                : taskCategoryOptions.map((t) => ({
-                                    id: t.category,
-                                    title: t.category,
-                                  }))
-                            }
-                          />
-                        </div>
-
-                        <button
-                          onClick={(e) => handleApplyFilter(e)}
-                          className="text-xs w-full py-2 bg-light flex justify-center rounded-md"
-                        >
-                          Apply Filters
-                        </button>
-                        {(priorityFilter.length > 0 ||
-                          assignedToFilter.length > 0 ||
-                          categoryFilter.length > 0) && (
-                          <button
-                            onClick={(e) => handleClearFilter(e)}
-                            className="text-xs w-full py-2 bg-red-400 flex justify-center rounded-md"
-                          >
-                            Clear Filters
-                          </button>
-                        )}
-                      </div>
-                    )}
-
+                            
                     {isActive === "Workspaces" &&
                       item.name === "Workspaces" && (
                         <div className="w-full flex flex-col gap-y-3 mb-6 px-5">

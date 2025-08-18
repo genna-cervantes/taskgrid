@@ -141,11 +141,11 @@ const ProjectColumn = ({
       className="flex-1 text-white/90 rounded-md group/column "
     >
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-x-2">
-          <h2 className="font-semibold text-sm capitalize py-1 text-center font-noto">
+        <div className="flex items-center gap-x-2 pt-1">
+          <h2 className="font-semibold text-sm capitalize text-center font-noto">
             {col}
           </h2>
-          <div className="px-2 flex justify-center items-center font-semibold text-xs capitalize py-1 text-center font-noto rounded-full bg-gray-500/20">
+          <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
             {columns[col].length}
           </div>
         </div>

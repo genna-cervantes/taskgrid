@@ -90,10 +90,10 @@ const TaskBlock = ({
         }}
         className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-inherit bg-lmLightBackground rounded-md dark:border-faintWhite/15 cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
-        <h1 className="text-xs text-white/90 line-clamp-2 font-jetbrains" title={task.title}>
-          <span className="font-semibold text-midWhite">
+        <p className="font-semibold text-midWhite text-xxs pb-1">
             [{task.projectTaskId}]
-          </span>{" "}
+        </p>
+        <h1 className="text-xs text-white/90 line-clamp-2 font-jetbrains" title={task.title}>
           {task.title}
         </h1>
         <div className="mt-4">

@@ -6,7 +6,8 @@ const TaskCategory = ({ category, taskCategoryOptions }: { category: string, tas
   let bg = taskCategoryOptions?.find((c) => c.category === category)?.color ?? 'gray'
   
   return (
-    <span className={`bg-${bg}-200/50 text-xxs px-2 rounded-md flex items-center`}>
+    <span className={`text-xxs rounded-md flex gap-x-1 border px-1 border-faintWhite items-center`}>
+      <span className={`bg-${bg}-300/50 h-2 w-2 rounded-full`}></span>
       {category}
     </span>
   );
