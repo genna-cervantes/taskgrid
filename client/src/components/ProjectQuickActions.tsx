@@ -10,7 +10,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Funnel, X } from "lucide-react";
+import { Funnel, Kanban, KanbanSquare, LayoutList, X } from "lucide-react";
 import { trpc } from "@/utils/trpc";
 import {
   SetURLSearchParams,
@@ -80,6 +80,36 @@ const ProjectQuickActions = ({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+            <KanbanSquare className="h-3" />
+            <p>View: Kanban</p>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-56 border-none font-jetbrains"
+          align="start"
+        >
+          <DropdownMenuLabel className="text-xs">View By:</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                <KanbanSquare className="h-4" />
+                  Kanban
+              </div>
+              <Checkbox />
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                <LayoutList className="h-4" />
+                  List
+              </div>
+              <Checkbox />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
             <Funnel className="h-3" />
             <p>Filter</p>
           </button>
@@ -135,7 +165,7 @@ const ProjectQuickActions = ({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Category</DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
+                  <DropdownMenuSubContent className="max-h-28 overflow-y-auto super-thin-scrollbar">
                     {taskCategoryOptions.map((tco) => (
                         <React.Fragment key={tco.category}>
                             <FilterOption

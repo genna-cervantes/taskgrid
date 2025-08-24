@@ -169,7 +169,7 @@ const ProjectColumn = ({
       </div>
 
       <div
-        className={`max-w-full flex flex-col gap-0 overflow-y-auto mb-2 h-[calc(100vh-130px)] scrollbar-none transition-all duration-200`}
+        className={`max-w-full flex flex-col gap-0 overflow-y-auto mb-2 h-[calc(100vh-170px)] scrollbar-none transition-all duration-200`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDragEnd}

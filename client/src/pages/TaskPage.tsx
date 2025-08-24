@@ -39,6 +39,7 @@ const TaskSchema = z.object({
   dependsOn: z.array(z.object({ id: z.string(), title: z.string() })),
   subtasks: z.array(z.object({ title: z.string(), isDone: z.boolean() })),
   index: z.number(),
+  daysInColumn: z.number()
 }) satisfies z.ZodType<Task>;
 
 const TaskUpdateSchema = z
@@ -77,23 +78,24 @@ const TaskPage = () => {
 
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
     trpc.workspaces.checkWorkspaceId.useQuery(
-      { workspaceId: workspaceId!},
+      { workspaceId: workspaceId! },
       { enabled: !!workspaceId }
     );
 
   const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
-      id: projectId,
-    });
-  
+    id: projectId,
+  });
 
-  const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } =
-    trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
+  const {
+    data: taskCategoryOptionsRes,
+    isLoading: taskCategoryOptionsIsLoading,
+  } = trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
 
   useEffect(() => {
-    if (taskCategoryOptionsRes && !taskCategoryOptionsIsLoading){
-      setTaskCategoryOptions(taskCategoryOptionsRes)
+    if (taskCategoryOptionsRes && !taskCategoryOptionsIsLoading) {
+      setTaskCategoryOptions(taskCategoryOptionsRes);
     }
-  }, [taskCategoryOptionsRes])
+  }, [taskCategoryOptionsRes]);
 
   const { data, isLoading: taskDataIsLoading } =
     trpc.tasks.getTaskById.useQuery({
@@ -173,7 +175,6 @@ const TaskPage = () => {
       },
     });
 
-
   const handleDeleteTask = () => {
     if (task == null) return;
 
@@ -207,11 +208,11 @@ const TaskPage = () => {
     if (Object.keys(updates).length === 0) return;
 
     // task category options update
-    if (taskCategoryOptions !== taskCategoryOptionsRes) updateTaskCategoryOptions.mutate({ projectId, taskCategoryOptions });
+    if (taskCategoryOptions !== taskCategoryOptionsRes)
+      updateTaskCategoryOptions.mutate({ projectId, taskCategoryOptions });
 
     updateTask.mutate({ taskId, updates });
   };
-
 
   useEffect(() => {
     Mousetrap.prototype.stopCallback = function () {
@@ -271,95 +272,25 @@ const TaskPage = () => {
         />
       )}
       <div className="w-full h-full flex pb-8">
-        <div className="scrollbar-group w-[60%] max-h-full overflow-y-scroll super-thin-scrollbar">
+        <div className="scrollbar-group w-[60%] h-full overflow-y-auto super-thin-scrollbar">
           <form
             id="update-task-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            className="pr-4 flex flex-col gap-y-4"
+            className="pr-4 flex flex-col min-h-full justify-between gap-y-4"
           >
-            <Controller
-              name="title"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <TaskTitle
-                  isPage={true}
-                  taskTitle={field.value}
-                  setTaskTitle={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="category"
-              render={({ field, fieldState }) => (
-                <TaskSelectCategory
-                isPage={true}
-                taskCategoryOptions={taskCategoryOptions}
-                taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
-                setTaskCategoryOptions={setTaskCategoryOptions}
-                taskCategory={field.value}
-                setTaskCategory={field.onChange}
-                error={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="priority"
-              render={({ field, fieldState }) => (
-                <TaskSelectPriority
-                  isPage={true}
-                  priorityLevels={priorityLevels}
-                  taskPriority={field.value}
-                  setTaskPriority={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            {/* <div className="flex flex-col gap-y-1 w-full">
-              <div className="flex w-full gap-x-6">
-                <Controller
-                  control={form.control}
-                  name="targetStartDate"
-                  render={({ field, fieldState }) => (
-                    <TaskTargetStartDate
-                      isPage={true}
-                      taskTargetStartDate={field.value}
-                      setTaskTargetStartDate={field.onChange}
-                      error={fieldState.error?.message}
-                    />
-                  )}
-                />
-                <Controller
-                  control={form.control}
-                  name="targetEndDate"
-                  render={({ field, fieldState }) => (
-                    <TaskTargetEndDate
-                      isPage={true}
-                      taskTargetEndDate={field.value}
-                      setTaskTargetEndDate={field.onChange}
-                      error={fieldState.error?.message}
-                    />
-                  )}
-                />
-              </div>
-            </div> */}
-            <Controller
-              control={form.control}
-              name="assignTo"
-              render={({ field, fieldState }) => (
-                <TaskAssignee
-                isPage={true}
-                projectId={projectId}
-                usersInProj={usersInProject ?? []}
-                username={userContext.username ?? undefined}
-                taskAssignedTo={field.value ?? []}
-                setTaskAssignedTo={field.onChange}
-                error={fieldState.error?.message}
-                />
-              )}
-            />
+            <div className="flex flex-col gap-y-4 overflow-hidden">
+              <Controller
+                name="title"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <TaskTitle
+                    isPage={true}
+                    taskTitle={field.value}
+                    setTaskTitle={field.onChange}
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
               <Controller
                 name="description"
                 control={form.control}
@@ -372,99 +303,24 @@ const TaskPage = () => {
                   />
                 )}
               />
-            {/* <>
-              <Controller
-                control={form.control}
-                name="files"
-                render={({ field, fieldState }) => (
-                  <TaskSelectMedia
+              <div className="overflow-hidden h-60">
+                <div className="flex justify-between w-full mb-2">
+                  <h3
+                    className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+                  >
+                    Discussion:
+                  </h3>
+                </div>
+                <div className="max-h-full overflow-auto overscroll-contain super-thin-scrollbar">
+                  <TaskDiscussionBoard
+                    ref={joinDiscussionRef}
                     isPage={true}
-                    task={task}
-                    projectId={projectId}
-                    previewUrls={previewUrls}
-                    setPreviewUrls={setPreviewUrls}
-                    taskImageUrls={taskImageUrls}
-                    setTaskImagesUrls={setTaskImagesUrls}
-                    setFiles={setFiles}
-                    setImageModalState={setImageModalState}
-                    error={fieldState.error?.message}
+                    user={userContext.username ?? undefined}
+                    taskId={task.id}
                   />
-                )}
-              />
-              {imageModalState?.visible && (
-                <TaskImageModal
-                  url={imageModalState.url}
-                  index={imageModalState.index}
-                  setDisplayImage={(s: boolean) => {
-                    setImageModalState((prev) => {
-                      if (!prev) return null; // or whatever makes sense if modal is closed
-                      return { ...prev, visible: s };
-                    });
-                  }}
-                  handleDelete={imageModalState.deleteFunction}
-                />
-              )}
-            </> */}
-            {/* <Controller
-              control={form.control}
-              name="link"
-              render={({ field, fieldState }) => (
-                <TaskLink
-                  isPage={true}
-                  taskLink={field.value}
-                  setTaskLink={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            /> */}
-            <div className="flex items-center gap-x-4 my-4">
-              <hr className="flex-grow border-t border-faintWhite" />
-              <p className="text-xs text-center text-faintWhite whitespace-nowrap">
-                Advanced Task Details
-              </p>
-              <hr className="flex-grow border-t border-faintWhite" />
+                </div>
+              </div>
             </div>
-            <Controller
-              control={form.control}
-              name="dependsOn"
-              render={({ field, fieldState }) => (
-                <TaskDependsOn
-                  isPage={true}
-                  taskId={task.id}
-                  projectId={projectId}
-                  taskDependsOn={field.value}
-                  setTaskDependsOn={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
-              control={form.control}
-              name="subtasks"
-              render={({ field, fieldState }) => (
-                <TaskSubtasks
-                  isPage={true}
-                  taskSubtasks={field.value ?? []}
-                  setTaskSubtasks={field.onChange}
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            <div className="">
-              <h3
-                className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-              >
-                Personal Notes:
-              </h3>
-              <textarea
-                placeholder="Notes only you can see"
-                className={`w-full text-base h-24 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
-                // value=""
-                // onChange={(e) => setTaskTitle(e.target.value)}
-              />
-            </div>
-
             <div className="flex gap-x-4">
               <button
                 type="submit"
@@ -473,25 +329,112 @@ const TaskPage = () => {
                 className="bg-green-400 w-full flex justify-center items-center text-white text-sm font-semibold py-[0.35rem] rounded-md cursor-pointer disabled:cursor-not-allowed"
                 disabled={updateTask.isLoading}
               >
-                {updateTask.isLoading ? <Loader2 className="animate-spin" /> : "Save"}
+                {updateTask.isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  "Save"
+                )}
               </button>
 
               <button
                 onClick={handleDeleteTask}
                 className="bg-red-400 w-full text-white text-sm py-[0.35rem] flex justify-center font-semibold rounded-md cursor-pointer disabled:cursor-not-allowed"
-                disabled={deleteTask.isLoading || updateTask.isLoading }
+                disabled={deleteTask.isLoading || updateTask.isLoading}
               >
-                {deleteTask.isLoading || updateTask.isLoading ? <Loader2 className="animate-spin" /> : "Delete"}
+                {deleteTask.isLoading || updateTask.isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </form>
         </div>
-        <div className="w-[40%] pl-4 pr-2 py-1 max-h-full overflow-y-scroll super-thin-scrollbar">
+        {/* <div className="w-[40%] pl-4 pr-2 py-1 max-h-full overflow-y-scroll super-thin-scrollbar">
           <TaskDiscussionBoard
             ref={joinDiscussionRef}
             isPage={true}
             user={userContext.username ?? undefined}
             taskId={task.id}
+          />
+        </div> */}
+
+        <div className="w-[40%] pl-4 pr-2 py-1 flex flex-col gap-y-4">
+          <Controller
+            control={form.control}
+            name="priority"
+            render={({ field, fieldState }) => (
+              <TaskSelectPriority
+                isPage={true}
+                priorityLevels={priorityLevels}
+                taskPriority={field.value}
+                setTaskPriority={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="category"
+            render={({ field, fieldState }) => (
+              <TaskSelectCategory
+                isPage={true}
+                taskCategoryOptions={taskCategoryOptions}
+                taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
+                setTaskCategoryOptions={setTaskCategoryOptions}
+                taskCategory={field.value}
+                setTaskCategory={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="assignTo"
+            render={({ field, fieldState }) => (
+              <TaskAssignee
+                isPage={true}
+                projectId={projectId}
+                usersInProj={usersInProject ?? []}
+                username={userContext.username ?? undefined}
+                taskAssignedTo={field.value ?? []}
+                setTaskAssignedTo={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <div className="flex items-center gap-x-4">
+            <hr className="flex-grow border-t border-faintWhite" />
+            <p className="text-xs text-center text-faintWhite whitespace-nowrap">
+              Advanced Task Details
+            </p>
+            <hr className="flex-grow border-t border-faintWhite" />
+          </div>
+          <Controller
+            control={form.control}
+            name="dependsOn"
+            render={({ field, fieldState }) => (
+              <TaskDependsOn
+                isPage={true}
+                taskId={task.id}
+                projectId={projectId}
+                taskDependsOn={field.value}
+                setTaskDependsOn={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="subtasks"
+            render={({ field, fieldState }) => (
+              <TaskSubtasks
+                isPage={true}
+                taskSubtasks={field.value ?? []}
+                setTaskSubtasks={field.onChange}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </div>
       </div>

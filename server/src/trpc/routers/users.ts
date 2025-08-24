@@ -12,6 +12,7 @@ import {
   insertUser,
   insertUserWithWorkspace,
   kickUserFromProject,
+  updateTimezone,
 } from "../../db/queries/users.js";
 import { pool } from "../router.js";
 import { tryCatch } from "../../lib/utils.js";
@@ -226,4 +227,30 @@ export const usersRouter = router({
 
       return result.data;
     }),
+
+  updateTimezone: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ username: z.string(), timezone: z.string()}))
+    .mutation(async ({input}) => {
+      console.log('upd timezone running')
+      let result = await tryCatch(updateTimezone(pool, input.username, input.timezone))
+      if (result.error != null) {
+        console.error(result.error)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update user timezone",
+          cause: result.error,
+        });
+      }
+      
+      if (!result.data) {
+        console.error(result.error)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update user timezone",
+        });
+      }
+
+      return result.data;
+    })
 });

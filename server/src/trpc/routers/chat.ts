@@ -40,6 +40,7 @@ import { tryCatch } from "../../lib/utils.js";
 import { AddTask } from "../../shared/types.js";
 import { OpenAi } from "../../lib/openai.js";
 import { randomUUID } from "crypto";
+import pLimit from "p-limit"
 
 // cant stream if trpc
 
@@ -352,7 +353,10 @@ chatRouter.post("/", async (req, res) => {
           data: { text: "\n\n" },
         });
 
-        console.log(jobQueue);
+        console.log('sent plan')
+        console.log('jq', jobQueue);
+
+        // check if jq empty so say not in knolwedge base/ cannot do that
 
         let totalGenerateContext = "";
         for (let i = 0; i < jobQueue["GENERATE_TASK"].length; i++) {
@@ -387,16 +391,12 @@ chatRouter.post("/", async (req, res) => {
             },
           });
 
-          try {
-            await runGenerateTask({
-              messages,
-              projectId,
-              writer,
-              executingGenerateId,
-            });
-          } catch (err) {
-            console.error(err);
-          }
+          await runGenerateTask({
+            messages,
+            projectId,
+            writer,
+            executingGenerateId,
+          });          
 
           writer.write({
             id: Math.random().toString(),
@@ -404,7 +404,7 @@ chatRouter.post("/", async (req, res) => {
             data: { text: "" },
           });
           await generateTaskMessage({ messages, writer });
-        }
+        } 
 
         let totalUpdateContext = "";
         for (let i = 0; i < jobQueue["UPDATE_TASK"].length; i++) {
@@ -731,8 +731,43 @@ const runGenerateTask = async ({
     )
   ).filter((result) => !!result);
 
-  // insert to database
-  await Promise.all(uniqueTasks.map((ppt) => insertTask(pool, ppt, projectId)));
+  writer.write({
+    id: Math.random().toString(),
+    type: "data-text",
+    data: { text: "" },
+  });
+
+  // returns a promise while capping concurrent tasks
+  const limit = pLimit(5);
+
+  const inserts = uniqueTasks.map((ppt) => 
+    limit(async () => {
+      try{
+        const res = await insertTask(pool, ppt, projectId)
+        writer.write({
+          id: Math.random().toString(),
+          type: "data-generated",
+          data: {
+            text: `Generated task: ${ppt.title}`,
+          },
+        });
+
+        return {ok: true, value: res}
+      }catch(err){
+        writer.write({
+          id: Math.random().toString(),
+          type: "data-generated",
+          data: {
+            text: `Failed to generate task: ${ppt.title}`,
+          },
+        });
+        throw err;
+      }
+    })
+  )
+
+  await Promise.all(inserts)
+  console.log('done inserting')
 
   // message to the user
   messages.push({

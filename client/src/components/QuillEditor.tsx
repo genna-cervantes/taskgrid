@@ -37,6 +37,7 @@ const QuillEditor = ({description, setDescription}: {description: string|undefin
 
   return (
     <ReactQuill
+      className=""
       theme="snow"
       value={description}
       onChange={setDescription}

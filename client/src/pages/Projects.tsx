@@ -16,21 +16,6 @@ import LoadingModal from "../components/LoadingModal";
 import { Task } from "../../../server/src/shared/types";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import Mousetrap from "mousetrap";
-import { Funnel } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ProjectQuickActions from "@/components/ProjectQuickActions";
 
 const Projects = () => {

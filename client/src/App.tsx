@@ -11,6 +11,9 @@ import TaskPage from "./pages/TaskPage";
 import WorkspaceRedirector from "./redirectors/WorkspaceRedirector";
 import ProfilePage from "./pages/ProfilePage";
 import Login from "./pages/Login";
+import Inbox from "./pages/Inbox";
+import Integrations from "./pages/Integrations";
+import { TimezoneSync } from "./pages/TimezoneSync";
 
 const App = () => {
 
@@ -19,6 +22,7 @@ const App = () => {
   return (
     <ThemeProvider>
       <BrowserRouter>
+        <TimezoneSync />
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<WorkspaceRedirector />} />
@@ -40,6 +44,12 @@ const App = () => {
             <Route path="workspaces/:workspaceId/projects/:projectId/tasks" element={<TaskLayout />}>
               <Route path=":taskId" element={<TaskPage />} />
             </Route>
+
+            {/* inbox */}
+            <Route path="workspaces/:workspaceId/projects/:projectId/inbox" element={<Inbox />} />
+
+            {/* integrations */}
+            <Route path="workspaces/:workspaceId/projects/:projectId/integrations" element={<Integrations />} />
 
             {/* profile */}
             <Route path="profile" element={<ProfilePage />} />

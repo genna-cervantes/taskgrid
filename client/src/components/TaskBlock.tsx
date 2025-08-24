@@ -90,9 +90,14 @@ const TaskBlock = ({
         }}
         className={`relative hover:cursor-grab active:cursor-grabbing focus:cursor-grabbing border focus:ring-0 focus:outline-none dark:focus:border-midWhite px-3 pt-3 pb-2 dark:bg-inherit bg-lmLightBackground rounded-md dark:border-faintWhite/15 cursor-move border-faintBlack/15 shadow-bottom-grey`}
       >
-        <p className="font-semibold text-midWhite text-xxs pb-1">
-            [{task.projectTaskId}]
-        </p>
+        <div className="flex justify-between w-full">
+          <p className="font-semibold text-midWhite text-xxs pb-1">
+              [{task.projectTaskId}]
+          </p>
+          {task.daysInColumn !== 0 && <p className="font-semibold text-midWhite text-xxs pb-1" title="days in column">
+              {task.daysInColumn}
+          </p>}
+        </div>
         <h1 className="text-xs text-white/90 line-clamp-2 font-jetbrains" title={task.title}>
           {task.title}
         </h1>
@@ -148,7 +153,7 @@ const TaskBlock = ({
               <div className="h-[1px] w-full bg-faintWhite mt-4 mb-2"></div>
               <div className="flex flex-col gap-y-2">
                 {task.subtasks.map((s, index) => (
-                  <span className="flex gap-x-2 w-full items-center text-xs">
+                  <span key={s.title} className="flex gap-x-2 w-full items-center text-xs">
                     <Checkbox
                       onClick={(e) => handleSubtaskChange(e, index)}
                       checked={s.isDone}

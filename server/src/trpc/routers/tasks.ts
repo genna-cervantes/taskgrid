@@ -559,7 +559,10 @@ export const tasksRouter = router({
         updateTaskOrderBatched(pool, input.payload, input.projectId)
       );
 
+      console.log('payload', input.payload)
+
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update task order",
@@ -676,15 +679,17 @@ export const tasksRouter = router({
     .input(
       z.object({
         taskId: z.string(),
+        projectId: z.string(),
         comment: z.string(),
         commentBy: z.string(),
       })
     )
     .mutation(async ({ input }) => {
       let result = await tryCatch(
-        addComment(pool, input.taskId, input.comment, input.commentBy)
+        addComment(pool, input.taskId, input.projectId, input.comment, input.commentBy)
       );
       if (result.error != null) {
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to add comment",

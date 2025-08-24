@@ -243,3 +243,10 @@ export const insertUser = async (
 
   return (res.rowCount ?? 0) === 1 ? true: false;
 };
+
+export const updateTimezone = async (pool: Pool, username: string, timezone: string) => {
+  const query = 'UPDATE users SET timezone = $1 WHERE username = $2 AND is_active = TRUE;';
+  const res = await pool.query(query, [timezone, username]);
+
+  return (res.rowCount ?? 0) === 1;
+}

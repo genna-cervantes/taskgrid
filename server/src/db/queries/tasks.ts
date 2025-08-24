@@ -6,13 +6,13 @@ import {
   Task,
 } from "../../shared/types.js";
 import { toSnakeCase } from "../../lib/utils.js";
-import {OpenAi } from "../../lib/openai.js"
+import { OpenAi } from "../../lib/openai.js";
+import { insertAsyncNotification } from "./notifications.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
-  const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND is_active = TRUE';
+  const query = `SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index, FLOOR(EXTRACT(EPOCH FROM (now() - progress_updated_at)) / 86400)::int AS "daysInColumn" FROM tasks WHERE project_id = $1 AND is_active = TRUE`;
   const res = await pool.query(query, [id]);
 
   const tasks: Task[] = res.rows.map((task) => ({
@@ -56,16 +56,21 @@ export const getTaskById = async (
     throw new Error("Bad request missing required fields");
 
   const query =
-    'SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
+    'SELECT id, title, description, link, priority, progress, assign_to AS "assignTo", project_task_id AS "projectTaskId", files, target_start_date AS "targetStartDate", target_end_date AS "targetEndDate", category, depends_on AS "dependsOn", subtasks, index, FLOOR(EXTRACT(EPOCH FROM (now() - progress_updated_at)) / 86400)::int AS "daysInColumn" FROM tasks WHERE project_id = $1 AND id = $2 AND is_active = TRUE LIMIT 1';
   const res = await pool.query(query, [projectId, taskId]);
 
   if (res.rows.length === 0) {
     throw new Error("Task not found");
   }
 
-  const sanitized = {...Object.fromEntries(
-      Object.entries(res.rows[0]).map(([key, value]) => [key, value === null ? undefined : value])
-    ) } as Partial<Task>
+  const sanitized = {
+    ...Object.fromEntries(
+      Object.entries(res.rows[0]).map(([key, value]) => [
+        key,
+        value === null ? undefined : value,
+      ])
+    ),
+  } as Partial<Task>;
 
   const task = {
     ...sanitized,
@@ -109,26 +114,31 @@ export const insertTask = async (
       task.category ?? undefined,
       task.files ?? [],
       task.targetStartDate ?? undefined,
-      task.targetEndDate ?? undefined
+      task.targetEndDate ?? undefined,
     ]);
-  
+
     let taskId: string = res.rows[0].id.toString();
-    
+
     if (!taskId) throw new Error("Bad request query retuned no id");
 
     // process embedding
     const embedResult = await OpenAi.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: JSON.stringify(task)
-    })
+      model: "text-embedding-3-small",
+      input: JSON.stringify(task),
+    });
     const embedding = embedResult.data[0].embedding;
-    const vectorString = `[${embedding.join(',')}]`;
+    const vectorString = `[${embedding.join(",")}]`;
 
-    const embeddingQuery = 'UPDATE tasks SET embedding = $1 WHERE id = $2 AND is_active = TRUE;';
-    const embeddingRes = await pool.query(embeddingQuery, [vectorString, taskId]);
+    const embeddingQuery =
+      "UPDATE tasks SET embedding = $1 WHERE id = $2 AND is_active = TRUE;";
+    const embeddingRes = await pool.query(embeddingQuery, [
+      vectorString,
+      taskId,
+    ]);
 
-    if ((embeddingRes?.rowCount ?? 0) !== 1) throw new Error("Error creating task unable to insert embedding")
-    
+    if ((embeddingRes?.rowCount ?? 0) !== 1)
+      throw new Error("Error creating task unable to insert embedding");
+
     await client.query("COMMIT");
     return taskId;
   } catch (err) {
@@ -137,7 +147,6 @@ export const insertTask = async (
   } finally {
     client.release();
   }
-
 };
 
 export const updateTaskProgress = async (
@@ -355,7 +364,8 @@ export const getFilteredTasks = async (
          assign_to AS "assignTo", project_task_id AS "projectTaskId", 
          files, target_start_date AS "targetStartDate", 
          target_end_date AS "targetEndDate", category, 
-         depends_on AS "dependsOn", subtasks, index
+         depends_on AS "dependsOn", subtasks, index,
+         FLOOR(EXTRACT(EPOCH FROM (now() - progress_updated_at)) / 86400)::int AS "daysInColumn"
   FROM tasks
   WHERE project_id = $1 AND is_active = TRUE
 `;
@@ -390,7 +400,7 @@ export const getFilteredTasks = async (
     values.push(projectTaskIdFilters.map((ptf) => Number(ptf)));
     paramIndex++;
   }
-  
+
   const res = await pool.query(query, values);
 
   const tasks: Task[] = res.rows.map((task) => ({
@@ -431,6 +441,7 @@ export const archiveTasksInColumn = async (
 export const addComment = async (
   pool: Pool,
   taskId: string,
+  projectId: string,
   comment: string,
   commentBy: string
 ) => {
@@ -440,6 +451,8 @@ export const addComment = async (
   const query =
     "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
   const res = await pool.query(query, [taskId, comment, commentBy]);
+
+  await insertAsyncNotification(pool, 'update_discussion', taskId, projectId, {recipient: "all"}, {})
 
   return (res.rowCount ?? 0) === 1 ? true : false;
 };
@@ -467,26 +480,34 @@ export const getTaskCategoryOptions = async (pool: Pool, projectId: string) => {
   }[];
 };
 
-export const addTaskCategoryOptions = async (pool: Pool, projectId: string, taskCategoryOption: {category: string, color: string}) => {
-  if (!projectId) throw new Error("Bad request missing required fields")
+export const addTaskCategoryOptions = async (
+  pool: Pool,
+  projectId: string,
+  taskCategoryOption: { category: string; color: string }
+) => {
+  if (!projectId) throw new Error("Bad request missing required fields");
 
-    const client = await pool.connect();
+  const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-    
-    // 
-    const query = "UPDATE projects SET task_category_options = COALESCE(task_category_options, '[]'::jsonb) || $1 WHERE id = $2 AND is_active = TRUE;";
-    const res = await pool.query(query, [JSON.stringify([taskCategoryOption]), projectId]);
 
-    console.log(JSON.stringify([taskCategoryOption]))
+    //
+    const query =
+      "UPDATE projects SET task_category_options = COALESCE(task_category_options, '[]'::jsonb) || $1 WHERE id = $2 AND is_active = TRUE;";
+    const res = await pool.query(query, [
+      JSON.stringify([taskCategoryOption]),
+      projectId,
+    ]);
+
+    console.log(JSON.stringify([taskCategoryOption]));
 
     await client.query("COMMIT");
-  
-    if (res?.rowCount === 1){
-      return taskCategoryOption
+
+    if (res?.rowCount === 1) {
+      return taskCategoryOption;
     }
-  
+
     return false;
   } catch (err) {
     await client.query("ROLLBACK");
@@ -494,8 +515,7 @@ export const addTaskCategoryOptions = async (pool: Pool, projectId: string, task
   } finally {
     client.release();
   }
-
-}
+};
 
 export const updateTaskCategoryOptions = async (
   pool: Pool,
@@ -588,12 +608,12 @@ export const updateTaskSubTasks = async (
   ]);
 
   let subtasks: {
-    id: string,
+    id: string;
     subtasks: {
-      title: string,
-      isDone: boolean
-    }[]
-  } = res.rows[0]
+      title: string;
+      isDone: boolean;
+    }[];
+  } = res.rows[0];
 
   return (res.rowCount ?? 0) === 1 ? subtasks : false;
 };
@@ -604,6 +624,8 @@ export const updateTaskOrderBatched = async (
   projectId: string
 ) => {
   if (!projectId) throw new Error("Bad request missing required fields");
+
+  console.log('running upd')
 
   const taskIds = payload.map((t) => Number(t.taskId));
   const indices = payload.map((t) => t.index);
@@ -621,56 +643,87 @@ export const updateTaskOrderBatched = async (
   const placeholders = taskIds.map((_, i) => `$${i + 1}`).join(", ");
 
   const query = `
+    WITH old_values AS (
+      SELECT id, progress as old_progress
+      FROM tasks
+      WHERE id IN (${placeholders}) AND project_id = $${3 * payload.length + 1}
+    )
     UPDATE tasks
     SET
-      index = (CASE id
-        ${indexCases}
-      END)::integer,
-      progress = (CASE id
-        ${progressCases}
-      END)::text
-    WHERE id IN (${placeholders})
-      AND project_id = $${3 * payload.length + 1}
+      index = (CASE tasks.id ${indexCases} END)::integer,
+      progress = (CASE tasks.id ${progressCases} END)::text
+    FROM old_values  
+    WHERE tasks.id = old_values.id  
+      AND tasks.project_id = $${3 * payload.length + 1}
+    RETURNING 
+      tasks.id, 
+      tasks.progress,        
+      old_values.old_progress
   `;
 
   // Parameters: taskIds, indices, progressValues, projectId
   const values = [...taskIds, ...indices, ...progressValues, projectId];
 
   const res = await pool.query(query, values);
+  const changedTasks = res.rows
+    .filter(row => row.old_progress !== row.progress)
+    .map(row => ({id: row.id, oldProgress: row.old_progress, newProgress: row.progress}))  
+
+
+  await Promise.all(
+    changedTasks.map((ct) => {
+      return insertAsyncNotification(pool, 'update_progress', ct.id, projectId, {recipient: 'all'}, {oldProgress: ct.oldProgress, newProgress: ct.newProgress})
+    })
+  )
+
   return res.rowCount === payload.length ? true : false;
 };
 
-export const updateTask = async (pool: Pool, taskId: string, updates: Partial<Task>) => {
-
-  if (!taskId) throw new Error("Bad request missing required fields")
+export const updateTask = async (
+  pool: Pool,
+  taskId: string,
+  updates: Partial<Task>
+) => {
+  if (!taskId) throw new Error("Bad request missing required fields");
 
   const changedKeys = Object.keys(updates) as (keyof Task)[];
-  const changedValues = changedKeys.map((ck) => (ck === "targetEndDate" || ck === "targetStartDate") && updates[ck] ? new Date(updates[ck]) : updates[ck]);
-  let updatedQueries: string[] = []
+  const changedValues = changedKeys.map((ck) =>
+    (ck === "targetEndDate" || ck === "targetStartDate") && updates[ck]
+      ? new Date(updates[ck])
+      : updates[ck]
+  );
+  let updatedQueries: string[] = [];
 
   changedKeys.forEach((ck, i) => {
-    updatedQueries.push(`${toSnakeCase(ck)} = $${i+1}`)
-  })
+    updatedQueries.push(`${toSnakeCase(ck)} = $${i + 1}`);
+  });
 
-  const query = `UPDATE tasks SET ${updatedQueries.join(', ')} WHERE id = $${changedKeys.length + 1}`;
+  const query = `UPDATE tasks SET ${updatedQueries.join(", ")} WHERE id = $${
+    changedKeys.length + 1
+  }`;
 
   const res = await pool.query(query, [...changedValues, taskId]);
 
   return (res.rowCount ?? 0) === 1 ? true : false;
-}
+};
 
-export const getSimilarTasks = async (pool: Pool, projectId: string, embedding: string): Promise<{
-  title: string, 
-  description: string|undefined,
-  priority: "low"|"medium"|"high",
-  assign_to: string[]
-}|null> => {
-  if (!projectId || !embedding) throw new Error("Bad request missing required fields")
+export const getSimilarTasks = async (
+  pool: Pool,
+  projectId: string,
+  embedding: string
+): Promise<{
+  title: string;
+  description: string | undefined;
+  priority: "low" | "medium" | "high";
+  assign_to: string[];
+} | null> => {
+  if (!projectId || !embedding)
+    throw new Error("Bad request missing required fields");
 
   const query = `SELECT title, description, priority, assign_to, 1 - (embedding <=> $2) AS cosine_similarity
-    FROM tasks WHERE project_id = $1 AND (1 - (embedding <=> $2)) >= 0.84 AND is_active = TRUE ORDER BY embedding <=> $2 LIMIT 1;`
+    FROM tasks WHERE project_id = $1 AND (1 - (embedding <=> $2)) >= 0.84 AND is_active = TRUE ORDER BY embedding <=> $2 LIMIT 1;`;
 
   const res = await pool.query(query, [projectId, embedding]);
-  
-  return res?.rows[0] ?? null
-}
+
+  return res?.rows[0] ?? null;
+};

@@ -63,6 +63,9 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
   },
+  cors: {
+
+  },
   trustedOrigins: [
     "http://localhost:5173",
   ],

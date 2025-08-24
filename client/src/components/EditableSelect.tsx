@@ -82,7 +82,7 @@ export function EditableDropdown({
         >
           <span className="flex w-full items-center gap-x-4 text-white/90">
             <span
-              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-200`}
+              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-300`}
             ></span>
             {taskCategory
               ? taskCategoryOptions.find((o) => o.category === taskCategory)
@@ -102,7 +102,7 @@ export function EditableDropdown({
               {editingCategory === opt.category ? (
                 <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1">
                   <span
-                    className={`h-3 w-3 rounded-full bg-${opt.color}-200`}
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-300`}
                   ></span>
                   <Input
                     ref={(el) => {
@@ -120,7 +120,7 @@ export function EditableDropdown({
               ) : (
                 <div className="flex w-full items-center gap-x-4 hover:bg-faintWhite/10 rounded-sm px-1 py-2 hover:cursor-pointer">
                   <span
-                    className={`h-3 w-3 rounded-full bg-${opt.color}-200`}
+                    className={`h-3 w-3 rounded-full bg-${opt.color}-300`}
                   ></span>
                   <button
                     className={`text-left w-full text-xs `}

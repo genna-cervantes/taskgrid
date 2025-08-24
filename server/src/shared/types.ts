@@ -26,7 +26,8 @@ export const TaskSchema = z.object({
   targetEndDate: z.date().optional(),
   dependsOn: z.array(z.object({id: z.string(), title: z.string()})),
   subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()})),
-  index: z.number()
+  index: z.number(),
+  daysInColumn: z.number()
 });
 
 export const AddTaskSchema = z.object({

@@ -3,7 +3,7 @@ import QuillEditor from "./QuillEditor";
 
 const TaskDescription = ({taskDescription, setTaskDescription, error, isPage = false}: {isPage?: boolean, error: string|undefined, taskDescription: string|undefined, setTaskDescription: React.Dispatch<React.SetStateAction<string | undefined>>}) => {
   return (
-    <div>
+    <div className="">
       <h3
         className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider mb-1 transition-all duration-100 `}
       >

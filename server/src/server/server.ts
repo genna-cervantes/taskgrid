@@ -20,14 +20,15 @@ app.use(
       "https://taskan.cloud",
       "http://localhost:3001",
     ],
-    methods: ["GET", "POST", "PUT"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, 
+    allowedHeaders: ["Content-Type", "Authorization", "x-trpc-source"],
   })
 );
 
 app.all("/api/auth/*", toNodeHandler(auth));
 
-app.use(express.json({ limit: "10mb" })); // ⬅️ increase from default 100kb
+app.use(express.json({ limit: "10mb" })); 
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // set headers

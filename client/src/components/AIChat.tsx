@@ -41,7 +41,7 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
       onData(part) {
         if (part.type === "data-state") {
           // on data-state trigger a state var that will trigger a usestate that will update the value of the specific element via id
-
+          
           console.log("on data");
           const { text, visible } = part.data as {
             text: string;
@@ -51,11 +51,11 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
             ...prev,
             [text]: visible,
           }));
-
+          
           // while rendering check if the text is already in the state and skip that
         } else if (part.type === "data-query") {
           console.log("called");
-
+          
           try {
             const data = part.data as { filteredTaskIds: number[] };
             const newParams = new URLSearchParams(
@@ -67,6 +67,8 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
           } catch (err) {
             console.error(err);
           }
+        } else if (part.type === "data-generated"){
+          utils.tasks.getTasks.invalidate();
         } else if (part.type === "data-error") {
           setStates({});
         }
@@ -140,7 +142,10 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
                           );
                         } else if (p.type === "data-text") {
                           return <br key={i} />;
-                        } else if (p.type === "data-error") {
+                        } else if (p.type === "data-generated"){
+                          return <p className="text-purple-200 text-xxs italic">{(p.data as any).text}</p>
+                        }
+                         else if (p.type === "data-error") {
                           return (
                             <span className="text-red-400">
                               {(p.data as any).text}

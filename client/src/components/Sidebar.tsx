@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import {
+  Blocks,
   CircleUserRound,
   ExternalLink,
   FolderClosed,
@@ -17,6 +18,8 @@ import {
   SidebarClose,
   SidebarOpen,
   SquareKanban,
+  Waypoints,
+  Workflow,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import kanifyLogo from "/kanify_logo.png";
@@ -104,9 +107,7 @@ const Sidebar = ({
       name: "Inbox",
       func: function () {
         setActiveIndex(1);
-        // navigate(
-        //   `workspaces/${workspaceId}/projects/${projectId}?view=Calendar`
-        // );
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/inbox`);
       },
     },
     // {
@@ -140,10 +141,19 @@ const Sidebar = ({
     // },
     {
       parent: "projects",
+      icon: Blocks,
+      name: "Integrations",
+      func: function () {
+        setActiveIndex(2);
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/integrations`);
+      },
+    },
+    {
+      parent: "projects",
       icon: ExternalLink,
       name: "Share",
       func: function () {
-        setActiveIndex(2);
+        setActiveIndex(3);
       },
     },
   ];
@@ -155,9 +165,7 @@ const Sidebar = ({
   const [searchParams, setSearchParams] = useSearchParams();
 
   // default set to location // if may serach params
-  const view = isInProject
-    ? searchParams.get("view") ?? "kanban"
-    : path.split("/")[1];
+  const view = path.split("/")[5] ?? "kanban";  
 
   useEffect(() => {
     setActiveIndex(
