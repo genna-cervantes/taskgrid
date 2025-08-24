@@ -161,7 +161,7 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
   const query =
-    `SELECT username 
+    `SELECT username, u.id 
     FROM users AS u
     LEFT JOIN project_members AS pm
     ON u.id = pm.user_id
@@ -174,7 +174,8 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
 
   let users = res.rows.map((r) => {
     return {
-      username: r.username
+      username: r.username as string,
+      id: r.id as string
     };
   });
 

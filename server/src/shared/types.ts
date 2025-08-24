@@ -59,7 +59,8 @@ export const ProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   guestId: z.string(),
-  workspaceId: z.string()
+  workspaceId: z.string(),
+  pinned: z.boolean()
 })
 
 export type Project = z.infer<typeof ProjectSchema>

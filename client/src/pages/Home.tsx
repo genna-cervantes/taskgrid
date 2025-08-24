@@ -87,6 +87,8 @@ const Home = () => {
     return <Navigate to={`/`} replace />;
   }
 
+  console.log(projects)
+
   return (
     <div className="">
       <BreadCrumbs crumbs={[{name: workspaceName, url: `/workspaces/${workspaceId}`}]} />
@@ -97,7 +99,12 @@ const Home = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-4">
           {projects &&
-            projects.map((p: Project) => {
+            projects.sort((a, b) => {
+              if (a.pinned === b.pinned) {
+                return a.name.localeCompare(b.name); // secondary sort
+              }
+              return a.pinned ? -1 : 1; // true before false
+            }).map((p: Project) => {
               return (
                 <ProjectBlock
                   key={p.id}

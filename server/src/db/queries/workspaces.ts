@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { v4 as uuidv4 } from "uuid";
 
 export const getUserWorkspaces = async (pool: Pool, username: string) => {
   if (!username) throw new Error("Bad request missing required fields");
@@ -72,10 +73,20 @@ export const insertWorkspace = async (
       userId,
     ]);
 
+    // create default projects
+    let triageId = uuidv4()
+    let myIssuesId = uuidv4();
+    const insertProjectsQuery = "INSERT INTO projects (id, name, user_id, workspace_id, pinned) VALUES ($1, $2, $3, $4, TRUE), ($5, $6, $7, $8, TRUE)";
+    const projectRes = await client.query(insertProjectsQuery, [triageId, 'Triage', userId, workspaceId, myIssuesId, 'My Issues', userId, workspaceId]);
+    
+    const insertProjectMembersQuery = "INSERT INTO project_members (project_id, user_id) VALUES ($1, $2), ($3, $4)"
+    const projectMemberRes = await client.query(insertProjectMembersQuery, [triageId, userId, myIssuesId, userId])
+
     await client.query("COMMIT");
 
     return userWorkspaceRes.rowCount === 1 &&
-      userWorkspaceRes.rowCount === workspaceRes.rowCount
+      userWorkspaceRes.rowCount === workspaceRes.rowCount &&
+      projectRes.rowCount === 2 && projectMemberRes.rowCount === 2
       ? {workspaceId: workspaceId}
       : false;
 

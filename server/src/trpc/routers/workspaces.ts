@@ -58,6 +58,7 @@ export const workspacesRouter = router({
     .mutation(async ({ input }) => {
       let result = await tryCatch(insertWorkspace(pool, input.username, input.workspaceId, input.workspaceName));
       if (result.error != null){
+        console.error(result.error)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create workspace",

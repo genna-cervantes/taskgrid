@@ -1,8 +1,148 @@
 import { Info } from "lucide-react";
-import { useState, useEffect, useRef, forwardRef, Ref } from "react";
+import { useState, useEffect, useRef, forwardRef, Ref, useImperativeHandle } from "react";
 import { trpc } from "../utils/trpc";
 import { useParams } from "react-router-dom";
-import { MentionsInput, Mention } from "react-mentions";
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Mention from '@tiptap/extension-mention';
+import Placeholder from '@tiptap/extension-placeholder';
+import { ReactRenderer } from '@tiptap/react';
+import tippy from 'tippy.js';
+
+// Mention list component for TipTap
+interface MentionListHandle {
+  onKeyDown: (props: { event: KeyboardEvent }) => boolean;
+}
+
+const MentionList = forwardRef<MentionListHandle, {
+  items: { id: string; display: string }[];
+  command: (item: { id: string; label: string }) => void;
+}>((props, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const divRef = useRef<HTMLDivElement>(null);
+
+  const selectItem = (index: number) => {
+    const item = props.items[index];
+    if (item) {
+      props.command({ id: item.id, label: item.display });
+    }
+  };
+
+  const upHandler = () => {
+    setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
+  };
+
+  const downHandler = () => {
+    setSelectedIndex((selectedIndex + 1) % props.items.length);
+  };
+
+  const enterHandler = () => {
+    selectItem(selectedIndex);
+  };
+
+  useEffect(() => setSelectedIndex(0), [props.items]);
+
+  // Expose keyboard navigation methods to parent component
+  useImperativeHandle(ref, () => ({
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+      if (event.key === 'ArrowUp') {
+        upHandler();
+        return true;
+      }
+
+      if (event.key === 'ArrowDown') {
+        downHandler();
+        return true;
+      }
+
+      if (event.key === 'Enter') {
+        enterHandler();
+        return true;
+      }
+
+      return false;
+    }
+  }));
+
+  return (
+    <div
+      ref={divRef}
+      className="bg-dark border bg-light border-faintWhite/10 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50"
+    >
+      {props.items.length ? (
+        props.items.map((item, index) => (
+          <button
+            key={item.id}
+            className={`block w-full text-left px-3 py-2 text-sm hover:bg-faintWhite/10 ${
+              index === selectedIndex ? 'bg-faintWhite/10' : ''
+            }`}
+            onClick={() => selectItem(index)}
+          >
+            {item.display}
+          </button>
+        ))
+      ) : (
+        <div className="px-3 py-2 text-sm text-midWhite">No results</div>
+      )}
+    </div>
+  );
+});
+
+// Function to convert mentions for database storage (with full format)
+const convertMentionsForStorage = (htmlContent: string) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, 'text/html');
+  
+  // Find all mention spans
+  const mentions = doc.querySelectorAll('span.mention[data-id][data-label]');
+  
+  mentions.forEach((mention) => {
+    const userId = mention.getAttribute('data-id');
+    const displayName = mention.getAttribute('data-label');
+    
+    if (userId && displayName) {
+      // Replace the mention content with the full format for storage
+      mention.textContent = `@${userId}['${displayName}']`;
+    }
+  });
+  
+  return doc.body.innerHTML;
+};
+
+// Function to parse mentions in HTML and convert them to display format
+const parseMentionsForDisplay = (htmlContent: string) => {
+  // Parse the HTML content and replace mention spans with clickable elements
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, 'text/html');
+  
+  // Find all mention spans
+  const mentions = doc.querySelectorAll('span.mention[data-id][data-label]');
+  
+  mentions.forEach((mention) => {
+    const userId = mention.getAttribute('data-id');
+    const displayName = mention.getAttribute('data-label');
+    
+    if (userId && displayName) {
+      // Create a clickable mention element showing just @username
+      const clickableMention = doc.createElement('span');
+      clickableMention.className = 'mention cursor-pointer hover:bg-purple-300/40';
+      clickableMention.textContent = `@${displayName}`;
+      clickableMention.setAttribute('data-id', userId);
+      clickableMention.setAttribute('data-label', displayName);
+      
+      // Replace the original mention
+      mention.parentNode?.replaceChild(clickableMention, mention);
+    }
+  });
+  
+  // Also handle plain text mentions that might be in old comments with format @801['Genna Cervantes']
+  let content = doc.body.innerHTML;
+  content = content.replace(/@(\w+)\['([^']+)'\]/g, (_, userId, displayName) => {
+    return `<span class="mention cursor-pointer hover:bg-purple-300/40" data-id="${userId}" data-label="${displayName}">@${displayName}</span>`;
+  });
+  
+  return content;
+};
 
 const Comment = ({ comment }: { comment: string }) => {
   const [expanded, setExpanded] = useState(false);
@@ -15,6 +155,25 @@ const Comment = ({ comment }: { comment: string }) => {
     }
   }, [comment]);
 
+  // Handle mention clicks
+  const handleMentionClick = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains('mention')) {
+      const userId = target.getAttribute('data-id');
+      const displayName = target.getAttribute('data-label');
+      if (userId && displayName) {
+        // You can implement navigation to user profile or other actions here
+        console.log(`Clicked mention: ${displayName} (ID: ${userId})`);
+        // Example: navigate to user profile
+        // navigate(`/profile/${userId}`);
+      }
+    }
+  };
+
+  // Check if comment is HTML (contains tags) or plain text
+  const isHtmlComment = comment.includes('<') && comment.includes('>');
+  const processedComment = isHtmlComment ? parseMentionsForDisplay(comment) : comment;
+
   return (
     <>
       <div
@@ -23,8 +182,13 @@ const Comment = ({ comment }: { comment: string }) => {
           expanded ? "" : "line-clamp-2"
         }`}
         style={{ transition: "all 0.2s" }}
+        onClick={handleMentionClick}
       >
-        {comment}
+        {isHtmlComment ? (
+          <div dangerouslySetInnerHTML={{ __html: processedComment }} />
+        ) : (
+          comment
+        )}
       </div>
       {!expanded && isTruncated && (
         <button
@@ -46,20 +210,18 @@ type TaskDiscussionBoardProps = {
 
 const TaskDiscussionBoardBase = (
   props: TaskDiscussionBoardProps,
-  ref: Ref<HTMLTextAreaElement>
+  _ref: Ref<HTMLTextAreaElement>
 ) => {
   const { projectId } = useParams();
 
   const { taskId, user } = props;
-  const [insertComment, setInsertComment] = useState("");
-  const [showUsernames, setShowUsername] = useState(false);
 
   const utils = trpc.useUtils();
 
   const { data, isLoading: commentsIsLoading } =
     trpc.tasks.getCommentsByTask.useQuery({ taskId });
 
-  const { data: usersInProj } = trpc.users.getUsernamesInProject.useQuery(
+  const { data: usersInProj } = trpc.users.getUsersInProject.useQuery(
     { id: projectId! },
     { enabled: !!projectId }
   );
@@ -72,53 +234,138 @@ const TaskDiscussionBoardBase = (
   const addComment = trpc.tasks.addComment.useMutation({
     onSuccess: () => {
       utils.tasks.getCommentsByTask.invalidate({ taskId });
+      editor?.commands.clearContent();
     },
   });
 
-  const mentionInputStyle = {
-    control: {
-      backgroundColor: "transparent",
-      fontSize: "0.875rem", // text-sm
-      fontWeight: "normal",
-      width: '100%',
-    },
-    "&multiLine": {
-      control: {
-        minHeight: "3.5rem", // h-14
-        fontFamily: "inherit",
-        width: '100%',
-      },
-      highlighter: {
-        padding: "0.25rem 0.5rem", // py-1 px-2
-        border: "1px solid transparent",
-        borderRadius: "0.5rem", // rounded-lg
-      },
-      input: {
-        padding: "0.25rem 0.5rem", // py-1 px-2
-        border: "1px solid rgba(255, 255, 255, 0.1)", // border-faintWhite/10
-        borderRadius: "0.5rem", // rounded-lg
-        outline: "none",
-        "&:focus": {
-          outline: "none",
-          boxShadow: "none", // focus:ring-0
+  console.log(usersInProj)
+
+  // Create TipTap editor with mention support
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Placeholder.configure({
+        placeholder: 'Add a comment... (use @ to mention someone)',
+      }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention',
         },
-      },
-    },
-    suggestions: {
-      list: {
-        backgroundColor: "rgba(26, 26, 26, 1) !important",
-        borderRadius: "0.5rem",
-        fontSize: "0.75rem",
-        color: '#000',
-      },
-      item: {
-        padding: "4px 4px",
-        "&focused": {
-          backgroundColor: "#f3f4f6",
+        renderHTML({ node }) {
+          return [
+            'span',
+            {
+              class: 'mention',
+              'data-type': 'mention',
+              'data-id': node.attrs.id,
+              'data-label': node.attrs.label,
+            },
+            `@${node.attrs.label}`,
+          ];
         },
+        suggestion: {
+          items: ({ query }: { query: string }) => {
+            const users = usersInProj?.map((user) => ({ id: user.id, display: user.username })) ?? [];
+            return users
+              .filter(item => item.display.toLowerCase().startsWith(query.toLowerCase()))
+              .slice(0, 5);
+          },
+          render: () => {
+            let component: ReactRenderer;
+            let popup: any;
+
+            return {
+              onStart: (props: any) => {
+                component = new ReactRenderer(MentionList, {
+                  props,
+                  editor: props.editor,
+                });
+
+                if (!props.clientRect) {
+                  return;
+                }
+
+                popup = tippy('body', {
+                  getReferenceClientRect: props.clientRect,
+                  appendTo: () => document.body,
+                  content: component.element,
+                  showOnCreate: true,
+                  interactive: true,
+                  trigger: 'manual',
+                  placement: 'bottom-start',
+                });
+              },
+
+              onUpdate(props: any) {
+                component.updateProps(props);
+
+                if (!props.clientRect) {
+                  return;
+                }
+
+                popup[0].setProps({
+                  getReferenceClientRect: props.clientRect,
+                });
+              },
+
+              onKeyDown(props: any) {
+                if (props.event.key === 'Escape') {
+                  popup[0].hide();
+                  return true;
+                }
+
+                return (component.ref as any)?.onKeyDown?.(props);
+              },
+
+              onExit() {
+                popup[0].destroy();
+                component.destroy();
+              },
+            };
+          },
+        },
+      }),
+    ],
+    content: '',
+    editorProps: {
+      attributes: {
+        class: 'w-full min-h-14 px-2 py-1 border border-faintWhite/10 rounded-lg text-sm focus:outline-none focus:ring-0 prose prose-sm prose-invert max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-10',
       },
     },
-  };
+    onUpdate: () => {
+      // Optional: handle content changes if needed
+    },
+  });
+
+  // Handle Enter key to submit comment
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        
+        if (!projectId || !user) return;
+
+        const content = editor.getHTML().trim();
+        if (content.length > 0 && content !== '<p></p>') {
+          // Convert mentions to storage format before saving
+          const storageContent = convertMentionsForStorage(content);
+          addComment.mutate({
+            taskId,
+            projectId,
+            comment: storageContent,
+            commentBy: user,
+          });
+        }
+      }
+    };
+
+    editor.view.dom.addEventListener('keydown', handleKeyDown);
+    return () => {
+      editor.view.dom.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [editor, taskId, projectId, user, addComment]);
 
 
   return (
@@ -155,90 +402,9 @@ const TaskDiscussionBoardBase = (
           <Info className="h-3" />
           <p className="text-xxs italic">press enter to send message</p>
         </span>
-        <MentionsInput
-          className="w-full"
-          value={insertComment}
-          onChange={(e) => setInsertComment(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-
-              if (!projectId) return;
-
-              if (insertComment.trim().length > 0) {
-                addComment.mutate({
-                  taskId,
-                  projectId,
-                  comment: insertComment,
-                  commentBy: user!,
-                });
-                setInsertComment("");
-              }
-
-              setShowUsername(false);
-            }
-          }}
-          style={mentionInputStyle}
-          placeholder="Add a comment... (use @ to mention someone)"
-        >
-          <Mention
-            className="bg-light"
-            trigger="@"
-            data={
-              usersInProj?.map((user) => ({ id: user, display: user })) ?? []
-            }
-            // style={mentionStyle}
-          />
-        </MentionsInput>
-
-        {/* <textarea
-          ref={ref}
-          value={insertComment}
-          onChange={(e) => setInsertComment(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "@") {
-              setShowUsername(true);
-            }
-            if (e.key === "Enter") {
-              e.preventDefault();
-
-              if (!projectId) return;
-
-              if (insertComment.trim().length > 0) {
-                addComment.mutate({
-                  taskId,
-                  projectId,
-                  comment: insertComment,
-                  commentBy: user!,
-                });
-                setInsertComment("");
-              }
-
-              setShowUsername(false);
-            }
-          }}
-          className="w-full h-14 px-2 py-1 border border-faintWhite/10 rounded-lg text-sm placeholder:text-faintWhite focus:outline-none focus:ring-0"
-          placeholder="Join the discussion"
-        /> */}
-        {/* <button
-          type="button"
-          className="text-midWhite hover:text-white focus:text-white focus:outline-none focus:ring-0 disabled:hover:text-midWhite disabled:hover:cursor-not-allowed"
-          onClick={() => {
-            if (insertComment.trim().length > 0) {
-              addComment.mutate({
-                taskId,
-                comment: insertComment,
-                commentBy: user!,
-              });
-              setInsertComment("");
-            }
-          }}
-          disabled={
-            !user || addComment.isLoading || insertComment.trim().length === 0
-          }
-        >
-          <SendHorizonal />
-        </button> */}
+        <div className="w-full">
+          <EditorContent editor={editor} />
+        </div>
       </div>
     </div>
   );

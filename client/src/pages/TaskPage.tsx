@@ -303,7 +303,7 @@ const TaskPage = () => {
                   />
                 )}
               />
-              <div className="overflow-hidden h-60">
+              <div className="overflow-hidden h-96">
                 <div className="flex justify-between w-full mb-2">
                   <h3
                     className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
