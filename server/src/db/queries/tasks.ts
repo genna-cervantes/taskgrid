@@ -5,9 +5,9 @@ import {
   InsertableTask,
   Task,
 } from "../../shared/types.js";
-import { toSnakeCase } from "../../lib/utils.js";
+import { getDataIdFromComment, toSnakeCase } from "../../lib/utils.js";
 import { OpenAi } from "../../lib/openai.js";
-import { insertAsyncNotification } from "./notifications.js";
+import { insertAsyncNotification, insertSyncNotification } from "./notifications.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
@@ -447,6 +447,17 @@ export const addComment = async (
 ) => {
   if (!taskId || !comment || !commentBy)
     throw new Error("Bad request missing required fields");
+  
+  // theres a mention add to notifs
+  if (comment.includes(`data-type="mention"`)){
+    const recipient = getDataIdFromComment(comment)
+    if (recipient == null){
+      throw new Error("Error parsing comment with mention");
+    }
+    
+    await insertSyncNotification(pool, 'mention', taskId, projectId, {recipient: [recipient]}, {context: {comment}})
+    // push to websockets
+  }
 
   const query =
     "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";

@@ -1,3 +1,5 @@
+import { parse } from 'node-html-parser';
+
 type Success<T> = {
   data: T;
   error: null;
@@ -22,18 +24,16 @@ export async function tryCatch<T, E = Error>(
   }
 }
 
-// export const toSnakeCase = (camelCase: string) => {
-//   let camelArr = camelCase.split('');
+export const getDataIdFromComment = (htmlString: string) => {
+  const root = parse(htmlString);
+  const elementWithDataId = root.querySelector('[data-id]');
+  const attr = elementWithDataId?.getAttribute('data-id')
 
-//   camelArr = camelArr.map((c) => {
-//     if (c === c.toUpperCase()){
-//       return `_${c.toLowerCase()}`
-//     }else{
-//       return c
-//     }
-//   })
+  if (attr){
+    return parseInt(attr)
+  }
 
-//   return camelArr.join('')
-// }
+  return null;
+};
 
 export const toSnakeCase = (str: string) => str.replace(/([A-Z])/g, '_$1').toLowerCase();
