@@ -138,7 +138,7 @@ const ProjectColumn = ({
   return (
     <div
       key={col}
-      className="flex-1 text-white/90 rounded-md group/column "
+      className="flex-1 text-white/90 rounded-md group/column h-full"
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2 pt-1">
@@ -169,40 +169,41 @@ const ProjectColumn = ({
       </div>
 
       <div
-        className={`max-w-full flex flex-col gap-0 overflow-y-auto mb-2 h-[calc(100vh-170px)] scrollbar-none transition-all duration-200`}
+        className={`max-w-full mt-2 flex flex-col h-[calc(100vh-130px)] gap-y-2 mb-2 transition-all duration-200`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDragEnd}
       >
-        {columns[col] && columns[col].sort((a, b) => a.index - b.index).map((task, i) => {
-
-          return (
-            <div key={task.id} id={task.id} className="">
-              <TaskBlock
-                handleDragStart={handleDragStart}
-                projectId={projectId}
-                showAllSubtasks={showAllSubtasks}
-                col={col}
-                task={task}
-                taskCategoryOptions={taskCategoryOptions}
-                username={username}
-              />
-              {showDependencies &&
-                task.dependsOn &&
-                task.dependsOn.map((d) => (
-                  <Xarrow
-                    start={task.id}
-                    end={d.id}
-                    headSize={4}
-                    strokeWidth={2}
-                    color="#BABABA"
-                    animateDrawing={true}
-                  />
-                ))}
-            </div>
-          );
-        })}
-        <DropIndicator beforeId="-1" column={col} />
+        <div className="max-h-[90%] overflow-y-auto scrollbar-none">
+          {columns[col] && columns[col].sort((a, b) => a.index - b.index).map((task) => {
+            return (
+              <div key={task.id} id={task.id} className="">
+                <TaskBlock
+                  handleDragStart={handleDragStart}
+                  projectId={projectId}
+                  showAllSubtasks={showAllSubtasks}
+                  col={col}
+                  task={task}
+                  taskCategoryOptions={taskCategoryOptions}
+                  username={username}
+                />
+                {showDependencies &&
+                  task.dependsOn &&
+                  task.dependsOn.map((d) => (
+                    <Xarrow
+                      start={task.id}
+                      end={d.id}
+                      headSize={4}
+                      strokeWidth={2}
+                      color="#BABABA"
+                      animateDrawing={true}
+                    />
+                  ))}
+              </div>
+            );
+          })}
+          <DropIndicator beforeId="-1" column={col} />
+        </div>
         <AddTask
           type="block"
           setAddModal={setAddModal}

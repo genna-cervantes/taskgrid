@@ -36,11 +36,23 @@ const TaskSelectPriority = ({
               className={`${
                 taskPriority === p
                   ? "bg-lmMidBackground dark:bg-midWhite text-fadedBlack dark:text-white"
-                  : "bg-faintWhite dark:text-midWhite"
+                  : "text-fadedWhite border border-faintWhite"
               } ${
                 isPage ? "text-sm" : "text-xs"
-              }  dark:bg-faintWhite dark:hover:text-white text-fadedBlack flex-1 hover:bg-lmMidBackground dark:hover:bg-midWhite rounded-md py-1 cursor-pointer transition-colors`}
+              } flex items-center gap-x-2 justify-center text-fadedBlack flex-1 rounded-md py-1 cursor-pointer transition-colors`}
             >
+              {p === 'high' && <div className="flex gap-x-[0.2rem]">
+                <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+                <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+                <div className={`bg-red-400 h-2 w-[0.15rem]`} />
+              </div>}
+              {p === 'medium' && <div className="flex gap-x-[0.2rem]">
+                <div className={`bg-orange-400 h-2 w-[0.15rem]`} />
+                <div className={`bg-orange-400 h-2 w-[0.15rem]`} />
+              </div>}
+              {p === 'low' && <div className="flex gap-x-[0.2rem]">
+                <div className={`bg-green-400 h-2 w-[0.15rem]`} />
+              </div>}
               {p.slice(0, 1).toUpperCase()}
               {p.slice(1)}
             </button>

@@ -87,8 +87,6 @@ const Home = () => {
     return <Navigate to={`/`} replace />;
   }
 
-  console.log(projects)
-
   return (
     <div className="">
       <BreadCrumbs crumbs={[{name: workspaceName, url: `/workspaces/${workspaceId}`}]} />

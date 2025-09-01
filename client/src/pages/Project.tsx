@@ -11,6 +11,7 @@ import ClearTask from "../components/ClearTask";
 import Mousetrap from "mousetrap";
 import ProjectColumn from "@/components/ProjectColumn";
 import AddTaskForm from "@/components/AddTaskForm";
+import { useNotificationsSocket } from "@/contexts/NotificationContext";
 
 const Project = () => {
   const { projectId } = useParams();
@@ -19,7 +20,10 @@ const Project = () => {
 
   const [addModal, setAddModal] = useState("");
   const [showDependencies, setShowDependencies] = useState(false);
-  const [showAllSubtasks, setShowAllSubtasks] = useState(true);
+  const [showAllSubtasks, setShowAllSubtasks] = useState(localStorage.getItem("showAllSubtasks") === "true");
+
+  const { socket } = useNotificationsSocket();
+  console.log(socket)
 
   const {
     username,
@@ -78,7 +82,11 @@ const Project = () => {
 
     Mousetrap.bind("ctrl+alt+s", function (e) {
       e.preventDefault();
-      setShowAllSubtasks((prev) => !prev);
+      setShowAllSubtasks((prev) => {
+        const newVal = !prev;
+        localStorage.setItem("showAllSubtasks", newVal.toString());
+        return newVal;
+      });
     });
 
     return () => {

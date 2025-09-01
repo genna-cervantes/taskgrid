@@ -5,7 +5,7 @@ import {
   InsertableTask,
   Task,
 } from "../../shared/types.js";
-import { getDataIdFromComment, toSnakeCase } from "../../lib/utils.js";
+import { getDataIdFromComment, handleSyncNotification, toSnakeCase } from "../../lib/utils.js";
 import { OpenAi } from "../../lib/openai.js";
 import { insertAsyncNotification, insertSyncNotification } from "./notifications.js";
 
@@ -455,8 +455,7 @@ export const addComment = async (
       throw new Error("Error parsing comment with mention");
     }
     
-    await insertSyncNotification(pool, 'mention', taskId, projectId, {recipient: [recipient]}, {context: {comment}})
-    // push to websockets
+    await handleSyncNotification('mention', taskId, projectId, {recipient: recipient}, {context: {comment}})
   }
 
   const query =

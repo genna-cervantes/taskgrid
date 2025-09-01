@@ -160,21 +160,6 @@ const TaskPage = () => {
     },
   });
 
-  const updateTaskCategoryOptions =
-    trpc.tasks.updateTaskCategoryOptions.useMutation({
-      onSuccess: (data) => {
-        console.log("Task updated:", data);
-        utils.tasks.getTaskById.invalidate({
-          taskId: taskId,
-          projectId: projectId,
-        });
-        utils.tasks.getTaskCategoryOptions.invalidate({ projectId });
-      },
-      onError: (error) => {
-        console.error("Failed to create task:", error.message);
-      },
-    });
-
   const handleDeleteTask = () => {
     if (task == null) return;
 
@@ -206,10 +191,6 @@ const TaskPage = () => {
     });
 
     if (Object.keys(updates).length === 0) return;
-
-    // task category options update
-    if (taskCategoryOptions !== taskCategoryOptionsRes)
-      updateTaskCategoryOptions.mutate({ projectId, taskCategoryOptions });
 
     updateTask.mutate({ taskId, updates });
   };
@@ -384,6 +365,7 @@ const TaskPage = () => {
                 setTaskCategoryOptions={setTaskCategoryOptions}
                 taskCategory={field.value}
                 setTaskCategory={field.onChange}
+                projectId={projectId}
                 error={fieldState.error?.message}
               />
             )}

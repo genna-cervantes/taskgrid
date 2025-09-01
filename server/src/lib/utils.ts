@@ -1,4 +1,7 @@
 import { parse } from 'node-html-parser';
+import { insertSyncNotification } from '../db/queries/notifications.js';
+import { pool } from '../trpc/router.js';
+import { bus } from '../websocket/bus.js';
 
 type Success<T> = {
   data: T;
@@ -26,14 +29,31 @@ export async function tryCatch<T, E = Error>(
 
 export const getDataIdFromComment = (htmlString: string) => {
   const root = parse(htmlString);
-  const elementWithDataId = root.querySelector('[data-id]');
-  const attr = elementWithDataId?.getAttribute('data-id')
+  const mentions = root.querySelectorAll('span.mention[data-label]');
+  
+  let recipients: string[] = [];
+  mentions.forEach((mention) => {
+    const username = mention.getAttribute('data-label');
+  
+    if (username) recipients.push(username);
+  })
 
-  if (attr){
-    return parseInt(attr)
-  }
-
-  return null;
+  return recipients
 };
 
 export const toSnakeCase = (str: string) => str.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+export const handleSyncNotification = async (type: string, taskId: string, projectId: string, recipient: {recipient: string[]}, context: any) => {
+  console.log('handling sync notif')
+
+  insertSyncNotification(pool, type, taskId, projectId, recipient, context);
+  console.log('inserted to db')
+
+  // emit event
+  console.log(`sending to recipients ${recipient.recipient}`)
+  console.log(recipient)
+  recipient.recipient.forEach((r) => {
+    console.log(`notifying user ${r}`)
+    bus.emit("notify:user", {username: r, payload: context})
+  })
+}

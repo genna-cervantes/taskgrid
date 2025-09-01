@@ -36,6 +36,8 @@ import { randomUUID } from "crypto";
 import s3 from "../../aws/s3.js";
 import { tryCatch } from "../../lib/utils.js";
 import { TRPCError } from "@trpc/server";
+import { io } from "../../server/server.js";
+import { bus } from "../../websocket/bus.js";
 
 export const tasksRouter = router({
   getTasks: publicProcedure
@@ -87,6 +89,7 @@ export const tasksRouter = router({
     }),
   insertTask: publicProcedure
     .use(rateLimitMiddleware)
+    // auth middleware to get user id and if is guest
     .input(
       z.object({
         id: z.string(),

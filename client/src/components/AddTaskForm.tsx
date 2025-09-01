@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
@@ -8,15 +8,10 @@ import { ActionContext } from "../contexts/ActionContext";
 import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import TaskTitle from "./TaskTitle";
 import TaskDescription from "./TaskDescription";
-import TaskLink from "./TaskLink";
 import TaskSelectPriority from "./TaskSelectPriority";
 import TaskAssignee from "./TaskAssignee";
 import Mousetrap from "mousetrap";
 import TaskSelectCategory from "./TaskSelectCategory";
-import TaskTargetStartDate from "./TaskTargetStartDate";
-import TaskTargetEndDate from "./TaskTargetEndDate";
-import TaskSelectMedia from "./TaskSelectMedia";
-import TaskImageModal from "./TaskImageModal";
 
 const TaskAddSchema = z.object({
   title: z.string(),
@@ -53,6 +48,13 @@ const AddTaskForm = ({
 }) => {
   const form = useForm<TaskAdd>({
     resolver: zodResolver(TaskAddSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: undefined,
+      assignTo: [],
+      category: undefined
+    }
   });
 
   const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
@@ -60,8 +62,6 @@ const AddTaskForm = ({
   });
 
   const utils = trpc.useUtils();
-  const actionContext = useContext(ActionContext);
-  const recentTaskContext = useContext(RecentTaskContext);
 
   const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } =
     trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
@@ -82,7 +82,7 @@ const AddTaskForm = ({
   });
 
   const onSubmit = async (data: TaskAdd) => {
-    insertTask.mutate({ id: projectId, task: { ...data, progress: col } }); // empty files array first
+    insertTask.mutate({ userId: username, id: projectId, task: { ...data, progress: col } }); // empty files array first
   };
 
   // keyboard shortcuts
@@ -138,6 +138,7 @@ const AddTaskForm = ({
             name="category"
             render={({ field, fieldState }) => (
               <TaskSelectCategory
+                projectId={projectId}
                 taskCategoryOptions={taskCategoryOptions}
                 taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
                 setTaskCategoryOptions={setTaskCategoryOptions}
@@ -167,7 +168,7 @@ const AddTaskForm = ({
                 projectId={projectId}
                 username={username}
                 usersInProj={usersInProject ?? []}
-                taskAssignedTo={field.value ?? []}
+                taskAssignedTo={field?.value ?? []}
                 setTaskAssignedTo={field.onChange}
                 error={fieldState.error?.message}
               />

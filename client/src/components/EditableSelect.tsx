@@ -9,6 +9,7 @@ import { Trash2, Pen, ChevronDown } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { pickRandomColor } from "@/lib/utils";
+import { trpc } from "@/utils/trpc";
 
 export function EditableDropdown({
   isPage,
@@ -16,9 +17,10 @@ export function EditableDropdown({
   setTaskCategory,
   taskCategoryOptions,
   setTaskCategoryOptions,
+  projectId,
 }: {
   isPage: boolean;
-  taskCategory: string|undefined;
+  taskCategory: string | undefined;
   setTaskCategory: React.Dispatch<React.SetStateAction<string | undefined>>;
   taskCategoryOptions: {
     color: string;
@@ -32,11 +34,24 @@ export function EditableDropdown({
       }[]
     >
   >;
+  projectId: string;
 }) {
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newOption, setNewOption] = useState("");
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const utils = trpc.useUtils();
+
+  const updateTaskCategoryOptions =
+    trpc.tasks.updateTaskCategoryOptions.useMutation({
+      onSuccess: () => {
+        utils.tasks.getTaskCategoryOptions.invalidate({ projectId });
+      },
+      onError: (error) => {
+        console.error("Failed to create task:", error.message);
+      },
+    });
 
   useEffect(() => {
     if (editingCategory) {
@@ -49,14 +64,26 @@ export function EditableDropdown({
   };
 
   const handleDelete = (id: string) => {
-    setTaskCategoryOptions((prev) => prev.filter((o) => o.category !== id));
-    if (taskCategory === id) setTaskCategory(undefined);
+    const newOptions = taskCategoryOptions.filter((o) => o.category !== id);
+    setTaskCategoryOptions(newOptions);
+      updateTaskCategoryOptions.mutate({
+      projectId,
+      taskCategoryOptions: newOptions
+    });
+
+    if (taskCategory === id) setTaskCategory(undefined); // if deleted ung currently selected
   };
 
   const handleChange = (color: string, value: string) => {
-    setTaskCategoryOptions((prev) =>
-      prev.map((o) => (o.color === color ? { ...o, category: value } : o))
+    const newOptions = taskCategoryOptions.map((o) => 
+      o.color === color ? { ...o, category: value } : o
     );
+    setTaskCategoryOptions(newOptions);
+    
+    updateTaskCategoryOptions.mutate({
+      projectId,
+      taskCategoryOptions: newOptions
+    });
   };
 
   const handleAdd = () => {
@@ -66,10 +93,9 @@ export function EditableDropdown({
 
     const randomColor = pickRandomColor(taskCategoryOptions);
 
-    setTaskCategoryOptions((prev) => [
-      ...prev,
-      { category: newOption, color: randomColor },
-    ]);
+    const newCategoryOptions = [...taskCategoryOptions, { category: newOption, color: randomColor },]
+    setTaskCategoryOptions(newCategoryOptions);
+    updateTaskCategoryOptions.mutate({ projectId, taskCategoryOptions: newCategoryOptions });
 
     setNewOption("");
   };
@@ -78,11 +104,20 @@ export function EditableDropdown({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          className={`${isPage ? "text-base" : "text-sm"} border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${taskCategoryOptions.find((o) => o.category === taskCategory) ? "text-white" : "text-faintWhite"}`}
+          className={`${
+            isPage ? "text-base" : "text-sm"
+          } border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${
+            taskCategoryOptions.find((o) => o.category === taskCategory)
+              ? "text-white"
+              : "text-faintWhite"
+          }`}
         >
           <span className="flex w-full items-center gap-x-4 text-white/90">
             <span
-              className={`h-3 w-3 rounded-full bg-${taskCategoryOptions.find((o) => o.category === taskCategory)?.color ?? "gray"}-300`}
+              className={`h-3 w-3 rounded-full bg-${
+                taskCategoryOptions.find((o) => o.category === taskCategory)
+                  ?.color ?? "gray"
+              }-300`}
             ></span>
             {taskCategory
               ? taskCategoryOptions.find((o) => o.category === taskCategory)
@@ -92,8 +127,12 @@ export function EditableDropdown({
           <ChevronDown className="text-white" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={`px-2 py-2 w-[var(--radix-popover-trigger-width)] ${isPage ? "dark:bg-backgroundDark" : "dark:bg-[#1A1A1A]"} font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none`}>
-        <div className="flex flex-col gap-y-2 max-h-60 overflow-y-auto w-full">
+      <PopoverContent
+        className={`px-2 py-2 w-[var(--radix-popover-trigger-width)] ${
+          isPage ? "dark:bg-backgroundDark" : "dark:bg-[#1A1A1A]"
+        } font-jetbrains text-xs focus:outline-none focus:ring-0 focus:border-transparent border-none`}
+      >
+        <div className="flex flex-col gap-y-2 super-thin-scrollbar max-h-60 overflow-y-auto w-full">
           {taskCategoryOptions.map((opt) => (
             <div
               key={opt.category}
@@ -106,8 +145,8 @@ export function EditableDropdown({
                   ></span>
                   <Input
                     ref={(el) => {
-                      (inputRefs.current[opt.category] = el)}
-                    }
+                      inputRefs.current[opt.category] = el;
+                    }}
                     value={opt.category}
                     onChange={(e) => handleChange(opt.color, e.target.value)}
                     onBlur={() => setEditingCategory(null)}
@@ -135,7 +174,11 @@ export function EditableDropdown({
               )}
 
               <Pen
-                className={`w-5 h-5 cursor-pointer hover:text-fadedWhite ${editingCategory === opt.category ? "text-fadedWhite" : "text-faintWhite"}`}
+                className={`w-5 h-5 cursor-pointer hover:text-fadedWhite ${
+                  editingCategory === opt.category
+                    ? "text-fadedWhite"
+                    : "text-faintWhite"
+                }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleEdit(opt.category);
@@ -165,7 +208,11 @@ export function EditableDropdown({
               disabled={
                 newOption.length < 1 || taskCategoryOptions.length >= 10
               }
-              className={`px-3 rounded-md py-2 focus:outline-none focus:ring-0 focus:border-transparent focus:bg-midWhite focus:text-fadedWhite border-none bg-faintWhite disabled:bg-faintWhite ${newOption.length < 1 ? "hover:bg-faintWhite cursor-not-allowed" : "hover:bg-midWhite hover:text-fadedWhite"} disabled:cursor-not-allowed  text-midWhite`}
+              className={`px-3 rounded-md py-2 focus:outline-none focus:ring-0 focus:border-transparent focus:bg-midWhite focus:text-fadedWhite border-none bg-faintWhite disabled:bg-faintWhite ${
+                newOption.length < 1
+                  ? "hover:bg-faintWhite cursor-not-allowed"
+                  : "hover:bg-midWhite hover:text-fadedWhite"
+              } disabled:cursor-not-allowed  text-midWhite`}
               onClick={handleAdd}
             >
               Add

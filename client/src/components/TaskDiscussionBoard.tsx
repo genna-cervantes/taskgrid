@@ -94,15 +94,15 @@ const convertMentionsForStorage = (htmlContent: string) => {
   const doc = parser.parseFromString(htmlContent, 'text/html');
   
   // Find all mention spans
-  const mentions = doc.querySelectorAll('span.mention[data-id][data-label]');
+  const mentions = doc.querySelectorAll('span.mention[data-username][data-label]');
   
   mentions.forEach((mention) => {
-    const userId = mention.getAttribute('data-id');
+    const username = mention.getAttribute('data-username');
     const displayName = mention.getAttribute('data-label');
     
-    if (userId && displayName) {
+    if (username && displayName) {
       // Replace the mention content with the full format for storage
-      mention.textContent = `@${userId}['${displayName}']`;
+      mention.textContent = `@${username}['${displayName}']`;
     }
   });
   
@@ -116,18 +116,18 @@ const parseMentionsForDisplay = (htmlContent: string) => {
   const doc = parser.parseFromString(htmlContent, 'text/html');
   
   // Find all mention spans
-  const mentions = doc.querySelectorAll('span.mention[data-id][data-label]');
+  const mentions = doc.querySelectorAll('span.mention[data-username][data-label]');
   
   mentions.forEach((mention) => {
-    const userId = mention.getAttribute('data-id');
+    const username = mention.getAttribute('data-username');
     const displayName = mention.getAttribute('data-label');
     
-    if (userId && displayName) {
+    if (username && displayName) {
       // Create a clickable mention element showing just @username
       const clickableMention = doc.createElement('span');
       clickableMention.className = 'mention cursor-pointer hover:bg-purple-300/40';
       clickableMention.textContent = `@${displayName}`;
-      clickableMention.setAttribute('data-id', userId);
+      clickableMention.setAttribute('data-username', username);
       clickableMention.setAttribute('data-label', displayName);
       
       // Replace the original mention
@@ -137,8 +137,8 @@ const parseMentionsForDisplay = (htmlContent: string) => {
   
   // Also handle plain text mentions that might be in old comments with format @801['Genna Cervantes']
   let content = doc.body.innerHTML;
-  content = content.replace(/@(\w+)\['([^']+)'\]/g, (_, userId, displayName) => {
-    return `<span class="mention cursor-pointer hover:bg-purple-300/40" data-id="${userId}" data-label="${displayName}">@${displayName}</span>`;
+  content = content.replace(/@(\w+)\['([^']+)'\]/g, (_, username, displayName) => {
+    return `<span class="mention cursor-pointer hover:bg-purple-300/40" data-username="${username}" data-label="${displayName}">@${displayName}</span>`;
   });
   
   return content;
@@ -156,19 +156,17 @@ const Comment = ({ comment }: { comment: string }) => {
   }, [comment]);
 
   // Handle mention clicks
-  const handleMentionClick = (event: React.MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains('mention')) {
-      const userId = target.getAttribute('data-id');
-      const displayName = target.getAttribute('data-label');
-      if (userId && displayName) {
-        // You can implement navigation to user profile or other actions here
-        console.log(`Clicked mention: ${displayName} (ID: ${userId})`);
-        // Example: navigate to user profile
-        // navigate(`/profile/${userId}`);
-      }
-    }
-  };
+  // const handleMentionClick = (event: React.MouseEvent) => {
+  //   const target = event.target as HTMLElement;
+  //   if (target.classList.contains('mention')) {
+  //     const username = target.getAttribute('data-username');
+  //     const displayName = target.getAttribute('data-label');
+  //     if (username && displayName) {
+  //       // navigation to user profile or other actions here
+  //       console.log(`Clicked mention: ${displayName} (ID: ${username})`);
+  //     }
+  //   }
+  // };
 
   // Check if comment is HTML (contains tags) or plain text
   const isHtmlComment = comment.includes('<') && comment.includes('>');
@@ -182,7 +180,6 @@ const Comment = ({ comment }: { comment: string }) => {
           expanded ? "" : "line-clamp-2"
         }`}
         style={{ transition: "all 0.2s" }}
-        onClick={handleMentionClick}
       >
         {isHtmlComment ? (
           <div dangerouslySetInnerHTML={{ __html: processedComment }} />
@@ -238,8 +235,6 @@ const TaskDiscussionBoardBase = (
     },
   });
 
-  console.log(usersInProj)
-
   // Create TipTap editor with mention support
   const editor = useEditor({
     extensions: [
@@ -257,7 +252,7 @@ const TaskDiscussionBoardBase = (
             {
               class: 'mention',
               'data-type': 'mention',
-              'data-id': node.attrs.id,
+              'data-username': node.attrs.username,
               'data-label': node.attrs.label,
             },
             `@${node.attrs.label}`,
@@ -265,14 +260,14 @@ const TaskDiscussionBoardBase = (
         },
         suggestion: {
           items: ({ query }: { query: string }) => {
-            const users = usersInProj?.map((user) => ({ id: user.id, display: user.username })) ?? [];
+            const users = usersInProj?.map((user) => ({ username: user.username, display: user.username })) ?? [];
             return users
               .filter(item => item.display.toLowerCase().startsWith(query.toLowerCase()))
               .slice(0, 5);
           },
           render: () => {
-            let component: ReactRenderer;
-            let popup: any;
+            let component: ReactRenderer | null = null;
+            let popup: any[] | null = null;
 
             return {
               onStart: (props: any) => {
@@ -297,9 +292,11 @@ const TaskDiscussionBoardBase = (
               },
 
               onUpdate(props: any) {
+                if (!component) return;
+                
                 component.updateProps(props);
 
-                if (!props.clientRect) {
+                if (!props.clientRect || !popup) {
                   return;
                 }
 
@@ -309,17 +306,39 @@ const TaskDiscussionBoardBase = (
               },
 
               onKeyDown(props: any) {
+                if (props.event.key === 'Enter') props.event.preventDefault();
                 if (props.event.key === 'Escape') {
-                  popup[0].hide();
+                  if (popup && popup[0]) {
+                    popup[0].hide();
+                  }
                   return true;
                 }
 
-                return (component.ref as any)?.onKeyDown?.(props);
+                return (component?.ref as any)?.onKeyDown?.(props);
               },
 
               onExit() {
-                popup[0].destroy();
-                component.destroy();
+                // Clean up popup first
+                if (popup && popup[0]) {
+                  try {
+                    popup[0].destroy();
+                  } catch (error) {
+                    // Tippy instance might already be destroyed, ignore the error
+                    console.debug('Tippy instance already destroyed');
+                  }
+                  popup = null;
+                }
+                
+                // Clean up component
+                if (component) {
+                  try {
+                    component.destroy();
+                  } catch (error) {
+                    // Component might already be destroyed, ignore the error
+                    console.debug('ReactRenderer component already destroyed');
+                  }
+                  component = null;
+                }
               },
             };
           },
@@ -366,6 +385,15 @@ const TaskDiscussionBoardBase = (
       editor.view.dom.removeEventListener('keydown', handleKeyDown);
     };
   }, [editor, taskId, projectId, user, addComment]);
+
+  // Cleanup editor on component unmount
+  useEffect(() => {
+    return () => {
+      if (editor) {
+        editor.destroy();
+      }
+    };
+  }, [editor]);
 
 
   return (

@@ -78,7 +78,7 @@ const TaskSubtasks = ({
                 value={s.title}
                 onChange={(e) => handleTitleChange(index, e.target.value)}
                 placeholder="Add Subtask"
-                className="shadow-bottom-grey placeholder:text-faintWhite text-base w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
+                className="shadow-bottom-grey text-sm placeholder:text-faintWhite w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
               />
             </div>
           );

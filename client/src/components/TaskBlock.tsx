@@ -95,7 +95,7 @@ const TaskBlock = ({
               [{task.projectTaskId}]
           </p>
           {task.daysInColumn !== 0 && <p className="font-semibold text-midWhite text-xxs pb-1" title="days in column">
-              {task.daysInColumn}
+              {task.daysInColumn}d
           </p>}
         </div>
         <h1 className="text-xs text-white/90 line-clamp-2 font-jetbrains" title={task.title}>
@@ -175,7 +175,7 @@ export const DropIndicator = ({beforeId, column}: {beforeId: string, column: Col
   return <div
   data-before={beforeId}
   data-column={column}
-   className="h-[2px] w-full bg-purple-200/50 my-1 opacity-0"></div>
+   className="h-[2px] w-full bg-purple-200/50 my-[0.15rem] opacity-0"></div>
 }
 
 export default TaskBlock;

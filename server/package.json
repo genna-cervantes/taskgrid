@@ -29,6 +29,7 @@
     "openai": "^5.12.2",
     "p-limit": "^7.1.0",
     "pg": "^8.15.6",
+    "socket.io": "^4.8.1",
     "superjson": "^2.2.1",
     "typescript": "^5.7.3",
     "uuid": "^11.1.0",
@@ -40,6 +41,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/pg": "^8.11.14",
+    "@types/socket.io": "^3.0.1",
     "ts-node": "^10.9.2"
   }
 }

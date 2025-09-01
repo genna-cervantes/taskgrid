@@ -8,11 +8,16 @@ import { createContext } from "../trpc/trpc.js";
 import { auth } from "../lib/auth.js";
 import { toNodeHandler } from "better-auth/node";
 import { chatRouter } from "../trpc/routers/chat.js";
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { setupWebSocket } from "../websocket/handlers.js";
+import { bus } from "../websocket/bus.js";
 
 dotenv.config();
 
 const app = express();
 
+// rest api
 app.use(
   cors({
     origin: [
@@ -47,9 +52,22 @@ app.use(
   })
 );
 
+// needs auth
 app.use("/ai-chat", chatRouter)
 
+// websocket
+const httpServer = createServer(app)
+export const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
+
+setupWebSocket(io);
+
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(PORT, "0.0.0.0", () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
