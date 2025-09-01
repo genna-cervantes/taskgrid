@@ -16,6 +16,7 @@ import {
 } from "ai";
 import { z } from "zod";
 import {
+  GENERATE_DAILY_STARTER_NOTIFICATION_SYSTEM_PROMPT,
   GENERATE_TASK_MESSAGE_SYSTEM_PROMPT,
   GENERATE_TASK_SYSTEM_PROMPT,
   INFER_REQUEST_SYSTEM_PROMPT,
@@ -45,6 +46,27 @@ import pLimit from "p-limit"
 // cant stream if trpc
 
 export const chatRouter = express.Router();
+
+
+export const generateDailyStarterNotificationMessage = async ({
+  messages,
+}: {
+  messages: ModelMessage[];
+}) => {
+  const result = await generateObject({
+    model: openai("gpt-4o"),
+    messages: messages,
+    system: GENERATE_DAILY_STARTER_NOTIFICATION_SYSTEM_PROMPT,
+    schema: z.object({
+      title: z.string(),
+      message: z.string(),
+    }),
+    schemaDescription: `The return schema for generating a daily starter notification message.  It is a single object with a parameter
+    title: string and message: string.  The title should be a short title and the message should be a detailed message containing the bullet points.`,
+  });
+
+  return result.object;
+};
 
 // understand prompt
 const makePlan = async ({

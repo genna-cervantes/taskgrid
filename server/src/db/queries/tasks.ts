@@ -7,7 +7,7 @@ import {
 } from "../../shared/types.js";
 import { getDataIdFromComment, handleSyncNotification, toSnakeCase } from "../../lib/utils.js";
 import { OpenAi } from "../../lib/openai.js";
-import { insertAsyncNotification, insertSyncNotification } from "./notifications.js";
+import { insertAsyncNotification } from "./notifications.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
@@ -447,6 +447,11 @@ export const addComment = async (
 ) => {
   if (!taskId || !comment || !commentBy)
     throw new Error("Bad request missing required fields");
+
+  // get project task id
+  const projectTaskIdQuery = 'SELECT project_task_id AS "projectTaskId" FROM tasks WHERE id = $1 AND is_active = TRUE;';
+  const projectTaskIdRes = await pool.query(projectTaskIdQuery, [taskId]);
+  const projectTaskId = projectTaskIdRes.rows[0].projectTaskId;
   
   // theres a mention add to notifs
   if (comment.includes(`data-type="mention"`)){
@@ -455,14 +460,14 @@ export const addComment = async (
       throw new Error("Error parsing comment with mention");
     }
     
-    await handleSyncNotification('mention', taskId, projectId, {recipient: recipient}, {context: {comment}})
+    await handleSyncNotification('mention', projectTaskId, projectId, {recipient: recipient}, {comment: comment})
   }
 
   const query =
     "INSERT INTO task_comments_link (task_id, comment, comment_by) VALUES ($1, $2, $3);";
   const res = await pool.query(query, [taskId, comment, commentBy]);
 
-  await insertAsyncNotification(pool, 'update_discussion', taskId, projectId, {recipient: "all"}, {})
+  await insertAsyncNotification(pool, 'update_discussion', projectTaskId, projectId, {recipient: "all"}, {})
 
   return (res.rowCount ?? 0) === 1 ? true : false;
 };
@@ -654,7 +659,7 @@ export const updateTaskOrderBatched = async (
 
   const query = `
     WITH old_values AS (
-      SELECT id, progress as old_progress
+      SELECT id, project_task_id as project_task_id, progress as old_progress
       FROM tasks
       WHERE id IN (${placeholders}) AND project_id = $${3 * payload.length + 1}
     )
@@ -668,6 +673,7 @@ export const updateTaskOrderBatched = async (
     RETURNING 
       tasks.id, 
       tasks.progress,        
+      tasks.project_task_id,
       old_values.old_progress
   `;
 
@@ -677,12 +683,12 @@ export const updateTaskOrderBatched = async (
   const res = await pool.query(query, values);
   const changedTasks = res.rows
     .filter(row => row.old_progress !== row.progress)
-    .map(row => ({id: row.id, oldProgress: row.old_progress, newProgress: row.progress}))  
+    .map(row => ({id: row.id, projectTaskId: row.project_task_id, oldProgress: row.old_progress, newProgress: row.progress}))  
 
 
   await Promise.all(
     changedTasks.map((ct) => {
-      return insertAsyncNotification(pool, 'update_progress', ct.id, projectId, {recipient: 'all'}, {oldProgress: ct.oldProgress, newProgress: ct.newProgress})
+      return insertAsyncNotification(pool, 'update_progress', ct.projectTaskId, projectId, {recipient: 'all'}, {oldProgress: ct.oldProgress, newProgress: ct.newProgress})
     })
   )
 

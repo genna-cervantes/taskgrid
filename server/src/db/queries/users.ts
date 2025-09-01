@@ -182,6 +182,27 @@ export const getUsersInProject = async (pool: Pool, id: string) => {
   return users;
 };
 
+export const getUsersAndTimezonesInProject = async (pool: Pool, projectId: string) => {
+  if (!projectId) throw new Error("Bad request missing required fields");
+
+  const query = `SELECT username, timezone 
+    FROM users AS u
+    LEFT JOIN project_members AS pm
+    ON u.id = pm.user_id 
+    WHERE pm.project_id = $1 AND pm.is_active = TRUE AND u.is_active = TRUE`;
+  const res = await pool.query(query, [projectId]);
+
+  const users = res.rows.map((r) => {
+    return {
+      username: r.username as string,
+      timezone: (r?.timezone ?? 'UTC') as string,
+      projectId: projectId
+    };
+  });
+
+  return users;
+}
+
 export const getUsernamesInProject = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 

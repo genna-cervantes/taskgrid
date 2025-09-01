@@ -2,7 +2,7 @@ import BreadCrumbs from "@/components/BreadCrumbs";
 import { useNotificationsSocket } from "@/contexts/NotificationContext";
 import { useUserContext } from "@/contexts/UserContext";
 import { trpc } from "@/utils/trpc";
-import { Check, MailOpen } from "lucide-react";
+import { MailOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useParams } from "react-router-dom";
 
@@ -10,10 +10,10 @@ const Inbox = () => {
   const { workspaceId, projectId } = useParams();
   const { username } = useUserContext();
 
-  const { notifications } = useNotificationsSocket();
+  const { notifications: mentions } = useNotificationsSocket();
 
   // get non read notifs from backend
-  const { data } = trpc.notifications.getUnreadNotifications.useQuery(
+  const { data: unreadNotifications, isLoading: unreadNotificationsIsLoading } = trpc.notifications.getUnreadNotifications.useQuery(
     { username: username!, projectId: projectId! },
     {
       enabled: !!username && username !== "" && !!projectId && projectId !== "",
@@ -58,7 +58,7 @@ const Inbox = () => {
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Unread Messages</p>
             <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
-              3
+              {mentions.length + (unreadNotifications?.length ?? 0)}
             </div>
           </div>
           <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
@@ -67,12 +67,23 @@ const Inbox = () => {
           </button>
         </div>
 
+        {/* loading state */}
+        {unreadNotificationsIsLoading && <p className="text-center text-sm font-semibold mt-3">Loading...</p>}
+
+        {/* empty notifications */}
+        {unreadNotifications && unreadNotifications.length === 0 && <p className="text-center text-sm font-semibold mt-3">What an empty sea..</p>}
+
+        {/* acutal notifs */}
         <div className="w-full flex flex-col gap-y-2 mt-3">
-          {/* acutal notifs */}
-          {notifications.length > 0 ? (
-            notifications.map((n) => <MentionNotification comment={n} />)
+          {mentions.length > 0 ? (
+            mentions.map((n) => <MentionNotification notif={n as {title: string, message: string}} />)
           ) : (
-            <p>What an empty sea..</p>
+            <></>
+          )}
+          {unreadNotifications && unreadNotifications.length > 0 ? (
+            unreadNotifications.map((n) => <Notification notif={n} />)
+          ) : (
+            <></>
           )}
         </div>
       </div>
@@ -80,18 +91,41 @@ const Inbox = () => {
   );
 };
 
-const MentionNotification = ({ comment }: { comment: string }) => {
+const Notification = ({ notif }: { notif: {title: string, message: string} }) => {
   return (
     <div className="w-full border border-faintWhite rounded-md px-3 py-3">
       <div className="mb-3">
         <p className="text-xxs text-midWhite mb-2">
-          {new Date().toLocaleDateString()}
+          {new Date().toLocaleString()}
         </p>
         <h1 className="text-xs font-bold">
-          🔔 You were mentioned in a discussion!
+          {notif.title}
         </h1>
         <p className="text-xxs mt-2 text-fadedWhite">
-          <ReactMarkdown>{comment}</ReactMarkdown>
+          <ReactMarkdown>{notif.message}</ReactMarkdown>
+        </p>
+      </div>
+
+      <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+        <MailOpen className="h-3" />
+        <p>Mark as read</p>
+      </button>
+    </div>
+  );
+};
+
+const MentionNotification = ({ notif }: { notif: {title: string, message: string} }) => {
+  return (
+    <div className="w-full border border-faintWhite rounded-md px-3 py-3">
+      <div className="mb-3">
+        <p className="text-xxs text-midWhite mb-2">
+          {new Date().toLocaleString()}
+        </p>
+        <h1 className="text-xs font-bold">
+          {notif.title}
+        </h1>
+        <p className="text-xxs mt-2 text-fadedWhite">
+          <ReactMarkdown>{notif.message}</ReactMarkdown>
         </p>
       </div>
 

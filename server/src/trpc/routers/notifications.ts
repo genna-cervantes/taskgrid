@@ -18,6 +18,7 @@ export const notificationsRouter = router({
     .query(async ({input}) => {
         const result = await tryCatch(getUnreadNotifications(pool, input.username, input.projectId))
         if (result.error != null){
+            console.error(result.error)
             throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
                 message: "Failed to get unread notifications",

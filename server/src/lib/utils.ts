@@ -1,5 +1,6 @@
 import { parse } from 'node-html-parser';
-import { insertSyncNotification } from '../db/queries/notifications.js';
+import { insertNotification, insertSyncNotification, updateSentAt } from '../db/queries/notifications.js';
+import { updateRead } from '../db/queries/notifications.js';
 import { pool } from '../trpc/router.js';
 import { bus } from '../websocket/bus.js';
 
@@ -28,6 +29,12 @@ export async function tryCatch<T, E = Error>(
 }
 
 export const getDataIdFromComment = (htmlString: string) => {
+  // Safety check for htmlString
+  if (!htmlString || typeof htmlString !== 'string') {
+    console.error('getDataIdFromComment: htmlString is undefined, null, or not a string');
+    return [];
+  }
+  
   const root = parse(htmlString);
   const mentions = root.querySelectorAll('span.mention[data-label]');
   
@@ -43,17 +50,83 @@ export const getDataIdFromComment = (htmlString: string) => {
 
 export const toSnakeCase = (str: string) => str.replace(/([A-Z])/g, '_$1').toLowerCase();
 
-export const handleSyncNotification = async (type: string, taskId: string, projectId: string, recipient: {recipient: string[]}, context: any) => {
-  console.log('handling sync notif')
-
-  insertSyncNotification(pool, type, taskId, projectId, recipient, context);
-  console.log('inserted to db')
-
+export const handleSyncNotification = async (type: string, taskId: string, projectId: string, recipient: {recipient: string[]}, context: any) => {  
+  const title = '🔔 You were mentioned in a discussion!';
+  
+  // Safety check for context.comment
+  if (!context.comment) {
+    console.error('handleSyncNotification: context.comment is undefined or null');
+    return;
+  }
+  
+  const root = parse(context.comment);
+  const message = root.text.trim();
+  
+  let resultNotif = await tryCatch(insertNotification(pool, type, projectId, recipient, title, message));
+  if (resultNotif.error != null) {
+    console.error(resultNotif.error)
+    return
+  }
+  await tryCatch(updateSentAt(pool, resultNotif.data));
+  
   // emit event
-  console.log(`sending to recipients ${recipient.recipient}`)
-  console.log(recipient)
   recipient.recipient.forEach((r) => {
-    console.log(`notifying user ${r}`)
-    bus.emit("notify:user", {username: r, payload: context})
+    bus.emit("notify:user", {username: r, payload: {context: {title, message}}})
   })
+}
+
+export const createAsyncNotificationTemplate = (type: string, context: any, linkedTask: string) => {
+  let template: {
+    context: any;
+    type: string;
+    linkedTaskId: string;
+  } = {
+    context: null,  
+    type: '',   
+    linkedTaskId: '',
+  }
+
+  switch (type) {
+    case 'update_progress': 
+      template.type = type;
+      template.context = context;
+      template.linkedTaskId = linkedTask;
+      break;
+    case 'update_discussion':
+      template.type = type;
+      template.context = context;
+      template.linkedTaskId = linkedTask;
+      break;
+    default:
+      template.type = type;
+      template.context = context;
+      template.linkedTaskId = linkedTask;
+      break;
+  }
+  return template;
+}
+
+export const groupBy = (array: any[], key: string) => {
+  return array.reduce((acc, item) => {
+    const groupKey = item[key];
+    if (!acc[groupKey]) {
+      acc[groupKey] = [];
+    }
+    acc[groupKey].push(item);
+    return acc;
+  }, {}) as Record<string, any[]>;
+}
+
+export const getUserLocalHour = (utcHour: number, timezone: string) => {
+  try {
+    const now = new Date()
+    now.setUTCHours(utcHour, 0, 0, 0)
+    
+    // Convert to user's timezone
+    const userTime = new Date(now.toLocaleString("en-US", {timeZone: timezone}))
+    return userTime.getHours()
+  } catch (error) {
+    console.error(`Invalid timezone: ${timezone}`)
+    return -1 // Invalid timezone
+  }
 }

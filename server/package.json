@@ -24,6 +24,7 @@
     "express": "^4.21.2",
     "kysely": "^0.28.5",
     "nanoid": "^5.1.5",
+    "node-cron": "^4.2.1",
     "node-html-parser": "^7.0.1",
     "nodemon": "^3.1.9",
     "openai": "^5.12.2",
@@ -40,6 +41,7 @@
     "@swc/core": "^1.12.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.14",
     "@types/socket.io": "^3.0.1",
     "ts-node": "^10.9.2"
