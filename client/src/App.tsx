@@ -16,6 +16,8 @@ import Integrations from "./pages/Integrations";
 import { TimezoneSync } from "./pages/TimezoneSync";
 import { SocketNotificationsProvider } from "./contexts/NotificationContext";
 import { useUserContext } from "./contexts/UserContext";
+import Triage from "./pages/Triage";
+import ManageProject from "./pages/ManageProject";
 
 const App = () => {
 
@@ -38,11 +40,6 @@ const App = () => {
               <Route path="workspaces" element={<WorkspaceRedirector />} />
               <Route path="workspaces/:workspaceId" element={<Home />} />
 
-              {/* projects */}
-              <Route path="workspaces/:workspaceId/projects" element={<Projects />}>
-                <Route path=":projectId" element={<Project />}>
-                </Route>
-              </Route>
 
               {/* tasks */}
               <Route path="workspaces/:workspaceId/projects/:projectId/tasks" element={<TaskLayout />}>
@@ -51,6 +48,19 @@ const App = () => {
 
               {/* inbox */}
               <Route path="workspaces/:workspaceId/projects/:projectId/inbox" element={<Inbox />} />
+              
+              {/* PROJECT ROUTES */}
+              {/* projects */}
+              <Route path="workspaces/:workspaceId/projects" element={<Projects />}>
+                <Route path=":projectId/board" element={<Project />}>
+                </Route>
+              </Route>
+
+              {/* manage project */}
+              <Route path="workspaces/:workspaceId/projects/:projectId/manage" element={<ManageProject />} />
+
+              {/* triage */}
+              <Route path="workspaces/:workspaceId/projects/:projectId/triage" element={<Triage />} />
 
               {/* integrations */}
               <Route path="workspaces/:workspaceId/projects/:projectId/integrations" element={<Integrations />} />

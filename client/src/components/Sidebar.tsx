@@ -7,10 +7,12 @@ import {
 } from "react-router-dom";
 import {
   Blocks,
+  BookText,
   CircleUserRound,
   ExternalLink,
   FolderClosed,
   Funnel,
+  Inbox,
   LucideProps,
   Mail,
   MailPlus,
@@ -93,23 +95,43 @@ const Sidebar = ({
     },
     {
       parent: "projects",
-      icon: SquareKanban,
-      name: "Kanban",
+      icon: BookText,
+      name: "General",
       func: function () {
         setActiveIndex(0);
-        navigate(`workspaces/${workspaceId}/projects/${projectId}`);
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/manage`);
         setToggleSidebar(false);
       },
     },
     {
       parent: "projects",
-      icon: MailPlus,
-      name: "Inbox",
+      icon: Inbox,
+      name: "Triage",
       func: function () {
         setActiveIndex(1);
-        navigate(`workspaces/${workspaceId}/projects/${projectId}/inbox`);
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/triage`);
+        setToggleSidebar(false);
       },
     },
+    {
+      parent: "projects",
+      icon: SquareKanban,
+      name: "Kanban",
+      func: function () {
+        setActiveIndex(2);
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/board`);
+        setToggleSidebar(false);
+      },
+    },
+    // {
+    //   parent: "projects",
+    //   icon: MailPlus,
+    //   name: "Inbox",
+    //   func: function () {
+    //     setActiveIndex(3);
+    //     navigate(`workspaces/${workspaceId}/projects/${projectId}/inbox`);
+    //   },
+    // },
     // {
     //   parent: "projects",
     //   icon: Funnel,
@@ -139,23 +161,23 @@ const Sidebar = ({
     //     );
     //   },
     // },
-    {
-      parent: "projects",
-      icon: Blocks,
-      name: "Integrations",
-      func: function () {
-        setActiveIndex(2);
-        navigate(`workspaces/${workspaceId}/projects/${projectId}/integrations`);
-      },
-    },
-    {
-      parent: "projects",
-      icon: ExternalLink,
-      name: "Share",
-      func: function () {
-        setActiveIndex(3);
-      },
-    },
+    // {
+    //   parent: "projects",
+    //   icon: Blocks,
+    //   name: "Integrations",
+    //   func: function () {
+    //     setActiveIndex(3);
+    //     navigate(`workspaces/${workspaceId}/projects/${projectId}/integrations`);
+    //   },
+    // },
+    // {
+    //   parent: "projects",
+    //   icon: ExternalLink,
+    //   name: "Share",
+    //   func: function () {
+    //     setActiveIndex(4);
+    //   },
+    // },
   ];
 
   let navItems = isInProject
@@ -347,7 +369,7 @@ const Sidebar = ({
       className={`transition-all h-full duration-200 pt-4 pb-6 ${
         !toggleSidebar
           ? "left-0 top-0 w-[3.25rem] flex flex-col items-center"
-          : " top-0 l-0 w-64 flex flex-col items-start "
+          : " top-0 l-0 w-[13.5rem] flex flex-col items-start "
       }`}
     >
       {!toggleSidebar && (

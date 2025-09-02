@@ -56,7 +56,7 @@ const ProjectBlock = ({
   return (
     <Link
       className="border border-faintWhite rounded-md h-28 px-4 py-4 flex flex-col justify-between cursor-pointer relative"
-      to={`/workspaces/${workspaceId}/projects/${p.id}`}
+      to={`/workspaces/${workspaceId}/projects/${p.id}/board`}
     >
       <div className="flex justify-between">
         <h1 className="font-bold truncate text-sm text-white/80">

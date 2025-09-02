@@ -189,6 +189,10 @@ const Projects = () => {
                 name: projectName as string,
                 url: `/workspaces/${workspaceId}/projects/${projectId}`,
               },
+              {
+                name: 'board',
+                url: `/workspaces/${workspaceId}/projects/${projectId}`,
+              },
             ]}
           />
           <button

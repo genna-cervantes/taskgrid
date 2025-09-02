@@ -92,14 +92,12 @@ const ProjectQuickActions = ({
           <DropdownMenuGroup>
             <DropdownMenuItem className="flex justify-between items-center pr-3">
               <div className="flex gap-x-1 h-full items-center">
-                <KanbanSquare className="h-4" />
                   Kanban
               </div>
               <Checkbox />
             </DropdownMenuItem>
             <DropdownMenuItem className="flex justify-between items-center pr-3">
               <div className="flex gap-x-1 h-full items-center">
-                <LayoutList className="h-4" />
                   List
               </div>
               <Checkbox />
