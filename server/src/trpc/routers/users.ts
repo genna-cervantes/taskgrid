@@ -174,7 +174,7 @@ export const usersRouter = router({
     }),
   getUsersInProject: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string()}))
     .query(async ({ input }) => {
       let result = await tryCatch(getUsersInProject(pool, input.id));
       if (result.error != null) {
@@ -190,7 +190,7 @@ export const usersRouter = router({
     }),
   getUsernamesInProject: publicProcedure
     .use(rateLimitMiddleware)
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string()}))
     .query(async ({ input }) => {
       let result = await tryCatch(getUsernamesInProject(pool, input.id));
       if (result.error != null) {

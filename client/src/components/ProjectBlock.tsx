@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { trpc } from "../utils/trpc";
 import { useUserContext } from "../contexts/UserContext";
-import { CheckCircle2, ClipboardList, EllipsisVertical, Eye, Loader2, Lock, LockOpen } from "lucide-react";
+import { CheckCircle2, ClipboardList, EllipsisVertical, Eye, Loader2, LockOpen } from "lucide-react";
+import { useProjectDetailsStore } from "@/zustand/store";
 
 const ProjectBlock = ({
   p,
@@ -36,7 +37,10 @@ const ProjectBlock = ({
 }) => {
   // check if owner
   const userContext = useUserContext();
+  const utils = trpc.useUtils();
+
   const { data: ownerUsername } = trpc.projects.getProjectOwner.useQuery({ id: p.id });
+  const { setProjectDetails } = useProjectDetailsStore();
 
   const { data: projectStats, isLoading: projectsStatsIsLoading } =
     trpc.projects.getProjectStats.useQuery({ projectId: p.id }) as {

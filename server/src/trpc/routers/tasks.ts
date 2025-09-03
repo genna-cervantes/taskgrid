@@ -74,6 +74,7 @@ export const tasksRouter = router({
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string(), taskId: z.string() }))
     .query(async ({ input }) => {
+      console.log('running get task by id')
       let result = await tryCatch(
         getTaskById(pool, input.projectId, input.taskId)
       );
@@ -728,6 +729,7 @@ export const tasksRouter = router({
     .use(rateLimitMiddleware)
     .input(z.object({ projectId: z.string() }))
     .query(async ({ input }) => {
+      console.log('running tco')
       let result = await tryCatch(
         getTaskCategoryOptions(pool, input.projectId)
       );

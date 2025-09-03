@@ -1,17 +1,16 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Task } from "../../../server/src/shared/types";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "../utils/trpc";
-import { ActionContext } from "../contexts/ActionContext";
-import { RecentTaskContext } from "../contexts/RecentTaskContext";
 import TaskTitle from "./TaskTitle";
 import TaskDescription from "./TaskDescription";
 import TaskSelectPriority from "./TaskSelectPriority";
 import TaskAssignee from "./TaskAssignee";
 import Mousetrap from "mousetrap";
 import TaskSelectCategory from "./TaskSelectCategory";
+import { useTaskCategoryOptionsStore, useUsersInProjectStore } from "@/zustand/store";
 
 const TaskAddSchema = z.object({
   title: z.string(),
@@ -57,14 +56,22 @@ const AddTaskForm = ({
     }
   });
 
-  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
+  const { usersInProject: usersInProjectStoreData } = useUsersInProjectStore();
+  const { data: usersInProjectQueryData } = trpc.users.getUsernamesInProject.useQuery({
     id: projectId,
+  }, {
+    enabled: usersInProjectStoreData.length === 0
   });
+  const usersInProject = usersInProjectStoreData || usersInProjectQueryData;
 
   const utils = trpc.useUtils();
 
-  const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } =
-    trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
+  const { taskCategoryOptions: taskCategoryOptionsStoreData } = useTaskCategoryOptionsStore()
+  const {
+    data: taskCategoryOptionsQueryData,
+    isLoading: taskCategoryOptionsIsLoading,
+  } = trpc.tasks.getTaskCategoryOptions.useQuery({ projectId }, {enabled: taskCategoryOptionsStoreData?.length === 0});
+  const taskCategoryOptionsRes = taskCategoryOptionsStoreData || taskCategoryOptionsQueryData;
 
   const [taskCategoryOptions, setTaskCategoryOptions] = useState(
     taskCategoryOptionsRes ?? []
@@ -82,7 +89,7 @@ const AddTaskForm = ({
   });
 
   const onSubmit = async (data: TaskAdd) => {
-    insertTask.mutate({ userId: username, id: projectId, task: { ...data, progress: col } }); // empty files array first
+    insertTask.mutate({ id: projectId, task: { ...data, progress: col } }); // empty files array first
   };
 
   // keyboard shortcuts
@@ -167,7 +174,7 @@ const AddTaskForm = ({
               <TaskAssignee
                 projectId={projectId}
                 username={username}
-                usersInProj={usersInProject ?? []}
+                usersInProj={usersInProject.map(user => user.username) ?? []}
                 taskAssignedTo={field?.value ?? []}
                 setTaskAssignedTo={field.onChange}
                 error={fieldState.error?.message}

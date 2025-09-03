@@ -64,3 +64,12 @@ export const ProjectSchema = z.object({
 })
 
 export type Project = z.infer<typeof ProjectSchema>
+
+export const ProjectDetailsSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  privacy: z.enum(["private", "public"]),
+  plan: z.enum(["basic", "pro"])
+})
+
+export type ProjectDetails = z.infer<typeof ProjectDetailsSchema>

@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { ColumnKey, Project } from "../../shared/types.js";
+import { ColumnKey, Project, ProjectDetails } from "../../shared/types.js";
 
 export const addProject = async (
   pool: Pool,
@@ -107,7 +107,7 @@ export const editProjectName = async (
     throw new Error("Bad request missing required fields");
 
   const query =
-    "UPDATE projects SET name = $1 WHERE id = $2 AND guest_id = $3 AND is_active = TRUE";
+    "UPDATE project_details SET name = $1 WHERE project_id = $2 AND is_active = TRUE";
   const res = await pool.query(query, [name, projectId, guestId]);
 
   return (res.rowCount ?? 0) === 1 ? true : false;
@@ -116,7 +116,7 @@ export const editProjectName = async (
 export const getProjectNameByKey = async (pool: Pool, id: string) => {
   if (!id) throw new Error("Bad request missing required fields");
 
-  const query = "SELECT name FROM projects WHERE id = $1 AND is_active = TRUE";
+  const query = "SELECT name FROM project_details WHERE project_id = $1 AND is_active = TRUE";
   const res = await pool.query(query, [id]);
 
   if (!res.rows[0].name) throw new Error("Bad request project does not exist");
@@ -153,10 +153,22 @@ export const getUserWorkspaceProjects = async (
 
   if (!userId) throw new Error("Bad request user does not exist");
 
-  const query = `SELECT p.id, p.name FROM projects AS p 
+  const query = `SELECT p.id, pd.name FROM projects AS p 
   LEFT JOIN project_members AS pm ON p.id = pm.project_id 
-  WHERE p.workspace_id = $1 AND pm.user_id = $2;`;
+  LEFT JOIN project_details AS pd ON p.id = pd.project_id
+  WHERE p.workspace_id = $1 AND pm.user_id = $2 AND p.is_active = TRUE;`;
   const res = await pool.query(query, [workspaceId, userId]);
 
   return res.rows as Project[];
 };
+
+export const getProjectDetails = async (pool: Pool, projectId: string) => {
+  if (!projectId) throw new Error("Bad request missing required fields");
+
+  const query = `SELECT name, description, privacy, plan FROM project_details WHERE project_id = $1 AND is_active = TRUE`;
+  const res = await pool.query(query, [projectId]);
+
+  if (!res.rows[0]) throw new Error("Bad request project does not exist");
+
+  return res.rows[0] as ProjectDetails;
+}

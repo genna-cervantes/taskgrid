@@ -6,7 +6,7 @@ import TaskCommentCount from "./TaskCommentCount";
 import TaskCategory from "./TaskCategory";
 import { Checkbox } from "./ui/checkbox";
 import { trpc } from "@/utils/trpc";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const TaskBlock = ({
   col,
@@ -32,6 +32,8 @@ const TaskBlock = ({
 }) => {
   const utils = trpc.useUtils();
   const navigate = useNavigate()
+
+  const {workspaceId} = useParams();
 
   const [showSubtasks, setShowsubtasks] = useState(false);
 
@@ -82,7 +84,7 @@ const TaskBlock = ({
         tabIndex={0}
         draggable={true}
         onDragStart={(e) => handleDragStart(e, task.id, task.progress)}
-        onClick={() => navigate(`tasks/${task.id}`)}
+        onClick={() => navigate(`/workspaces/${workspaceId}/projects/${projectId}/tasks/${task.id}`)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             navigate(`tasks/${task.id}`)

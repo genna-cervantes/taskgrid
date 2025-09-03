@@ -5,6 +5,7 @@ import {
   addProject,
   deleteProject,
   editProjectName,
+  getProjectDetails,
   getProjectNameByKey,
   getProjectOwner,
   getProjectStats,
@@ -150,6 +151,21 @@ export const projectsRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch workspace projects",
+          cause: result.error,
+        });
+      }
+
+      return result.data;
+    }),
+  getProjectDetails: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input }) => {
+      let result = await tryCatch(getProjectDetails(pool, input.projectId));
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch project details",
           cause: result.error,
         });
       }

@@ -12,7 +12,6 @@ import { useUserContext } from "@/contexts/UserContext";
 import TaskDiscussionBoard from "@/components/TaskDiscussionBoard";
 import Mousetrap from "mousetrap";
 import { ActionContext } from "@/contexts/ActionContext";
-import { RecentTaskContext } from "@/contexts/RecentTaskContext";
 import TaskTitle from "@/components/TaskTitle";
 import TaskDependsOn from "@/components/TaskDependsOn";
 import TaskSubtasks from "@/components/TaskSubtasks";
@@ -21,6 +20,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
+import { useTaskCategoryOptionsStore, useTasksStore, useUsersInProjectStore } from "@/zustand/store";
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -58,7 +58,6 @@ const TaskPage = () => {
   const taskId = taskIdParam ?? "";
 
   const actionContext = useContext(ActionContext);
-  const recentTaskContext = useContext(RecentTaskContext);
   const userContext = useUserContext();
 
   const navigate = useNavigate();
@@ -82,14 +81,20 @@ const TaskPage = () => {
       { enabled: !!workspaceId }
     );
 
-  const { data: usersInProject } = trpc.users.getUsernamesInProject.useQuery({
-    id: projectId,
+  const { usersInProject: usersInProjectStoreData } = useUsersInProjectStore();
+  const { data: usersInProjectQueryData } = trpc.users.getUsersInProject.useQuery({
+    id: projectId
+  }, {
+    enabled: usersInProjectStoreData.length === 0
   });
+  const usersInProject = usersInProjectStoreData || usersInProjectQueryData;
 
+  const { taskCategoryOptions: taskCategoryOptionsStoreData } = useTaskCategoryOptionsStore()
   const {
-    data: taskCategoryOptionsRes,
+    data: taskCategoryOptionsQueryData,
     isLoading: taskCategoryOptionsIsLoading,
-  } = trpc.tasks.getTaskCategoryOptions.useQuery({ projectId });
+  } = trpc.tasks.getTaskCategoryOptions.useQuery({ projectId }, {enabled: taskCategoryOptionsStoreData?.length === 0});
+  const taskCategoryOptionsRes = taskCategoryOptionsStoreData || taskCategoryOptionsQueryData;
 
   useEffect(() => {
     if (taskCategoryOptionsRes && !taskCategoryOptionsIsLoading) {
@@ -97,28 +102,30 @@ const TaskPage = () => {
     }
   }, [taskCategoryOptionsRes]);
 
-  const { data, isLoading: taskDataIsLoading } =
+  const { tasks: tasksStoreData } = useTasksStore();
+  const taskByIdStoreData = tasksStoreData.find((task: Task) => task.id === taskId);  
+  const { data: taskByIdQueryData, isLoading: taskDataIsLoading } =
     trpc.tasks.getTaskById.useQuery({
       projectId,
       taskId: taskId,
-    });
+    }, {enabled: tasksStoreData.length === 0 || taskByIdStoreData == null});
+  
+  const taskById = taskByIdStoreData || taskByIdQueryData;
 
-  const task: Task | undefined = useMemo(
-    () =>
-      data
-        ? {
-            ...data,
-            targetStartDate: data.targetStartDate
-              ? new Date(data.targetStartDate)
-              : undefined,
-            targetEndDate: data.targetEndDate
-              ? new Date(data.targetEndDate)
-              : undefined,
-          }
-        : undefined,
-    [data]
-  );
-
+  const task: Task | undefined = useMemo(() => {
+    return taskById
+      ? {
+          ...taskById,
+          targetStartDate: taskById.targetStartDate
+            ? new Date(taskById.targetStartDate)
+            : undefined,
+          targetEndDate: taskById.targetEndDate
+            ? new Date(taskById.targetEndDate)
+            : undefined,
+        }
+      : undefined;
+  }, [taskById]);
+        
   const form = useForm<TaskUpdate>({
     resolver: zodResolver(TaskUpdateSchema),
   });
@@ -213,7 +220,7 @@ const TaskPage = () => {
 
     Mousetrap.bind("esc", function (e) {
       e.preventDefault();
-      navigate(`/workspaces/${workspaceId}/projects/${projectId}`);
+      navigate(`/workspaces/${workspaceId}/projects/${projectId}/board`);
     });
 
     return () => {
@@ -223,13 +230,12 @@ const TaskPage = () => {
     };
   }, []);
 
-  if (!task && !taskDataIsLoading) {
-    return <Navigate to="/404" replace />;
+  if (taskDataIsLoading && task == undefined) {
+    return <LoadingModal />;
   }
 
-  if (taskDataIsLoading || task == undefined) {
-    console.log("loading");
-    return <LoadingModal />;
+  if (task == undefined) {
+    return <Navigate to="/404" replace />;
   }
 
   return (
@@ -377,7 +383,7 @@ const TaskPage = () => {
               <TaskAssignee
                 isPage={true}
                 projectId={projectId}
-                usersInProj={usersInProject ?? []}
+                usersInProj={usersInProject.map(user => user.username) ?? []}
                 username={userContext.username ?? undefined}
                 taskAssignedTo={field.value ?? []}
                 setTaskAssignedTo={field.onChange}

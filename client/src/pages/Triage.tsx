@@ -1,30 +1,30 @@
 import BreadCrumbs from "@/components/BreadCrumbs";
 import { trpc } from "@/utils/trpc";
-import React from "react";
 import { useParams } from "react-router-dom";
-import { Task } from "../../../server/src/shared/types";
-import TaskPriority from "@/components/TaskPriority";
 import TaskCategory from "@/components/TaskCategory";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { Funnel, User } from "lucide-react";
+import { useProjectDetailsStore } from "@/zustand/store";
 
 const Triage = () => {
   const { workspaceId, projectId } = useParams();
+  const { name } = useProjectDetailsStore();
 
   // check if workspace exists
-  const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
-    trpc.workspaces.checkWorkspaceId.useQuery(
-      { workspaceId: workspaceId! },
-      { enabled: !!workspaceId }
-    );
+  const { data: workspaceName } = trpc.workspaces.checkWorkspaceId.useQuery(
+    { workspaceId: workspaceId! },
+    { enabled: !!workspaceId }
+  );
 
-  const { data: projectName, isLoading: projectNameIsLoading } =
+  const { data: projectNameQueryData } =
     trpc.projects.getProjectNameByKey.useQuery(
       {
         id: projectId!,
       },
-      { enabled: projectId !== "" }
+      { enabled: projectId !== "" && name === "" }
     );
+
+  const projectName = name || projectNameQueryData;
 
   return (
     <>
@@ -44,7 +44,13 @@ const Triage = () => {
           },
         ]}
       />
-      <div className="w-full">
+      <div>
+        <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+            <Funnel className="h-3" />
+            <p>Filter</p>
+          </button>  
+      </div>
+      <div className="w-full mt-3">
         <div className="flex items-center gap-x-4">
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Open Tasks</p>
@@ -64,34 +70,50 @@ const Triage = () => {
 const TriageTask = () => {
   return (
     <div className="w-full border border-faintWhite rounded-md px-3 py-3">
-        <p className="text-xxs text-midWhite mb-2">{new Date().toLocaleDateString()} | 5d</p>
+      <p className="text-xxs text-midWhite mb-2">
+        {new Date().toLocaleDateString()} | 5d
+      </p>
 
-        <h1 className="text-sm font-bold">Task Title Here</h1>
-        <div className="flex gap-x-2 items-center mt-1">
-            {/* <TaskPriority className="text-sm" priority="low" /> */}
-            <TaskCategory className="!text-xs" category="Category" taskCategoryOptions={[]} />
-            <div className="border border-faintWhite rounded-md px-1">
-                <p className="text-xs flex items-center gap-x-0"><User className="h-3 ml-[-0.4rem]" /> Genna Cervantes</p>
-            </div>
+      <h1 className="text-sm font-bold">Task Title Here</h1>
+      <div className="flex gap-x-2 items-center mt-1">
+        {/* <TaskPriority className="text-sm" priority="low" /> */}
+        <TaskCategory
+          className="!text-xs"
+          category="Category"
+          taskCategoryOptions={[]}
+        />
+        <div className="border border-faintWhite rounded-md px-1">
+          <p className="text-xs flex items-center gap-x-0">
+            <User className="h-3 ml-[-0.4rem]" /> Genna Cervantes
+          </p>
         </div>
-        
-        <p className="text-xs mt-2">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. </p>
-        <div className="flex gap-x-2 mt-3">
-            <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
-                Accept to Backlog
-            </Button>
-            <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
-                Mark as Duplicate
-            </Button>
-            <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
-                Delete
-            </Button>
-        </div>
-        <div className="w-full bg-purple-300/20 rounded-md px-2 py-1 mt-3 text-xs border-faintWhite border">
-            <p className="text-xxs text-purple-300 font-bold mb-1">AI Suggestions</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos. </p>
-        </div>
+      </div>
 
+      <p className="text-xs mt-2">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.
+        Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.{" "}
+      </p>
+      <div className="flex gap-x-2 mt-3">
+        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+          Accept to Backlog
+        </Button>
+        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+          Mark as Duplicate
+        </Button>
+        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+          Delete
+        </Button>
+      </div>
+      <div className="w-full bg-purple-300/20 rounded-md px-2 py-1 mt-3 text-xs border-faintWhite border">
+        <p className="text-xxs text-purple-300 font-bold mb-1">
+          AI Suggestions
+        </p>
+        <p>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+          quos. Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          Quisquam, quos.{" "}
+        </p>
+      </div>
     </div>
   );
 };
