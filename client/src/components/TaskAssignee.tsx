@@ -1,6 +1,7 @@
 import React from "react";
 import SelectAssignee from "./SelectAssignee";
 import { trpc } from "@/utils/trpc";
+import { User2 } from "lucide-react";
 
 const TaskAssignee = ({
   projectId,
@@ -21,14 +22,15 @@ const TaskAssignee = ({
 }) => {
 
   return (
-    <div>
+    <div className={`w-full flex ${isPage ? "flex-row gap-x-4 items-center" : "flex-col"}`}>
       <h3
-        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+        className={`${isPage ? "hidden" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Assign to:
       </h3>
+      <User2 className="h-4 w-4 text-midWhite" strokeWidth={3} />
 
-      <SelectAssignee
+     <SelectAssignee
         isPage={isPage}
         setTaskAssignedTo={setTaskAssignedTo}
         taskAssignedTo={taskAssignedTo}

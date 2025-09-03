@@ -5,7 +5,7 @@ const TaskDescription = ({taskDescription, setTaskDescription, error, isPage = f
   return (
     <div className="">
       <h3
-        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider mb-1 transition-all duration-100 `}
+        className={`${isPage ? "hidden" : "text-xxs"} text-midWhite !font-rubik tracking-wider mb-1 transition-all duration-100 `}
       >
         Description:
       </h3>

@@ -240,7 +240,7 @@ const TaskDiscussionBoardBase = (
     extensions: [
       StarterKit,
       Placeholder.configure({
-        placeholder: 'Add a comment... (use @ to mention someone)',
+        placeholder: 'Leave a comment... (enter to send)',
       }),
       Mention.configure({
         HTMLAttributes: {
@@ -421,15 +421,16 @@ const TaskDiscussionBoardBase = (
               </div>
             ))
           ) : (
-            <p className="text-sm text-midWhite">No comments yet...</p>
+            // <p className="text-sm text-midWhite">No comments yet...</p>
+            <></>
           )}
         </div>
       </div>
       <div className="shrink-0 flex flex-col items-start gap-y-1 w-full">
-        <span className="flex items-center text-midWhite">
+        {/* <span className="flex items-center text-midWhite">
           <Info className="h-3" />
           <p className="text-xxs italic">press enter to send message</p>
-        </span>
+        </span> */}
         <div className="w-full">
           <EditorContent editor={editor} />
         </div>

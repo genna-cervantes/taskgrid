@@ -17,12 +17,7 @@ import { Task } from "../../../server/src/shared/types";
 import BreadCrumbs from "@/components/BreadCrumbs";
 import Mousetrap from "mousetrap";
 import ProjectQuickActions from "@/components/ProjectQuickActions";
-import {
-  useProjectDetailsStore,
-  useTaskCategoryOptionsStore,
-  useTasksStore,
-  useUsersInProjectStore,
-} from "@/zustand/store";
+// Removed Zustand stores - using React Query cache instead
 
 const Projects = () => {
   const { workspaceId, projectId } = useParams();
@@ -36,10 +31,7 @@ const Projects = () => {
     setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
   }>();
 
-  const { setProjectDetails } = useProjectDetailsStore();
-  const { setUsersInProject } = useUsersInProjectStore();
-  const { setTaskCategoryOptions } = useTaskCategoryOptionsStore()
-  const { tasks: tasksStoreData, setTasks } = useTasksStore();
+  // Removed Zustand store usage - React Query handles caching automatically
 
   const [searchParams] = useSearchParams();
   const priority = searchParams.get("priority") || "";
@@ -62,81 +54,65 @@ const Projects = () => {
       { enabled: !!workspaceId }
     );
 
-  // CENTRALIZED FETCHING
+  // CENTRALIZED FETCHING - React Query handles caching automatically
   // raw tasks
   const { data: rawData, isLoading } = trpc.tasks.getTasks.useQuery(
-    {
-      id: projectId!,
-    },
-    { enabled: projectId !== "",
-      onSuccess: (data) => setTasks(data)
-     }
+    { id: projectId ?? "" },
+    { 
+      enabled: !!projectId,
+      staleTime: 2 * 60 * 1000, // Consider data fresh for 2 minutes
+      cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    }
   );
 
   // project details
   const { data: projectDetails, isLoading: projectDetailsIsLoading } =
     trpc.projects.getProjectDetails.useQuery(
-      { projectId: projectId! },
+      { projectId: projectId ?? "" },
       {
-        enabled: projectId !== "",
-        onSuccess: (data) => setProjectDetails(data),
+        enabled: !!projectId,
+        staleTime: 5 * 60 * 1000, // Project details change less frequently
+        cacheTime: 15 * 60 * 1000,
       }
     );
 
   // users in project
-  trpc.users.getUsersInProject.useQuery(
-    { id: projectId! },
+  const { data: usersInProject } = trpc.users.getUsersInProject.useQuery(
+    { id: projectId ?? "" },
     {
-      enabled: projectId !== "",
-      onSuccess: (data) => setUsersInProject(data)
+      enabled: !!projectId,
+      staleTime: 5 * 60 * 1000,
+      cacheTime: 15 * 60 * 1000,
     }
   );
 
   // task category options
   const { data: taskCategoryOptions } =
     trpc.tasks.getTaskCategoryOptions.useQuery(
-      { projectId: projectId! },
-      { enabled: projectId !== "",
-        onSuccess: (data) => setTaskCategoryOptions(data)
-       }
+      { projectId: projectId ?? "" },
+      { 
+        enabled: !!projectId,
+        staleTime: 10 * 60 * 1000, // Categories change infrequently
+        cacheTime: 20 * 60 * 1000,
+      }
     );
 
-  // handle multiple filter in one factor
-  const rawFilteredTasksStoreData = isFilterEnabled ? tasksStoreData.filter((task: Task) => {
-    if (priority === "" && assignedTo === "" && category === "" && projectTaskIds === "") {
-      return true;
-    }
-    
-    if (priority !== "" && !priority.split(",").includes(task.priority)) {
-      return false;
-    }
-    if (assignedTo !== "" && !task.assignTo.some((at) => assignedTo.split(',').includes(at))) {
-      return false;
-    }
-    if (category !== "" && !category.split(",").includes(task.category ?? "")) {
-      return false;
-    }
-    if (projectTaskIds !== "" && !projectTaskIds.split(",").includes(task.projectTaskId.toString())) {
-      return false;
-    }
-    
-    return true;
-  }) : [];
-  const filterTaskQueryEnabled = isFilterEnabled && projectId !== "" && tasksStoreData.length === 0;
-  const { data: rawFilteredTasksQueryData, isLoading: filteredTasksIsLoading } =
+  // Simplified filtering - use server-side filtering when filters are enabled
+  const { data: rawFilteredTasks, isLoading: filteredTasksIsLoading } =
     trpc.tasks.filterTask.useQuery(
       {
-        id: projectId!,
+        id: projectId ?? "",
         priority,
         assignedTo,
         category,
         projectTaskIds,
       },
       {
-        enabled: filterTaskQueryEnabled,
+        enabled: !!projectId && isFilterEnabled,
+        staleTime: 1 * 60 * 1000, // Filtered results change more frequently
+        cacheTime: 5 * 60 * 1000,
       }
     );
-  const rawFilteredTasks = rawFilteredTasksStoreData || rawFilteredTasksQueryData;
 
   const data: Task[] | undefined = (rawData as Task[] | undefined)?.map(
     (rd) => {
@@ -163,7 +139,7 @@ const Projects = () => {
   }));
 
   const columns = isFilterEnabled
-    ? filteredTasks && (!filterTaskQueryEnabled || !filteredTasksIsLoading)
+    ? filteredTasks && !filteredTasksIsLoading
       ? groupTasksByColumn(filteredTasks)
       : {}
     : data && !isLoading
@@ -260,6 +236,7 @@ const Projects = () => {
               username: userContext.username,
               columns,
               taskCategoryOptions,
+              usersInProject,
             }}
           />
         ) : (

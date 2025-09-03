@@ -1,6 +1,7 @@
 import React from "react";
 import MultiSelect from "./MultiSelect";
 import { trpc } from "@/utils/trpc";
+import { Link } from "lucide-react";
 
 const TaskDependsOn = ({
   taskDependsOn,
@@ -24,14 +25,15 @@ const TaskDependsOn = ({
   let choices = tasks?.filter(t => t.id !== taskId) ?? [];
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-row gap-x-4 items-center">
       <h3
-        className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+        className={`${isPage ? "hidden" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Depends On:
       </h3>
+      <Link className="h-4 w-4 text-midWhite" strokeWidth={3} />
       <MultiSelect
-        placeholder="Select Task To Depend On"
+        placeholder="Select Task"
         isPage={isPage}
         value={taskDependsOn ?? []}
         setValue={setTaskDependsOn}

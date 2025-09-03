@@ -42,11 +42,11 @@ const MultiSelect = ({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
+          className="w-full py-1 border-none truncate bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
         >
           <span
             className={cn(
-              isPage ? "text-base" : isSidebar ? "text-xs" : "text-sm",
+              isSidebar ? "text-xs" : "text-sm",
               value.length === 0 ? "text-faintWhite" : "text-white/90"
             )}
           >

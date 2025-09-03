@@ -20,7 +20,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
-import { useTaskCategoryOptionsStore, useTasksStore, useUsersInProjectStore } from "@/zustand/store";
+// Removed Zustand stores - using React Query cache instead
 
 const TaskSchema = z.object({
   id: z.string(),
@@ -29,7 +29,6 @@ const TaskSchema = z.object({
   priority: z.enum(["low", "medium", "high"]),
   assignTo: z.array(z.string()),
   progress: z.string(),
-  link: z.string().url().optional(),
   category: z.string().optional(),
   files: z.array(z.string()),
   projectTaskId: z.number(),
@@ -81,36 +80,47 @@ const TaskPage = () => {
       { enabled: !!workspaceId }
     );
 
-  const { usersInProject: usersInProjectStoreData } = useUsersInProjectStore();
-  const { data: usersInProjectQueryData } = trpc.users.getUsersInProject.useQuery({
+  // Users in project - React Query will use cached data from Projects.tsx
+  const { data: usersInProject } = trpc.users.getUsersInProject.useQuery({
     id: projectId
   }, {
-    enabled: usersInProjectStoreData.length === 0
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000, // Same cache settings as Projects.tsx
+    cacheTime: 15 * 60 * 1000,
   });
-  const usersInProject = usersInProjectStoreData || usersInProjectQueryData;
 
-  const { taskCategoryOptions: taskCategoryOptionsStoreData } = useTaskCategoryOptionsStore()
-  const {
-    data: taskCategoryOptionsQueryData,
-    isLoading: taskCategoryOptionsIsLoading,
-  } = trpc.tasks.getTaskCategoryOptions.useQuery({ projectId }, {enabled: taskCategoryOptionsStoreData?.length === 0});
-  const taskCategoryOptionsRes = taskCategoryOptionsStoreData || taskCategoryOptionsQueryData;
+  // Task category options - React Query will use cached data from Projects.tsx
+  const { data: taskCategoryOptionsRes, isLoading: taskCategoryOptionsIsLoading } = 
+    trpc.tasks.getTaskCategoryOptions.useQuery({ projectId }, {
+      enabled: !!projectId,
+      staleTime: 10 * 60 * 1000, // Same cache settings as Projects.tsx
+      cacheTime: 20 * 60 * 1000,
+    });
 
-  useEffect(() => {
-    if (taskCategoryOptionsRes && !taskCategoryOptionsIsLoading) {
-      setTaskCategoryOptions(taskCategoryOptionsRes);
+  // Get all tasks first (uses cache from Projects.tsx), then find specific task
+  const { data: allTasks } = trpc.tasks.getTasks.useQuery(
+    { id: projectId },
+    { 
+      enabled: !!projectId,
+      staleTime: 2 * 60 * 1000, // Same cache settings as Projects.tsx
+      cacheTime: 10 * 60 * 1000,
     }
-  }, [taskCategoryOptionsRes]);
-
-  const { tasks: tasksStoreData } = useTasksStore();
-  const taskByIdStoreData = tasksStoreData.find((task: Task) => task.id === taskId);  
+  );
+  
+  const taskFromAllTasks = allTasks?.find((task: Task) => task.id === taskId);
+  
+  // Fallback to individual task query if not found in all tasks
   const { data: taskByIdQueryData, isLoading: taskDataIsLoading } =
     trpc.tasks.getTaskById.useQuery({
       projectId,
       taskId: taskId,
-    }, {enabled: tasksStoreData.length === 0 || taskByIdStoreData == null});
+    }, {
+      enabled: !!projectId && !!taskId && !taskFromAllTasks,
+      staleTime: 2 * 60 * 1000,
+      cacheTime: 10 * 60 * 1000,
+    });
   
-  const taskById = taskByIdStoreData || taskByIdQueryData;
+  const taskById = taskFromAllTasks || taskByIdQueryData;
 
   const task: Task | undefined = useMemo(() => {
     return taskById
@@ -139,9 +149,8 @@ const TaskPage = () => {
     }
   }, [task, form]);
 
-  const [taskCategoryOptions, setTaskCategoryOptions] = useState(
-    taskCategoryOptionsRes ?? []
-  );
+  // Use taskCategoryOptionsRes directly from React Query
+  const taskCategoryOptions = taskCategoryOptionsRes ?? [];
 
   // USE MUTATIONS
   const deleteTask = trpc.tasks.deleteTask.useMutation({
@@ -158,6 +167,7 @@ const TaskPage = () => {
     onSuccess: () => {
       utils.tasks.getTaskById.invalidate();
       utils.tasks.getTaskCategoryOptions.invalidate();
+      utils.tasks.getTasks.invalidate({ id: projectId });
       form.reset(form.getValues()); // what does this do
     },
     onError: (err) => {
@@ -197,7 +207,12 @@ const TaskPage = () => {
       }
     });
 
-    if (Object.keys(updates).length === 0) return;
+    console.log("Updates to be sent:", updates);
+
+    if (Object.keys(updates).length === 0) {
+      console.log("No changes detected, skipping update");
+      return;
+    }
 
     updateTask.mutate({ taskId, updates });
   };
@@ -220,7 +235,7 @@ const TaskPage = () => {
 
     Mousetrap.bind("esc", function (e) {
       e.preventDefault();
-      navigate(`/workspaces/${workspaceId}/projects/${projectId}/board`);
+      navigate(-1);
     });
 
     return () => {
@@ -259,7 +274,7 @@ const TaskPage = () => {
         />
       )}
       <div className="w-full h-full flex pb-8">
-        <div className="scrollbar-group w-[60%] h-full overflow-y-auto super-thin-scrollbar">
+        <div className="scrollbar-group w-[70%] h-full overflow-y-auto super-thin-scrollbar">
           <form
             id="update-task-form"
             onSubmit={form.handleSubmit(onSubmit)}
@@ -292,11 +307,11 @@ const TaskPage = () => {
               />
               <div className="overflow-hidden h-96">
                 <div className="flex justify-between w-full mb-2">
-                  <h3
+                  {/* <h3
                     className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
                   >
                     Discussion:
-                  </h3>
+                  </h3> */}
                 </div>
                 <div className="max-h-full overflow-auto overscroll-contain super-thin-scrollbar">
                   <TaskDiscussionBoard
@@ -346,7 +361,7 @@ const TaskPage = () => {
           />
         </div> */}
 
-        <div className="w-[40%] pl-4 pr-2 py-1 flex flex-col gap-y-4">
+        <div className="w-[30%] pl-4 pr-2 py-1 flex flex-col gap-y-[0.9rem]">
           <Controller
             control={form.control}
             name="priority"
@@ -368,7 +383,7 @@ const TaskPage = () => {
                 isPage={true}
                 taskCategoryOptions={taskCategoryOptions}
                 taskCategoryOptionsIsLoading={taskCategoryOptionsIsLoading}
-                setTaskCategoryOptions={setTaskCategoryOptions}
+                setTaskCategoryOptions={() => {}} // No longer needed - React Query handles updates
                 taskCategory={field.value}
                 setTaskCategory={field.onChange}
                 projectId={projectId}
@@ -383,7 +398,7 @@ const TaskPage = () => {
               <TaskAssignee
                 isPage={true}
                 projectId={projectId}
-                usersInProj={usersInProject.map(user => user.username) ?? []}
+                usersInProj={usersInProject?.map(user => user.username) ?? []}
                 username={userContext.username ?? undefined}
                 taskAssignedTo={field.value ?? []}
                 setTaskAssignedTo={field.onChange}
@@ -394,7 +409,7 @@ const TaskPage = () => {
           <div className="flex items-center gap-x-4">
             <hr className="flex-grow border-t border-faintWhite" />
             <p className="text-xs text-center text-faintWhite whitespace-nowrap">
-              Advanced Task Details
+              Advanced
             </p>
             <hr className="flex-grow border-t border-faintWhite" />
           </div>
@@ -406,7 +421,7 @@ const TaskPage = () => {
                 isPage={true}
                 taskId={task.id}
                 projectId={projectId}
-                taskDependsOn={field.value}
+                taskDependsOn={field.value ?? []}
                 setTaskDependsOn={field.onChange}
                 error={fieldState.error?.message}
               />

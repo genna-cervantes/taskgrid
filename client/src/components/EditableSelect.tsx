@@ -104,9 +104,8 @@ export function EditableDropdown({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          className={`${
-            isPage ? "text-base" : "text-sm"
-          } border-none shadow-bottom-grey w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${
+          className={`
+            text-sm border-none py-1 w-full flex justify-between bg-transparent px-0 focus:outline-none focus:ring-0 focus:border-transparent hover:bg-transparent ${
             taskCategoryOptions.find((o) => o.category === taskCategory)
               ? "text-white"
               : "text-faintWhite"

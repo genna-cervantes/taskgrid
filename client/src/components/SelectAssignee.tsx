@@ -43,11 +43,11 @@ const SelectAssignee = ({
         <Button
           variant="outline"
           role="combobox"
-          className="w-full border-none bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
+          className="w-full py-1 border-none bg-transparent shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] px-0 placeholder:text-faintWhite justify-between hover:bg-transparent"
         >
           <span
             className={cn(
-              isPage ? "text-base" : "text-sm",
+              "text-sm",
               taskAssignedTo.length === 0 ? "text-faintWhite" : "text-white/90"
             )}
           >

@@ -162,6 +162,36 @@ export const getUserWorkspaceProjects = async (
   return res.rows as Project[];
 };
 
+export const editProjectDescription = async (
+  pool: Pool,
+  projectId: string,
+  description: string
+) => {
+  if (!projectId)
+    throw new Error("Bad request missing required fields");
+
+  const query =
+    "UPDATE project_details SET description = $1 WHERE project_id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [description, projectId]);
+
+  return (res.rowCount ?? 0) === 1 ? true : false;
+};
+
+export const editProjectPrivacy = async (
+  pool: Pool,
+  projectId: string,
+  privacy: string
+) => {
+  if (!projectId || !privacy)
+    throw new Error("Bad request missing required fields");
+
+  const query =
+    "UPDATE project_details SET privacy = $1 WHERE project_id = $2 AND is_active = TRUE";
+  const res = await pool.query(query, [privacy, projectId]);
+
+  return (res.rowCount ?? 0) === 1 ? true : false;
+};
+
 export const getProjectDetails = async (pool: Pool, projectId: string) => {
   if (!projectId) throw new Error("Bad request missing required fields");
 

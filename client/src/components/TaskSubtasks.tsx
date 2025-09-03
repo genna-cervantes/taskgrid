@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { GripVertical } from "lucide-react";
 
 type Subtask = {
   title: string;
@@ -65,6 +66,7 @@ const TaskSubtasks = ({
           
           return (
             <div key={index} className="flex items-center gap-x-2">
+              <GripVertical className="h-[1.1rem] mx-[-5px] text-midWhite hover:cursor-grab" strokeWidth={2} />
               <Checkbox
                 checked={s.isDone ?? false}
                 onCheckedChange={(checked) =>

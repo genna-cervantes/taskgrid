@@ -5,6 +5,8 @@ import {
   addProject,
   deleteProject,
   editProjectName,
+  editProjectDescription,
+  editProjectPrivacy,
   getProjectDetails,
   getProjectNameByKey,
   getProjectOwner,
@@ -97,6 +99,54 @@ export const projectsRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update project name",
+        });
+      }
+
+      return result.data;
+    }),
+  editProjectDescription: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ id: z.string(), description: z.string(), guestId: z.string() }))
+    .mutation(async ({ input }) => {
+      let result = await tryCatch(
+        editProjectDescription(pool, input.id, input.description)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project description",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project description",
+        });
+      }
+
+      return result.data;
+    }),
+  editProjectPrivacy: publicProcedure
+    .use(rateLimitMiddleware)
+    .input(z.object({ id: z.string(), privacy: z.enum(["public", "private"]), guestId: z.string() }))
+    .mutation(async ({ input }) => {
+      let result = await tryCatch(
+        editProjectPrivacy(pool, input.id, input.privacy)
+      );
+      if (result.error != null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project privacy",
+          cause: result.error,
+        });
+      }
+
+      if (!result.data) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update project privacy",
         });
       }
 

@@ -21,7 +21,7 @@ const TaskSelectPriority = ({
     <div>
       <h3
         className={`${
-          isPage ? "text-xs" : "text-xxs"
+          isPage ? "hidden" : "text-xxs"
         } text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Priority:

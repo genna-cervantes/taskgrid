@@ -1,6 +1,7 @@
 import React from "react";
 import { EditableDropdown } from "./EditableSelect";
 import { trpc } from "@/utils/trpc";
+import { Tag } from "lucide-react";
 
 const TaskSelectCategory = ({
   taskCategory,
@@ -26,12 +27,13 @@ const TaskSelectCategory = ({
 }) => {
 
   return (
-    <div className="w-full ">
+    <div className={`w-full flex ${isPage ? "flex-row gap-x-4 items-center" : "flex-col"}`}>
       <h3
-        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+        className={`${isPage ? "hidden" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Category:
       </h3>
+      <Tag className="h-4 w-4 text-midWhite" strokeWidth={3} />
       <div className="flex gap-x-6 w-full">
         {taskCategoryOptionsIsLoading ? 'Loading...' : <EditableDropdown projectId={projectId} taskCategory={taskCategory} setTaskCategory={setTaskCategory} taskCategoryOptions={taskCategoryOptions} setTaskCategoryOptions={setTaskCategoryOptions} isPage={isPage} />}
       </div>

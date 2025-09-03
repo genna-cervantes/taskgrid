@@ -5,6 +5,7 @@ import TaskCategory from "@/components/TaskCategory";
 import { Button } from "@/components/ui/button";
 import { Funnel, User } from "lucide-react";
 import { useProjectDetailsStore } from "@/zustand/store";
+import TaskPriority from "@/components/TaskPriority";
 
 const Triage = () => {
   const { workspaceId, projectId } = useParams();
@@ -76,31 +77,31 @@ const TriageTask = () => {
 
       <h1 className="text-sm font-bold">Task Title Here</h1>
       <div className="flex gap-x-2 items-center mt-1">
-        {/* <TaskPriority className="text-sm" priority="low" /> */}
+        <TaskPriority className="text-sm" priority="low" />
         <TaskCategory
-          className="!text-xs"
+          className=""
           category="Category"
           taskCategoryOptions={[]}
-        />
-        <div className="border border-faintWhite rounded-md px-1">
-          <p className="text-xs flex items-center gap-x-0">
-            <User className="h-3 ml-[-0.4rem]" /> Genna Cervantes
-          </p>
-        </div>
+        />        
       </div>
 
       <p className="text-xs mt-2">
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quos.{" "}
       </p>
+
+      <p className="text-xs mt-2 flex items-center gap-x-0">
+        <User className="h-3 ml-[-0.4rem]" /> Genna Cervantes
+      </p>
+
       <div className="flex gap-x-2 mt-3">
-        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+        <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">
           Accept to Backlog
         </Button>
-        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+        <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">
           Mark as Duplicate
         </Button>
-        <Button className="text-xs text-white bg-inherit border border-faintWhite px-2 py-1">
+        <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">
           Delete
         </Button>
       </div>

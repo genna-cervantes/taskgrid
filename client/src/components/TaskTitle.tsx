@@ -14,7 +14,7 @@ const TaskTitle = ({
   return (
     <div>
       <h3
-        className={`${isPage ? "text-xs" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
+        className={`${isPage ? "hidden" : "text-xxs"} text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
       >
         Title:
       </h3>
