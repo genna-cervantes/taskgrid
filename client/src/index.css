@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@source "../node_modules/streamdown/dist/index.js";
 
 /* styles/globals.css or index.css */
 .super-thin-scrollbar::-webkit-scrollbar {
@@ -21,6 +22,34 @@
   border: none;
   padding: 6px 4px;
   border-radius: 6px;
+  opacity: 0;
+  transform: translateY(-14px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Show toolbar when focused */
+.quill-wrapper.focused .ql-toolbar.ql-snow {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  height: auto;
+  overflow: visible;
+  z-index: 1000;
+  position: relative;
+}
+
+/* Keep toolbar visible when dropdown is open */
+.quill-wrapper .ql-toolbar.ql-snow:focus-within {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  height: auto;
+  overflow: visible;
+  z-index: 1000;
+  position: relative;
 }
 
 /* Editor Area */
@@ -31,8 +60,8 @@
 }
 
 .ql-editor {
-  min-height: 200px;
-  padding: 10px 8px;
+  min-height: 220px;
+  padding: 10px 14px;
   font-family: 'JetBrains Mono', sans-serif;
   font-size: 12px;
   color: #f1f1f1;
@@ -47,6 +76,99 @@
   font-style: normal;
   font-size: 13px;
   opacity: 0.7;
+}
+
+/* Quill Dropdown Styles */
+.ql-picker {
+  color: #f1f1f1;
+  position: relative;
+}
+
+.ql-picker-options {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 4px 0;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 100px;
+}
+
+.ql-picker-item {
+  color: #f1f1f1;
+  padding: 6px 12px;
+}
+
+.ql-picker-item:hover {
+  background-color: #333;
+}
+
+.ql-picker-item.ql-selected {
+  background-color: #444;
+}
+
+/* Color picker specific styles */
+.ql-color-picker .ql-picker-options,
+.ql-background-picker .ql-picker-options {
+  width: 200px;
+  padding: 8px;
+}
+
+.ql-color-picker .ql-picker-item,
+.ql-background-picker .ql-picker-item {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+  border-radius: 2px;
+  border: 1px solid #555;
+  padding: 0;
+}
+
+/* Header picker styles */
+.ql-header .ql-picker-options {
+  min-width: 120px;
+}
+
+.ql-header .ql-picker-item::before {
+  color: #f1f1f1;
+}
+
+/* Tooltip styles */
+.ql-tooltip {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #f1f1f1;
+  padding: 8px 12px;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.ql-tooltip input {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: #f1f1f1;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.ql-tooltip input:focus {
+  border-color: #666;
+  outline: none;
+}
+
+.ql-tooltip .ql-action,
+.ql-tooltip .ql-remove {
+  color: #f1f1f1;
+  margin-left: 8px;
+}
+
+.ql-tooltip .ql-action:hover,
+.ql-tooltip .ql-remove:hover {
+  color: #ccc;
 }
 
 /* TipTap Editor Styles */

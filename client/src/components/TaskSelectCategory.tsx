@@ -33,11 +33,13 @@ const TaskSelectCategory = ({
       >
         Category:
       </h3>
-      <Tag className="h-4 w-4 text-midWhite" strokeWidth={3} />
-      <div className="flex gap-x-6 w-full">
-        {taskCategoryOptionsIsLoading ? 'Loading...' : <EditableDropdown projectId={projectId} taskCategory={taskCategory} setTaskCategory={setTaskCategory} taskCategoryOptions={taskCategoryOptions} setTaskCategoryOptions={setTaskCategoryOptions} isPage={isPage} />}
+      <div className="w-full flex flex-col gap-y-2">
+        <div className="flex gap-x-4 w-full items-center">
+          {isPage && <Tag className="h-4 w-4 text-midWhite" strokeWidth={3} />}
+          {taskCategoryOptionsIsLoading ? 'Loading...' : <EditableDropdown projectId={projectId} taskCategory={taskCategory} setTaskCategory={setTaskCategory} taskCategoryOptions={taskCategoryOptions} setTaskCategoryOptions={setTaskCategoryOptions} isPage={isPage} />}
+        </div>
+        {error && <p className="text-xxs pb-2 text-red-400 text-start line-clamp-1">{error}</p>}
       </div>
-      {error && <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">{error}</p>}
     </div>
   );
 };

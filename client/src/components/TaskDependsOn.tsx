@@ -31,19 +31,23 @@ const TaskDependsOn = ({
       >
         Depends On:
       </h3>
-      <Link className="h-4 w-4 text-midWhite" strokeWidth={3} />
-      <MultiSelect
-        placeholder="Select Task"
-        isPage={isPage}
-        value={taskDependsOn ?? []}
-        setValue={setTaskDependsOn}
-        choices={choices}
-      />
-      {error && (
-        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
-          {error}
-        </p>
-      )}
+      <div className="w-full flex flex-col gap-y-1">
+        <div className="flex gap-x-4 w-full items-center">
+          <Link className="h-4 w-4 text-midWhite" strokeWidth={3} />
+          <MultiSelect
+            placeholder="Depends on..."
+            isPage={isPage}
+            value={taskDependsOn ?? []}
+            setValue={setTaskDependsOn}
+            choices={choices}
+          />
+        </div>
+        {error && (
+          <p className="text-xxs pb-2 text-red-400 text-start line-clamp-1">
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

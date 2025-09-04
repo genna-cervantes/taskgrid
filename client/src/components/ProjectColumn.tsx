@@ -150,7 +150,7 @@ const ProjectColumn = ({
           </div>
         </div>
         <div className="flex items-center gap-x-1">
-          <Ellipsis className="text-faintWhite h-4 hover:text-fadedWhite hover:cursor-pointer" />
+          {/* <Ellipsis className="text-faintWhite h-4 hover:text-fadedWhite hover:cursor-pointer" /> */}
           <AddTask
             type=""
             setAddModal={setAddModal}

@@ -233,6 +233,7 @@ const ManageProject = () => {
         </div>
         <div className="text-sm mt-3 min-h-24">
           <QuillEditor 
+            isPage={true}
             description={projectDescription} 
             setDescription={(description) => {
               if (typeof description === 'function') {
@@ -308,19 +309,6 @@ const ManageProject = () => {
                 </div>
               </div>
             ))}
-              <div className="w-full border border-faintWhite flex justify-between gap-x-8 rounded-md px-2 py-1 items-center">
-                <div>
-                  <h1 className="text-sm">Francie</h1>
-                </div>
-                <div className="flex gap-x-2">
-                  <button className="border border-faintWhite text-xxs px-2 rounded-md py-1">
-                    Make Admin
-                  </button>
-                  <button className="border border-faintWhite text-xxs px-2 rounded-md py-1">
-                    Remove
-                  </button>
-                </div>
-              </div>
           </div>
         </div>
 

@@ -45,13 +45,7 @@ const Triage = () => {
           },
         ]}
       />
-      <div>
-        <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
-            <Funnel className="h-3" />
-            <p>Filter</p>
-          </button>  
-      </div>
-      <div className="w-full mt-3">
+      <div className="w-full">
         <div className="flex items-center gap-x-4">
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Open Tasks</p>
@@ -59,6 +53,10 @@ const Triage = () => {
               3
             </div>
           </div>
+          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+            <Funnel className="h-3" />
+            <p>Filter</p>
+          </button>  
         </div>
       </div>
       <div className="w-full flex flex-col gap-y-2 mt-3">
@@ -71,11 +69,12 @@ const Triage = () => {
 const TriageTask = () => {
   return (
     <div className="w-full border border-faintWhite rounded-md px-3 py-3">
-      <p className="text-xxs text-midWhite mb-2">
-        {new Date().toLocaleDateString()} | 5d
-      </p>
-
-      <h1 className="text-sm font-bold">Task Title Here</h1>
+      <div className="flex justify-between">
+        <h1 className="text-sm font-bold">Task Title Here</h1>
+        <p className="text-xxs text-midWhite mb-2">
+          5d
+        </p>
+      </div>
       <div className="flex gap-x-2 items-center mt-1">
         <TaskPriority className="text-sm" priority="low" />
         <TaskCategory

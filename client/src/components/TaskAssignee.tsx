@@ -28,7 +28,7 @@ const TaskAssignee = ({
       >
         Assign to:
       </h3>
-      <User2 className="h-4 w-4 text-midWhite" strokeWidth={3} />
+      {isPage && <User2 className="h-4 w-4 text-midWhite" strokeWidth={3} />}
 
      <SelectAssignee
         isPage={isPage}

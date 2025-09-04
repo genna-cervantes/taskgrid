@@ -66,64 +66,6 @@ const ProjectBlock = ({
         <h1 className="font-bold truncate text-sm text-white/80">
           {p.name}
         </h1>
-        <div className="relative">
-          <button
-            title="Edit Project"
-            className="cursor-pointer px-1 py-1 dark:text-white/90 text-fadedBlack hover:dark:text-midWhite hover:text-midBlack"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              if (editProject.projectId === p.id) {
-                setEditProject({ projectId: "", projectName: "" });
-              } else {
-                setEditProject({ projectId: p.id, projectName: p.name });
-              }
-            }}
-          >
-            <EllipsisVertical className="h-4" />
-          </button>
-
-          {editProject.projectId === p.id && (
-            <div
-              ref={dropdownRef}
-              className="z-10 absolute top-full right-0 mt-2 bg-lmBackground dark:bg-[#3a3a3a] p-2 rounded-md shadow-lg w-max flex flex-col gap-y-2 text-sm"
-            >
-              <button
-                onClick={(e) => {
-                  setEditProjectModal(true);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="w-full h-1/2 dark:hover:bg-white/20 hover:bg-lmMidBackground dark:text-white text-fadedBlack  p-2 px-4 rounded-md cursor-pointer"
-              >
-                edit project
-              </button>
-              {isOwner && (
-                <button
-                  onClick={(e) => {
-                    setManageProjectModal(true);
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="w-full h-1/2 dark:hover:bg-white/20 hover:bg-lmMidBackground dark:text-white text-fadedBlack p-2 px-4 rounded-md cursor-pointer"
-                >
-                  manage project
-                </button>
-              )}
-              <button
-                onClick={(e) => {
-                  setDeleteProjectModal(true);
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="w-full h-1/2 hover:bg-red-400 dark:text-white text-fadedBlack p-2 px-4 rounded-md cursor-pointer"
-              >
-                leave project
-              </button>
-            </div>
-          )}
-        </div>
       </div>
       {/* <h3 className="text-sm dark:text-midWhite text-midBlack">{p.id}</h3> */}
       {!projectsStatsIsLoading && projectStats && (

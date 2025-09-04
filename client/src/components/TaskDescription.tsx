@@ -9,13 +9,7 @@ const TaskDescription = ({taskDescription, setTaskDescription, error, isPage = f
       >
         Description:
       </h3>
-      {/* <textarea
-        placeholder="What's this about?"
-        className={`w-full ${isPage ? "text-base" : "text-sm"} ${isPage ? "h-24" : "h-16"} text-white/90 placeholder:text-faintWhite shadow-bottom-grey focus:outline-none focus:ring-0 focus:border-transparent`}
-        value={taskDescription}
-        onChange={(e) => setTaskDescription(e.target.value)}
-      /> */}
-      <QuillEditor description={taskDescription} setDescription={setTaskDescription} />
+      <QuillEditor isPage={isPage} description={taskDescription} setDescription={setTaskDescription} />
       {error && <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">{error}</p>}
     </div>
   );

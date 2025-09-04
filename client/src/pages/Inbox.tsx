@@ -2,7 +2,7 @@ import BreadCrumbs from "@/components/BreadCrumbs";
 import { useNotificationsSocket } from "@/contexts/NotificationContext";
 import { useUserContext } from "@/contexts/UserContext";
 import { trpc } from "@/utils/trpc";
-import { MailOpen } from "lucide-react";
+import { Funnel, MailOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useParams } from "react-router-dom";
 
@@ -54,24 +54,28 @@ const Inbox = () => {
         ]}
       />
       <div className="w-full">
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-2">
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Unread Messages</p>
             <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
               {mentions.length + (unreadNotifications?.length ?? 0)}
             </div>
           </div>
-          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
-            <MailOpen className="h-3" />
-            <p>Mark all as read</p>
-          </button>
+          <div className="ml-2 flex gap-x-2 items-center">
+            <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+              <MailOpen className="h-3" />
+              <p>Mark all as read</p>
+            </button>
+            <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+              <Funnel className="h-3" />
+              <p>Filter</p>
+            </button>  
+          </div>
+
         </div>
 
         {/* loading state */}
         {unreadNotificationsIsLoading && <p className="text-center text-sm font-semibold mt-3">Loading...</p>}
-
-        {/* empty notifications */}
-        {unreadNotifications && unreadNotifications.length === 0 && <p className="text-center text-sm font-semibold mt-3">What an empty sea..</p>}
 
         {/* acutal notifs */}
         <div className="w-full flex flex-col gap-y-2 mt-3">

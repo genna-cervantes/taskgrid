@@ -115,23 +115,23 @@ const Sidebar = ({
     },
     {
       parent: "projects",
+      icon: MailPlus,
+      name: "Inbox",
+      func: function () {
+        setActiveIndex(2);
+        navigate(`workspaces/${workspaceId}/projects/${projectId}/inbox`);
+      },
+    },
+    {
+      parent: "projects",
       icon: SquareKanban,
       name: "Kanban",
       func: function () {
-        setActiveIndex(2);
+        setActiveIndex(3);
         navigate(`workspaces/${workspaceId}/projects/${projectId}/board`);
         setToggleSidebar(false);
       },
     },
-    // {
-    //   parent: "projects",
-    //   icon: MailPlus,
-    //   name: "Inbox",
-    //   func: function () {
-    //     setActiveIndex(3);
-    //     navigate(`workspaces/${workspaceId}/projects/${projectId}/inbox`);
-    //   },
-    // },
     // {
     //   parent: "projects",
     //   icon: Funnel,

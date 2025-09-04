@@ -18,6 +18,10 @@ export const getTasksFromProjectId = async (pool: Pool, id: string) => {
   const tasks: Task[] = res.rows.map((task) => ({
     ...task,
     id: task.id.toString(),
+    category: task.category === null ? undefined : task.category,
+    subtasks: task.subtasks === null ? [] : task.subtasks,
+    dependsOn: task.dependsOn === null ? [] : task.dependsOn,
+
   }));
 
   const tasksWithComments = await Promise.all(
@@ -75,6 +79,8 @@ export const getTaskById = async (
   const task = {
     ...sanitized,
     id: res.rows[0].id.toString(),
+    subtasks: sanitized.subtasks === null ? [] : sanitized.subtasks,
+    dependsOn: sanitized.dependsOn === null ? [] : sanitized.dependsOn,
   };
 
   const commentQuery =
@@ -406,6 +412,9 @@ export const getFilteredTasks = async (
   const tasks: Task[] = res.rows.map((task) => ({
     ...task,
     id: task.id.toString(),
+    category: task.category === null ? undefined : task.category,
+    subtasks: task.subtasks === null ? [] : task.subtasks,
+    dependsOn: task.dependsOn === null ? [] : task.dependsOn,
   }));
 
   const tasksWithComments = await Promise.all(

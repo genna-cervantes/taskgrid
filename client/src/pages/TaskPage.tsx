@@ -3,7 +3,7 @@ import TaskDescription from "@/components/TaskDescription";
 import TaskSelectCategory from "@/components/TaskSelectCategory";
 import TaskSelectPriority from "@/components/TaskSelectPriority";
 import { trpc } from "@/utils/trpc";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { priorityLevels } from "@/components/AddTaskForm";
 import { Task } from "../../../server/src/shared/types";
@@ -16,6 +16,7 @@ import TaskTitle from "@/components/TaskTitle";
 import TaskDependsOn from "@/components/TaskDependsOn";
 import TaskSubtasks from "@/components/TaskSubtasks";
 import BreadCrumbs from "@/components/BreadCrumbs";
+import Timeline from "@/components/Timeline";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -264,7 +265,7 @@ const TaskPage = () => {
             },
             {
               name: projectName as string,
-              url: `/workspaces/${workspaceId}/projects/${projectId}`,
+              url: `/workspaces/${workspaceId}/projects/${projectId}/board`,
             },
             {
               name: task.title,
@@ -280,7 +281,7 @@ const TaskPage = () => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="pr-4 flex flex-col min-h-full justify-between gap-y-4"
           >
-            <div className="flex flex-col gap-y-4 overflow-hidden">
+            <div className="flex flex-col gap-y-2 overflow-hidden min-h-[90vh]">
               <Controller
                 name="title"
                 control={form.control}
@@ -305,22 +306,34 @@ const TaskPage = () => {
                   />
                 )}
               />
-              <div className="overflow-hidden h-96">
-                <div className="flex justify-between w-full mb-2">
-                  {/* <h3
-                    className={`text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100 `}
-                  >
-                    Discussion:
-                  </h3> */}
-                </div>
-                <div className="max-h-full overflow-auto overscroll-contain super-thin-scrollbar">
-                  <TaskDiscussionBoard
-                    ref={joinDiscussionRef}
-                    isPage={true}
-                    user={userContext.username ?? undefined}
-                    taskId={task.id}
+              {/* <div className="mt-2">
+                <h3 className="text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100">
+                  Activity:
+                </h3>
+                <div className="max-h-96 overflow-y-auto mt-2">
+                  <Timeline
+                    events={[
+                      {
+                        id: '1',
+                        title: 'Task created',
+                        timestamp: new Date(),
+                      },
+                      // {
+                      //   id: '2',
+                      //   title: 'Task progress updated to in progress',
+                      // },
+                    ]}
+                    className="max-h-96 overflow-y-auto"
                   />
                 </div>
+              </div> */}
+              <div className="mt-2">
+                <TaskDiscussionBoard
+                  ref={joinDiscussionRef}
+                  isPage={true}
+                  user={userContext.username ?? undefined}
+                  taskId={task.id}
+                />  
               </div>
             </div>
             <div className="flex gap-x-4">
@@ -361,7 +374,7 @@ const TaskPage = () => {
           />
         </div> */}
 
-        <div className="w-[30%] pl-4 pr-2 py-1 flex flex-col gap-y-[0.9rem]">
+        <div className="w-[30%] pl-5 pr-3 py-1 flex flex-col gap-y-4">
           <Controller
             control={form.control}
             name="priority"

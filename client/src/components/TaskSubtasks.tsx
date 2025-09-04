@@ -57,9 +57,9 @@ const TaskSubtasks = ({
 
   return (
     <div className="space-y-2">
-      <h3 className="text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100">
+      {/* <h3 className="text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100">
         Sub Tasks:
-      </h3>
+      </h3> */}
       <div className="flex flex-col gap-y-3">
         {displaySubtasks.map((s, index) => {
           const isNewInput = index >= taskSubtasks.length;
@@ -87,7 +87,7 @@ const TaskSubtasks = ({
         })}
       </div>
       {error && (
-        <p className="text-xs pb-2 text-red-400 !font-rubik text-start line-clamp-1">
+        <p className="text-xxs pb-2 text-red-400 text-start line-clamp-1">
           {error}
         </p>
       )}
