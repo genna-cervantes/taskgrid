@@ -67,21 +67,23 @@ const TaskSubtasks = ({
           return (
             <div key={index} className="flex items-center gap-x-2">
               <GripVertical className="h-[1.1rem] mx-[-5px] text-midWhite hover:cursor-grab" strokeWidth={2} />
-              <Checkbox
-                checked={s.isDone ?? false}
-                onCheckedChange={(checked) =>
-                  handleCheckboxChange(index, checked === true)
-                }
-                className="bg-inherit h-5 w-5 border border-faintWhite"
-                disabled={isNewInput} // Disable checkbox for the "add new" input
-              />
-              <input
-                type="text"
-                value={s.title}
-                onChange={(e) => handleTitleChange(index, e.target.value)}
-                placeholder="Add Subtask"
-                className="shadow-bottom-grey text-sm placeholder:text-faintWhite w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
-              />
+              <div className="flex items-center gap-x-2 ml-2">
+                <Checkbox
+                  checked={s.isDone ?? false}
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(index, checked === true)
+                  }
+                  className="bg-inherit h-5 w-5 border border-faintWhite"
+                  disabled={isNewInput} // Disable checkbox for the "add new" input
+                />
+                <input
+                  type="text"
+                  value={s.title}
+                  onChange={(e) => handleTitleChange(index, e.target.value)}
+                  placeholder="Add Subtask"
+                  className="w-full text-sm placeholder:text-faintWhite w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
+                />
+              </div>
             </div>
           );
         })}

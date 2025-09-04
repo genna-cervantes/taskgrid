@@ -1,5 +1,5 @@
 import BreadCrumbs from "@/components/BreadCrumbs";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { trpc } from "@/utils/trpc";
 import { Funnel, Github, Info } from "lucide-react";
 import {
@@ -209,7 +209,7 @@ const ManageProject = () => {
               <input
                 ref={inputRef}
                 type="text"
-                className="w-fit text-white/90 placeholder:text-midWhite text-white bg-transparent outline-none font-semibold"
+                className="w-fit text-lg text-white/90 placeholder:text-midWhite text-white bg-transparent outline-none font-semibold"
                 value={editedProjectName}
                 onChange={(e) => setEditedProjectName(e.target.value)}
                 onBlur={handleSaveProjectName}
@@ -218,7 +218,7 @@ const ManageProject = () => {
               />
             ) : (
               <h1
-                className="font-semibold text-white/90 cursor-pointer hover:text-white transition-colors"
+                className="font-semibold text-lg text-white/90 cursor-pointer hover:text-white transition-colors"
                 onClick={handleEditProjectName}
               >
                 {projectName || "Untitled Project"}
@@ -327,9 +327,9 @@ const ManageProject = () => {
                   minus autem omnis illum consequatur, cumque sint nostrum
                 </p>
               </div>
-              <button className="border border-faintWhite text-xs px-2 rounded-md py-1">
+              <Link target="_blank" to='https://github.com/apps/taskan-app/installations/new' className="border border-faintWhite text-xs px-2 rounded-md py-1">
                 Connect
-              </button>
+              </Link>
             </div>
           </div>
         </div>

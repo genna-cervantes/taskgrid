@@ -13,7 +13,7 @@ import {
   getProjectStats,
   getUserWorkspaceProjects,
 } from "../../db/queries/projects.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { tryCatch } from "../../lib/utils.js";
 import { TRPCError } from "@trpc/server";
 

@@ -111,7 +111,9 @@ export function EditableDropdown({
               : "text-faintWhite"
           }`}
         >
-          <span className="flex w-full items-center gap-x-4 text-white/90">
+          <span className={`flex w-full items-center gap-x-4 ${taskCategoryOptions.find((o) => o.category === taskCategory)
+              ? "text-white/90"
+              : "text-faintWhite"}`}>
             <span
               className={`h-3 w-3 rounded-full bg-${
                 taskCategoryOptions.find((o) => o.category === taskCategory)
@@ -121,7 +123,7 @@ export function EditableDropdown({
             {taskCategory
               ? taskCategoryOptions.find((o) => o.category === taskCategory)
                   ?.category
-              : "Select option"}
+              : "Add category"}
           </span>
           <ChevronDown className="text-white" />
         </Button>

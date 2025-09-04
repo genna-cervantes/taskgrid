@@ -1,5 +1,5 @@
 import { betterAuth } from "better-auth";
-import { pool } from "../trpc/router.js";
+import { pool } from "../db/db.js";
 
 export const auth = betterAuth({
   database: pool,

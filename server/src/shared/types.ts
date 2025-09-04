@@ -73,3 +73,15 @@ export const ProjectDetailsSchema = z.object({
 })
 
 export type ProjectDetails = z.infer<typeof ProjectDetailsSchema>
+
+export interface GitHubInstallation {
+  id: number;
+  installation_id: string;
+  user_id: string;
+  account_type: 'User' | 'Organization';
+  account_login: string; 
+  repository_ids: number[];
+  access_token: string | null;
+  access_token_expires_at: Date | null;
+  installed_at: Date;
+}

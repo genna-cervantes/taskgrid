@@ -95,7 +95,7 @@ const TriageTask = () => {
 
       <div className="flex gap-x-2 mt-3">
         <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">
-          Accept to Backlog
+          Move to Backlog
         </Button>
         <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">
           Mark as Duplicate
@@ -104,15 +104,22 @@ const TriageTask = () => {
           Delete
         </Button>
       </div>
-      <div className="w-full bg-purple-300/20 rounded-md px-2 py-1 mt-3 text-xs border-faintWhite border">
-        <p className="text-xxs text-purple-300 font-bold mb-1">
-          AI Suggestions
-        </p>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
-          quos. Lorem ipsum dolor sit amet consectetur adipisicing elit.
-          Quisquam, quos.{" "}
-        </p>
+      <div className="w-full flex gap-x-2 bg-purple-300/20 rounded-md px-2 py-1 mt-3 text-xs border-faintWhite border">
+        <div className="w-full">
+          <p className="text-xxs text-purple-300 font-bold mb-1">
+            AI Suggestions
+          </p>
+          <p>
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam,
+            quos. Lorem ipsum dolor sit amet consectetur adipisicing elit.
+            Quisquam, quos.{" "}
+          </p>
+        </div>
+        <div className="flex-1 flex items-center gap-x-1">
+          <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">Accept</Button>
+          <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">Accept & Move to Backlog</Button>
+          <Button className="text-xs hover:bg-inherit text-white bg-inherit border border-faintWhite px-2 py-1">Dismiss</Button>
+        </div>
       </div>
     </div>
   );

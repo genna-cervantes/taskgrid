@@ -9,7 +9,7 @@ import {
 } from "../../db/queries/workspaces.js";
 import { rateLimitMiddleware } from "../middleware.js";
 import { publicProcedure, router } from "../trpc.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { tryCatch } from "../../lib/utils.js";
 import { TRPCError } from "@trpc/server";
 

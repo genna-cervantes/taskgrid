@@ -14,7 +14,7 @@ import {
   kickUserFromProject,
   updateTimezone,
 } from "../../db/queries/users.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { tryCatch } from "../../lib/utils.js";
 import { TRPCError } from "@trpc/server";
 

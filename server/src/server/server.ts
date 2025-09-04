@@ -12,6 +12,10 @@ import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { setupWebSocket } from "../websocket/handlers.js";
 import { bus } from "../websocket/bus.js";
+import { getUserMiddleware } from "../lib/middleware.js";
+import { getInstallationDetails } from "../integrations/github.js";
+import { tryCatch } from "../lib/utils.js";
+import { webhookMiddleware, webhooks } from "../webhooks/webhooks.js";
 
 dotenv.config();
 
@@ -33,8 +37,44 @@ app.use(
 
 app.all("/api/auth/*", toNodeHandler(auth));
 
+// webhooks - needs to be BEFORE body parsing middleware that would consume the raw body
+app.use(webhookMiddleware);
+
+// Parse JSON and URL-encoded bodies AFTER webhook routes
 app.use(express.json({ limit: "10mb" })); 
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+// callbacks
+app.use("/github/callback", getUserMiddleware, async (req, res) => {
+  console.log('CALLBACK CALLED')
+
+  const userId = (req as any).user.id;
+  console.log(userId)
+  
+  if (!userId) {
+    console.error("User ID not found")
+    return res.redirect('/login?next=github_connect');
+  }
+
+  const installationId = req.query.installation_id as string;
+  if (!installationId) {
+    console.error("Installation ID not found in callback")
+    return res.redirect('/login?error=missing_installation_id');
+  }
+
+  const result = await tryCatch(getInstallationDetails(installationId))
+  if (result.error != null) {
+    console.error("Failed to get installation details:", result.error)
+    return res.redirect('/login?error=github_installation_failed');
+  }
+  
+  const installationDetails = result.data;
+  console.log("GitHub installation details:", installationDetails)
+  
+  // TODO: Save installation details to database
+  // For now, redirect to success page
+  return res.redirect('/integrations?github=connected');
+});
 
 // set headers
 app.use((req, res, next) => {

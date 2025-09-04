@@ -53,7 +53,7 @@ const Inbox = () => {
           },
         ]}
       />
-      <div className="w-full">
+      <div className="w-full overflow-hidden h-full">
         <div className="flex items-center gap-x-2">
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Unread Messages</p>
@@ -78,7 +78,7 @@ const Inbox = () => {
         {unreadNotificationsIsLoading && <p className="text-center text-sm font-semibold mt-3">Loading...</p>}
 
         {/* acutal notifs */}
-        <div className="w-full flex flex-col gap-y-2 mt-3">
+        <div className="w-full flex flex-col gap-y-2 mt-3 overflow-y-auto super-thin-scrollbar pr-2 min-h-fit">
           {mentions.length > 0 ? (
             mentions.map((n) => <MentionNotification notif={n as {title: string, message: string}} />)
           ) : (

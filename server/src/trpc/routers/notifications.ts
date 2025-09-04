@@ -3,7 +3,7 @@ import { rateLimitMiddleware } from "../middleware.js";
 import { publicProcedure, router } from "../trpc.js";
 import { tryCatch } from "../../lib/utils.js";
 import { getUnreadNotifications } from "../../db/queries/notifications.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { TRPCError } from "@trpc/server";
 
 export const notificationsRouter = router({

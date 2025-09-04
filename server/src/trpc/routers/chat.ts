@@ -35,7 +35,7 @@ import {
   insertTask,
   updateTask,
 } from "../../db/queries/tasks.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { getUsersInProject } from "../../db/queries/users.js";
 import { tryCatch } from "../../lib/utils.js";
 import { AddTask } from "../../shared/types.js";

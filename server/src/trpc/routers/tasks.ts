@@ -30,7 +30,7 @@ import {
   updateTaskTargetStartDate,
   updateTaskTitle,
 } from "../../db/queries/tasks.js";
-import { pool } from "../router.js";
+import { pool } from "../../db/db.js";
 import { ColumnKey, Comment, Task, TaskSchema } from "../../shared/types.js";
 import { randomUUID } from "crypto";
 import s3 from "../../aws/s3.js";
