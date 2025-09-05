@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { getAllNotSentYetAsyncNotifications, insertNotification, updateSentAt } from "../db/queries/notifications.js";
-import { pool } from "../trpc/router.js";
+import { pool } from "../db/db.js";
 import { createAsyncNotificationTemplate, getUserLocalHour, groupBy, tryCatch } from "./utils.js";
 import { bus } from "../websocket/bus.js";
 import { generateDailyStarterNotificationMessage } from "../trpc/routers/chat.js";

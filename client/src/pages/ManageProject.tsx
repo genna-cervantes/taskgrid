@@ -323,8 +323,7 @@ const ManageProject = () => {
                   <h1 className="text-sm font-bold">Github</h1>
                 </span>
                 <p className="text-xs mt-2">
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Nisi
-                  minus autem omnis illum consequatur, cumque sint nostrum
+                  Track issues, pull requests, and more from your GitHub repositories.
                 </p>
               </div>
               <Link target="_blank" to='https://github.com/apps/taskan-app/installations/new' className="border border-faintWhite text-xs px-2 rounded-md py-1">

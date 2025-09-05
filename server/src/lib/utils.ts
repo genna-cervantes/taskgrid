@@ -132,21 +132,3 @@ export const getUserLocalHour = (utcHour: number, timezone: string) => {
     return -1 // Invalid timezone
   }
 }
-
-export const getUserFromBetterAuth = async (req: Request): Promise<string | null> => {
-  try {
-    // better-auth provides a server-side session method
-    const session = await auth.api.getSession({
-      headers: req.headers as any, // Pass the request headers
-    });
-    
-    if (!session?.user?.id) {
-      return null;
-    }
-    
-    return session.user.id;
-  } catch (error) {
-    console.error('Error getting user from better-auth:', error);
-    return null;
-  }
-};

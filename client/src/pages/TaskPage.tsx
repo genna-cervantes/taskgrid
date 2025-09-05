@@ -374,7 +374,7 @@ const TaskPage = () => {
           />
         </div> */}
 
-        <div className="w-[30%] pl-5 pr-3 py-1 flex flex-col gap-y-4">
+        <div className="w-[30%] pl-5 pr-3 py-1 flex flex-col gap-y-2">
           <Controller
             control={form.control}
             name="priority"
