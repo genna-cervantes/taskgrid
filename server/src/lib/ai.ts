@@ -4,9 +4,10 @@ import { generateObject, ModelMessage } from 'ai';
 import z from 'zod';
 import { openai } from "@ai-sdk/openai";
 import { Task } from '../shared/types.js';
-import { GENERATE_CATEGORY_EVALUATION_SYSTEM_PROMPT, GENERATE_CATEGORY_SYSTEM_PROMPT } from './prompts.js';
+import { GENERATE_ASSIGNEE_SYSTEM_PROMPT, GENERATE_CATEGORY_EVALUATION_SYSTEM_PROMPT, GENERATE_CATEGORY_SYSTEM_PROMPT } from './prompts.js';
 import { getFilteredTasks } from '../db/queries/tasks.js';
 import { pool } from '../db/db.js';
+import { getUsersWithLatestTasks, getUsersWithWorkloadInProject } from '../db/queries/users.js';
 
 dotenv.config();
 
@@ -84,48 +85,60 @@ const generateCategory = async ({projectId, currentTask, projectCategories}: {pr
 
       feedback = evaluation.object;
       tries--;
-      continue;
+      continue; 
     }
   }
 
   return 'ran out of tries';
 }
 
-const category = await generateCategory({
+const generateAssignee = async ({projectId, currentTask}: {projectId: string, currentTask: Pick<Task, "title" | "description" | "priority" | "assignTo" | "progress" | "dependsOn" | "subtasks">}) => {
+  
+  const usersWithWorkloadInProject = await getUsersWithWorkloadInProject(pool, projectId);
+  const usersWithLatestTasks = await getUsersWithLatestTasks(pool, projectId);
+
+  const messages: ModelMessage[] = []
+  const startingPrompt = `{
+    task: ${JSON.stringify(currentTask)},
+    usersWithWorkloadInProject: ${JSON.stringify(usersWithWorkloadInProject)},
+    usersWithLatestTasks: ${JSON.stringify(usersWithLatestTasks)}
+  }`
+  messages.push({
+  role: "user",
+  content: startingPrompt,
+  })
+  
+  const generatedAssignee = await generateObject({
+    model: openai("gpt-4o-mini"),
+    schema: z.object({
+      assignee: z.string(),
+      reasoning: z.string(),
+    }),
+    messages: messages,
+    system: GENERATE_ASSIGNEE_SYSTEM_PROMPT
+  })
+
+  return generatedAssignee.object;
+}
+
+const assignee = await generateAssignee({
   projectId: "1",
   currentTask: {
-    title: "How to count tokens before sending to streamText (by provider",
-    description: `
-  Description
-Hi, is there an official way in ai sdk to count tokens of the full messages + tools payload so we can manage context window limit before sending request to streamText?
-
-Does it support different providers? Would be amazing to have as this util is essential for managing agentic use cases across steps.
-
-AI SDK Version
-ai 5.x.x
-ai-sdk/openai 2.x.x
-Code of Conduct
-
-I agree to follow this project's Code of Conduct
-    `,
+    title: "Optimize React performance for large dataset visualization",
+    description: "The dashboard is rendering 10k+ data points causing severe performance issues. Need to implement virtualization, memoization, and potentially Web Workers for data processing. Also requires integration with existing GraphQL subscriptions for real-time updates.",
     priority: "medium",
-    assignTo: ["John Doe"],
-    progress: "backlog",
-    dependsOn: [],
-    subtasks: [],
-  },
-  projectCategories: [
-    { category: "bug" },
-    { category: "documentation" },
-    { category: "duplicate" },
-    { category: "enhancement" },
-    { category: "good first issue" },
-    { category: "help wanted" },
-    { category: "in progress" },
-    { category: "invalid" },
-    { category: "question" },
-    { category: "wontfix" }
-  ]
+    assignTo: [],
+    progress: "backlog", 
+    dependsOn: [
+      { id: "TASK-445", title: "GraphQL subscription refactoring" }
+    ],
+    subtasks: [
+      { title: "Profile current performance bottlenecks", isDone: false },
+      { title: "Implement virtual scrolling", isDone: false },
+      { title: "Add React.memo and useMemo optimizations", isDone: false },
+      { title: "Integrate with GraphQL real-time data", isDone: false }
+    ]
+  }
 });
 
-console.log(JSON.stringify(category));
+console.log(JSON.stringify(assignee));
