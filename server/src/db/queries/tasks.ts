@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 import {
   ColumnKey,
   Comment,
@@ -109,7 +109,7 @@ export const insertTask = async (
 
     const query =
       "INSERT INTO tasks (project_id, title, description, priority, assign_to, progress, link, category, files, target_start_date, target_end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;";
-    const res = await pool.query(query, [
+    const res = await client.query(query, [
       id,
       task.title,
       task.description,
@@ -127,6 +127,9 @@ export const insertTask = async (
 
     if (!taskId) throw new Error("Bad request query retuned no id");
 
+    // add to column history
+    await updateColumnHistory(client, taskId, null, task.progress);
+
     // process embedding
     const embedResult = await OpenAi.embeddings.create({
       model: "text-embedding-3-small",
@@ -137,7 +140,7 @@ export const insertTask = async (
 
     const embeddingQuery =
       "UPDATE tasks SET embedding = $1 WHERE id = $2 AND is_active = TRUE;";
-    const embeddingRes = await pool.query(embeddingQuery, [
+    const embeddingRes = await client.query(embeddingQuery, [
       vectorString,
       taskId,
     ]);
@@ -163,11 +166,31 @@ export const updateTaskProgress = async (
   if (!taskId || !progress)
     throw new Error("Bad request missing required fields");
 
-  const query =
-    "UPDATE tasks SET progress = $1 WHERE id = $2 AND is_active = TRUE";
-  const res = await pool.query(query, [progress, parseInt(taskId)]);
+  const client = await pool.connect();
 
-  return (res.rowCount ?? 0) === 1 ? true : false;
+  try{
+    await client.query("BEGIN");
+  
+    const query = `UPDATE tasks t
+      SET progress = $1
+      FROM (SELECT id, progress AS "oldProgress" FROM tasks WHERE id = $2) s
+      WHERE t.id = s.id AND t.is_active = TRUE
+      RETURNING t.id, s.oldProgress;`;
+    const res = await client.query(query, [progress, parseInt(taskId)]);
+
+    if (res.rowCount !== 1) throw new Error("Error updating task progress");
+
+    await updateColumnHistory(client, taskId, res.rows[0].oldProgress, progress);
+
+    await client.query("COMMIT");
+  
+    return (res.rowCount ?? 0) === 1;
+  }catch(err){
+    await client.query("ROLLBACK");
+    throw err;
+  }finally{
+    client.release();
+  }
 };
 
 export const deleteTask = async (pool: Pool, taskId: string) => {
@@ -355,8 +378,10 @@ export const getFilteredTasks = async (
   priority: string,
   assignedTo: string,
   category: string,
+  progress: string,
   projectTaskIds: string,
-  projectId: string
+  projectId: string,
+  limit?: number
 ) => {
   if (!projectId) throw new Error("Bad request missing required fields");
 
@@ -364,6 +389,7 @@ export const getFilteredTasks = async (
   let assignedToFilters = assignedTo.split(",");
   let categoryFitlers = category.split(",");
   let projectTaskIdFilters = projectTaskIds.split(",");
+  let progressFilters = progress.split(",");
 
   let query = `
   SELECT id, title, description, link, priority, progress, 
@@ -405,6 +431,17 @@ export const getFilteredTasks = async (
     query += ` AND project_task_id = ANY($${paramIndex})`;
     values.push(projectTaskIdFilters.map((ptf) => Number(ptf)));
     paramIndex++;
+  }
+
+  // Add progress filter
+  if (progress !== "" && progress.length > 0) {
+    query += ` AND progress = ANY($${paramIndex})`;
+    values.push(progressFilters);
+    paramIndex++;
+  }
+
+  if (limit) {
+    query += ` LIMIT ${limit}`;
   }
 
   const res = await pool.query(query, values);
@@ -516,15 +553,12 @@ export const addTaskCategoryOptions = async (
   try {
     await client.query("BEGIN");
 
-    //
     const query =
       "UPDATE projects SET task_category_options = COALESCE(task_category_options, '[]'::jsonb) || $1 WHERE id = $2 AND is_active = TRUE;";
-    const res = await pool.query(query, [
+    const res = await client.query(query, [
       JSON.stringify([taskCategoryOption]),
       projectId,
     ]);
-
-    console.log(JSON.stringify([taskCategoryOption]));
 
     await client.query("COMMIT");
 
@@ -555,7 +589,7 @@ export const updateTaskCategoryOptions = async (
 
     const query1 =
       'SELECT task_category_options AS "taskCategoryOptions" FROM projects WHERE id = $1 AND is_active = true;';
-    const res1 = await pool.query(query1, [projectId]);
+    const res1 = await client.query(query1, [projectId]);
 
     const prevTaskCategories =
       res1.rows[0]?.taskCategoryOptions?.map(
@@ -576,13 +610,13 @@ export const updateTaskCategoryOptions = async (
                 AND project_id = $2
                 AND is_active = TRUE;
             `;
-      await pool.query(query2, [removedTaskCategories, projectId]);
+      await client.query(query2, [removedTaskCategories, projectId]);
     }
 
     const query =
       "UPDATE projects SET task_category_options = $1 WHERE id = $2 AND is_active = TRUE;";
 
-    const res = await pool.query(query, [
+    const res = await client.query(query, [
       JSON.stringify(taskCategoryOptions),
       projectId,
     ]);
@@ -642,6 +676,57 @@ export const updateTaskSubTasks = async (
   return (res.rowCount ?? 0) === 1 ? subtasks : false;
 };
 
+export const updateColumnHistory = async (client: PoolClient, taskId: string, previousProgress: string|null, newProgress: string) => {
+  if (!taskId || !newProgress) throw new Error("Bad request missing required fields");
+
+  try{
+    await client.query("BEGIN");
+
+    let sequenceNumber = 0;
+    if (previousProgress){
+      const columnHistorySequenceNumberQuery = `
+      SELECT COALESCE(MAX(sequence_number), 0) + 1 as "nextSequenceNumber" 
+      FROM task_column_history 
+      WHERE task_id = $1 
+      `;
+
+      const columnHistorySequenceNumberRes = await client.query(columnHistorySequenceNumberQuery, [taskId]);
+      sequenceNumber = columnHistorySequenceNumberRes.rows[0].nextSequenceNumber;
+
+      if (columnHistorySequenceNumberRes.rowCount !== 1) throw new Error("Error getting column history sequence number");
+      
+      // update previous column history
+      const previousColumnHistoryQuery = "UPDATE task_column_history SET exited_at = $1, is_current = FALSE WHERE task_id = $2 AND column_name = $3 AND exited_at IS NULL AND is_current = TRUE";
+      const previousColumnHistoryRes = await client.query(previousColumnHistoryQuery, [
+        new Date(),
+        taskId,
+        previousProgress
+      ]);
+      
+      if (previousColumnHistoryRes.rowCount !== 1) throw new Error("Error updating previous column history");
+    }
+
+    // add to column history
+    const columnHistoryQuery = "INSERT INTO task_column_history (task_id, column_name, entered_at, sequence_number) VALUES ($1, $2, $3, $4)";
+    const columnHistoryRes = await client.query(columnHistoryQuery, [
+      taskId,
+      newProgress,
+      new Date(),
+      sequenceNumber
+    ]);
+
+    if (columnHistoryRes?.rowCount !== 1) throw new Error("Error updating new column history");
+
+    await client.query("COMMIT");
+  }catch(err){
+    console.error(err)
+    await client.query("ROLLBACK");
+    throw err;
+  }finally{
+    client.release();
+  }
+}
+
 export const updateTaskOrderBatched = async (
   pool: Pool,
   payload: { taskId: string; index: number; progress: ColumnKey }[],
@@ -649,59 +734,75 @@ export const updateTaskOrderBatched = async (
 ) => {
   if (!projectId) throw new Error("Bad request missing required fields");
 
-  console.log('running upd')
-
   const taskIds = payload.map((t) => Number(t.taskId));
   const indices = payload.map((t) => t.index);
   const progressValues = payload.map((t) => t.progress);
 
-  // Build CASE statements with proper parameter references
-  const indexCases = payload
-    .map((_, i) => `WHEN $${i + 1} THEN $${payload.length + i + 1}`)
-    .join("\n");
+  const client = await pool.connect();
 
-  const progressCases = payload
-    .map((_, i) => `WHEN $${i + 1} THEN $${2 * payload.length + i + 1}`)
-    .join("\n");
+  try{
+    await client.query("BEGIN");
+    // Build CASE statements with proper parameter references
+    const indexCases = payload
+      .map((_, i) => `WHEN $${i + 1} THEN $${payload.length + i + 1}`)
+      .join("\n");
+  
+    const progressCases = payload
+      .map((_, i) => `WHEN $${i + 1} THEN $${2 * payload.length + i + 1}`)
+      .join("\n");
+  
+    const placeholders = taskIds.map((_, i) => `$${i + 1}`).join(", ");
+  
+    const query = `
+      WITH old_values AS (
+        SELECT id, project_task_id as project_task_id, progress as old_progress
+        FROM tasks
+        WHERE id IN (${placeholders}) AND project_id = $${3 * payload.length + 1}
+      )
+      UPDATE tasks
+      SET
+        index = (CASE tasks.id ${indexCases} END)::integer,
+        progress = (CASE tasks.id ${progressCases} END)::text
+      FROM old_values  
+      WHERE tasks.id = old_values.id  
+        AND tasks.project_id = $${3 * payload.length + 1}
+      RETURNING 
+        tasks.id, 
+        tasks.progress,        
+        tasks.project_task_id,
+        old_values.old_progress
+    `;
+  
+    // Parameters: taskIds, indices, progressValues, projectId
+    const values = [...taskIds, ...indices, ...progressValues, projectId];
+  
+    const res = await client.query(query, values);
+    const changedTasks = res.rows
+      .filter(row => row.old_progress !== row.progress) // changed progress
+      .map(row => ({id: row.id, projectTaskId: row.project_task_id, oldProgress: row.old_progress, newProgress: row.progress}))  
 
-  const placeholders = taskIds.map((_, i) => `$${i + 1}`).join(", ");
-
-  const query = `
-    WITH old_values AS (
-      SELECT id, project_task_id as project_task_id, progress as old_progress
-      FROM tasks
-      WHERE id IN (${placeholders}) AND project_id = $${3 * payload.length + 1}
+    await Promise.all(
+      changedTasks.map((ct) => {
+        return updateColumnHistory(client, ct.id, ct.oldProgress, ct.newProgress);
+      })
     )
-    UPDATE tasks
-    SET
-      index = (CASE tasks.id ${indexCases} END)::integer,
-      progress = (CASE tasks.id ${progressCases} END)::text
-    FROM old_values  
-    WHERE tasks.id = old_values.id  
-      AND tasks.project_id = $${3 * payload.length + 1}
-    RETURNING 
-      tasks.id, 
-      tasks.progress,        
-      tasks.project_task_id,
-      old_values.old_progress
-  `;
+    
+    await Promise.all(
+      changedTasks.map((ct) => {
+        return insertAsyncNotification(pool, 'update_progress', ct.projectTaskId, projectId, {recipient: 'all'}, {oldProgress: ct.oldProgress, newProgress: ct.newProgress})
+      })
+    )
+  
+    await client.query("COMMIT");
+    return res.rowCount === payload.length ? true : false;
+  }catch(err){
+    console.error(err)
+    await client.query("ROLLBACK");
+    throw err;
+  }finally{
+    client.release();
+  }
 
-  // Parameters: taskIds, indices, progressValues, projectId
-  const values = [...taskIds, ...indices, ...progressValues, projectId];
-
-  const res = await pool.query(query, values);
-  const changedTasks = res.rows
-    .filter(row => row.old_progress !== row.progress)
-    .map(row => ({id: row.id, projectTaskId: row.project_task_id, oldProgress: row.old_progress, newProgress: row.progress}))  
-
-
-  await Promise.all(
-    changedTasks.map((ct) => {
-      return insertAsyncNotification(pool, 'update_progress', ct.projectTaskId, projectId, {recipient: 'all'}, {oldProgress: ct.oldProgress, newProgress: ct.newProgress})
-    })
-  )
-
-  return res.rowCount === payload.length ? true : false;
 };
 
 export const updateTask = async (
@@ -710,6 +811,13 @@ export const updateTask = async (
   updates: Partial<Task>
 ) => {
   if (!taskId) throw new Error("Bad request missing required fields");
+
+  let previousProgress = null;
+  if (updates.progress){
+    const previousProgressQuery = 'SELECT progress FROM tasks WHERE id = $1;';
+    const previousProgressRes = await pool.query(previousProgressQuery, [taskId]);
+    previousProgress = previousProgressRes.rows[0].progress;
+  }
 
   const changedKeys = Object.keys(updates) as (keyof Task)[];
   const changedValues = changedKeys.map((ck) =>
@@ -723,32 +831,99 @@ export const updateTask = async (
     updatedQueries.push(`${toSnakeCase(ck)} = $${i + 1}`);
   });
 
-  const query = `UPDATE tasks SET ${updatedQueries.join(", ")} WHERE id = $${
-    changedKeys.length + 1
-  }`;
+  const client = await pool.connect();
 
-  const res = await pool.query(query, [...changedValues, taskId]);
+  try{
+    await client.query("BEGIN");
+    
+    const query = `UPDATE tasks SET ${updatedQueries.join(", ")} WHERE id = $${
+      changedKeys.length + 1
+    }`;
+  
+    const res = await client.query(query, [...changedValues, taskId]);
+  
+    if (updates.progress && previousProgress) {
+      await updateColumnHistory(client, taskId, previousProgress, updates.progress)
+    }
 
-  return (res.rowCount ?? 0) === 1 ? true : false;
+    await client.query("COMMIT");
+    return (res.rowCount ?? 0) === 1;
+  }catch(err){
+    await client.query("ROLLBACK");
+    throw err;
+  }finally{
+    client.release();
+  }
+
 };
 
 export const getSimilarTasks = async (
   pool: Pool,
   projectId: string,
-  embedding: string
+  embedding: string,
+  filter?: {
+    assignTo: string[]
+  },
+  limit: number = 1
 ): Promise<{
+  id: string;
   title: string;
   description: string | undefined;
   priority: "low" | "medium" | "high";
   assign_to: string[];
-} | null> => {
+}[]> => {
   if (!projectId || !embedding)
     throw new Error("Bad request missing required fields");
 
-  const query = `SELECT title, description, priority, assign_to, 1 - (embedding <=> $2) AS cosine_similarity
-    FROM tasks WHERE project_id = $1 AND (1 - (embedding <=> $2)) >= 0.84 AND is_active = TRUE ORDER BY embedding <=> $2 LIMIT 1;`;
+  let query = `SELECT id, title, description, priority, assign_to, 1 - (embedding <=> $2) AS cosine_similarity
+  FROM tasks 
+  WHERE project_id = $1 
+    AND (1 - (embedding <=> $2)) >= 0.84 
+    AND is_active = TRUE`;
 
-  const res = await pool.query(query, [projectId, embedding]);
+  let values: any[] = [projectId, embedding]; // Assuming these are your first two params
+  let paramCount = 2;
 
-  return res?.rows[0] ?? null;
+  if (filter && filter.assignTo.length > 0) {
+    paramCount++;
+    query += ` AND assign_to = ANY($${paramCount})`;
+    values.push(filter.assignTo);
+  }
+
+  query += ' ORDER BY embedding <=> $2';
+
+  if (limit) {
+    paramCount++;
+    query += ` LIMIT $${paramCount}`;
+    values.push(limit);
+  }
+  const res = await pool.query(query, values);
+
+  return res?.rows ?? [];
 };
+
+export const getTaskEffortInMs = async (pool: Pool, taskId: string) => {
+  if (!taskId) throw new Error("Bad request: missing required fields");
+
+  const query = `
+    SELECT entered_at, exited_at, is_current
+    FROM task_column_history 
+    WHERE task_id = $1 AND column_name = 'in progress'
+  `;
+  
+  const res = await pool.query(query, [parseInt(taskId.toString())]);
+
+  let totalTimeMs = 0;
+  
+  res.rows.forEach((row) => {
+    const enteredAt = new Date(row.entered_at);
+    const exitedAt = row.exited_at 
+      ? new Date(row.exited_at) 
+      : (row.is_current ? new Date() : enteredAt); 
+    
+    const timeSpent = exitedAt.getTime() - enteredAt.getTime();
+    totalTimeMs += Math.max(0, timeSpent); 
+  });
+
+  return totalTimeMs;
+}

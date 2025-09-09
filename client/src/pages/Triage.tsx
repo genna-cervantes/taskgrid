@@ -3,7 +3,7 @@ import { trpc } from "@/utils/trpc";
 import { useParams } from "react-router-dom";
 import TaskCategory from "@/components/TaskCategory";
 import { Button } from "@/components/ui/button";
-import { Funnel, User } from "lucide-react";
+import { ArrowUpDown, Funnel, Sparkles, User } from "lucide-react";
 import { useProjectDetailsStore } from "@/zustand/store";
 import TaskPriority from "@/components/TaskPriority";
 
@@ -48,15 +48,25 @@ const Triage = () => {
       <div className="w-full">
         <div className="flex items-center gap-x-4">
           <div className="flex gap-x-2 items-center">
-            <p className="text-sm font-semibold">Open Tasks</p>
+          <p className="text-sm font-semibold">Triage Tasks</p>
             <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
               3
             </div>
           </div>
-          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
-            <Funnel className="h-3" />
-            <p>Filter</p>
-          </button>  
+          <div className="flex gap-x-2">
+            <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+              <ArrowUpDown className="h-3" />
+              <p>Sort: Autosort</p>
+            </button>  
+            <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+              <Funnel className="h-3" />
+              <p>Filter</p>
+            </button>  
+            <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+              <Sparkles className="h-3" />
+              <p>Generate Tasks</p>
+            </button>  
+          </div>
         </div>
       </div>
       <div className="w-full flex flex-col gap-y-2 mt-3">

@@ -37,6 +37,7 @@ const Projects = () => {
   const priority = searchParams.get("priority") || "";
   const assignedTo = searchParams.get("assignedTo") || "";
   const category = searchParams.get("category") || "";
+  const progress = searchParams.get("progress") || "";
   const projectTaskIds = searchParams.get("projectTaskIds") || "";
 
   const [linkCopiedModal, setLinkCopiedModal] = useState(false);
@@ -45,7 +46,8 @@ const Projects = () => {
     priority !== "" ||
     assignedTo !== "" ||
     category !== "" ||
-    projectTaskIds !== "";
+    projectTaskIds !== "" ||
+    progress !== "";
 
   // check if workspace exists
   const { data: workspaceName, isLoading: workspaceExistsIsLoading } =
@@ -105,6 +107,7 @@ const Projects = () => {
         priority,
         assignedTo,
         category,
+        progress,
         projectTaskIds,
       },
       {

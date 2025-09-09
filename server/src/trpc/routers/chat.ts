@@ -741,10 +741,10 @@ const runGenerateTask = async ({
           projectId,
           vectorString
         );
-        if (duplicateTask) {
+        if (duplicateTask[0]) {
           duplicateTasks.push({
-            skippedTask: duplicateTask,
-            duplicateTaskTitle: duplicateTask.title,
+            skippedTask: duplicateTask[0],
+            duplicateTaskTitle: duplicateTask[0].title,
           });
         } else {
           return ppt;

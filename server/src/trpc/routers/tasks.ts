@@ -36,8 +36,6 @@ import { randomUUID } from "crypto";
 import s3 from "../../aws/s3.js";
 import { tryCatch } from "../../lib/utils.js";
 import { TRPCError } from "@trpc/server";
-import { io } from "../../server/server.js";
-import { bus } from "../../websocket/bus.js";
 
 export const tasksRouter = router({
   getTasks: publicProcedure
@@ -635,6 +633,7 @@ export const tasksRouter = router({
       z.object({
         priority: z.string(),
         assignedTo: z.string(),
+        progress: z.string(),
         id: z.string(),
         category: z.string(),
         projectTaskIds: z.string(),
@@ -647,6 +646,7 @@ export const tasksRouter = router({
           input.priority,
           input.assignedTo,
           input.category,
+          input.progress,
           input.projectTaskIds,
           input.id
         )
