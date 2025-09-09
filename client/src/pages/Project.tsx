@@ -6,24 +6,21 @@ import {
   useParams,
 } from "react-router-dom";
 import { trpc } from "../utils/trpc";
-import { Columns, Task, ColumnKey } from "../../../server/src/shared/types";
-import ClearTask from "../components/ClearTask";
+import { Columns, ColumnKey } from "../../../server/src/shared/types";
 import Mousetrap from "mousetrap";
 import ProjectColumn from "@/components/ProjectColumn";
 import AddTaskForm from "@/components/AddTaskForm";
-import { useNotificationsSocket } from "@/contexts/NotificationContext";
 
 const Project = () => {
   const { projectId } = useParams();
   const isTaskRoute = useMatch("/projects/:projectId/tasks/*");
   const utils = trpc.useUtils();
+  
+  const groupBy = localStorage.getItem("groupBy") ?? "progress";
 
   const [addModal, setAddModal] = useState("");
   const [showDependencies, setShowDependencies] = useState(false);
   const [showAllSubtasks, setShowAllSubtasks] = useState(localStorage.getItem("showAllSubtasks") === "true");
-
-  const { socket } = useNotificationsSocket();
-  console.log(socket)
 
   const {
     username,
@@ -61,7 +58,7 @@ const Project = () => {
 
   // drag and drop
   const persistTaskMove = async (
-    payload: { taskId: string; progress: ColumnKey; index: number }[]
+    payload: { taskId: string; progress: string; index: number }[]
   ) => {
     if (payload.length > 0) {
       updateTaskOrderBatched.mutate({ payload, projectId: projectId ?? "" });
@@ -107,12 +104,14 @@ const Project = () => {
 
   return (
     <>
-      <div className="grid super-thin-scrollbar grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-1 overflow-auto lg:overflow-y-hidden ">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-1 overflow-auto"> */}
+      <div className="grid grid-flow-col auto-cols-[24%] overflow-x-auto gap-4 overflow-y-hidden super-thin-scrollbar ">
         {(Object.keys(columns) as ColumnKey[]).map((col) => (
           <React.Fragment key={col}>
             <ProjectColumn
               col={col}
               columns={columns}
+              columnKey={groupBy}
               setAddModal={setAddModal}
               taskCategoryOptions={taskCategoryOptions}
               projectId={projectId}

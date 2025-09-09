@@ -10,7 +10,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Funnel, Kanban, KanbanSquare, LayoutList, X } from "lucide-react";
+import { Funnel, KanbanSquare, X } from "lucide-react";
 import { trpc } from "@/utils/trpc";
 import {
   SetURLSearchParams,
@@ -22,6 +22,7 @@ import React, { ReactNode, useEffect, useState } from "react";
 
 const ProjectQuickActions = ({
   taskCategoryOptions,
+  setGroupBy,
 }: {
   taskCategoryOptions:
     | {
@@ -29,6 +30,7 @@ const ProjectQuickActions = ({
         color: string;
       }[]
     | undefined;
+  setGroupBy: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   const { projectId } = useParams();
 
@@ -39,6 +41,8 @@ const ProjectQuickActions = ({
     category: searchParams.get("category")?.split(",") ?? [],
     assignedTo: searchParams.get("assignedTo")?.split(",") ?? [],
   });
+
+  const [selectedGroupBy, setSelectedGroupBy] = useState(localStorage.getItem("groupBy") ?? "progress");
 
   useEffect(() => {
     // if empty string
@@ -75,6 +79,12 @@ const ProjectQuickActions = ({
     { enabled: !!projectId }
   );
 
+  const handleGroupBy = (value: string) => {
+    localStorage.setItem("groupBy", value);
+    setGroupBy(value);
+    setSelectedGroupBy(value);
+  };
+
   return (
     <div className="mb-2 flex gap-x-2">
       <DropdownMenu>
@@ -105,6 +115,50 @@ const ProjectQuickActions = ({
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      
+      {/* GROUP BY */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+            <KanbanSquare className="h-3" />
+            <p>Group: {selectedGroupBy.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}</p>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-56 border-none font-jetbrains"
+          align="start"
+        >
+          <DropdownMenuLabel className="text-xs">Group By:</DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => handleGroupBy("progress")} className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                  Progress
+              </div>
+              <Checkbox checked={selectedGroupBy === "progress"} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGroupBy("priority")} className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                  Priority
+              </div>
+              <Checkbox checked={selectedGroupBy === "priority"} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGroupBy("category")} className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                  Category
+              </div>
+              <Checkbox checked={selectedGroupBy === "category"} />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGroupBy("assignTo")} className="flex justify-between items-center pr-3">
+              <div className="flex gap-x-1 h-full items-center">
+                  Assign To
+              </div>
+              <Checkbox checked={selectedGroupBy === "assignTo"} />
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      
+      {/* FILTER */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">

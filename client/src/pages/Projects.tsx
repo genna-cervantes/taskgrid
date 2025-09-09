@@ -25,13 +25,13 @@ const Projects = () => {
   const userContext = useUserContext();
   const actionContext = useContext(ActionContext);
 
+  const [groupBy, setGroupBy] = useState(() => localStorage.getItem("groupBy") || "progress");
+
   const { setToggleSidebar, setToggleAIChat, toggleAIChat } = useOutletContext<{
     toggleAIChat: boolean;
     setToggleSidebar: React.Dispatch<React.SetStateAction<boolean>>;
     setToggleAIChat: React.Dispatch<React.SetStateAction<boolean>>;
   }>();
-
-  // Removed Zustand store usage - React Query handles caching automatically
 
   const [searchParams] = useSearchParams();
   const priority = searchParams.get("priority") || "";
@@ -143,10 +143,10 @@ const Projects = () => {
 
   const columns = isFilterEnabled
     ? filteredTasks && !filteredTasksIsLoading
-      ? groupTasksByColumn(filteredTasks)
+      ? groupTasksByColumn(filteredTasks, groupBy, taskCategoryOptions, usersInProject)
       : {}
     : data && !isLoading
-    ? groupTasksByColumn(data)
+    ? groupTasksByColumn(data, groupBy, taskCategoryOptions, usersInProject)
     : {};
 
 
@@ -231,7 +231,7 @@ const Projects = () => {
         </div>
 
         {/* quick actions */}
-        <ProjectQuickActions taskCategoryOptions={taskCategoryOptions} />
+        <ProjectQuickActions setGroupBy={setGroupBy} taskCategoryOptions={taskCategoryOptions} />
 
         {Object.keys(columns).length > 0 ? (
           <Outlet

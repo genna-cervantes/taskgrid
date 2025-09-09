@@ -20,7 +20,7 @@ import Timeline from "@/components/Timeline";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Loader2 } from "lucide-react";
+import { Copy, Loader2, Sparkles } from "lucide-react";
 // Removed Zustand stores - using React Query cache instead
 
 const TaskSchema = z.object({
@@ -375,6 +375,18 @@ const TaskPage = () => {
         </div> */}
 
         <div className="w-[30%] pl-5 pr-3 py-1 flex flex-col gap-y-2">
+          <div className="flex flex-col gap-y-2">
+            <button className="w-full bg-gradient-to-r from-purple-300 to-pink-300 text-backgroundDark items-center gap-x-2 text-sm py-1 flex justify-center rounded-md cursor-pointer">
+              <Sparkles className="h-3 w-3"/>Enhance With AI
+            </button>
+            <button className="border-faintWhite w-full border items-center gap-x-2 text-fadedWhite text-sm py-1 flex justify-center rounded-md cursor-pointer">
+              <Copy className="h-3 w-3"/>Copy as Prompt
+            </button>
+          </div>
+          <div className="flex items-center gap-x-4 my-2">
+            <hr className="flex-grow border-t border-faintWhite" />
+          </div>
+          
           <Controller
             control={form.control}
             name="priority"

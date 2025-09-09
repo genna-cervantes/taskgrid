@@ -4,6 +4,8 @@
 @source "../node_modules/streamdown/dist/index.js";
 
 /* styles/globals.css or index.css */
+.super-thin-scrollbar::-webkit-scrollbar:vertical { width: 3px; }
+.super-thin-scrollbar::-webkit-scrollbar:horizontal { height: 3px; }
 .super-thin-scrollbar::-webkit-scrollbar {
   width: 3px;
 }

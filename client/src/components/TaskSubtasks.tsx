@@ -67,7 +67,7 @@ const TaskSubtasks = ({
           return (
             <div key={index} className="flex items-center gap-x-2">
               <GripVertical className="h-[1.1rem] mx-[-5px] text-midWhite hover:cursor-grab" strokeWidth={2} />
-              <div className="flex items-center gap-x-2 ml-2">
+              <div className="flex items-center gap-x-2 ml-2 w-full">
                 <Checkbox
                   checked={s.isDone ?? false}
                   onCheckedChange={(checked) =>
@@ -81,7 +81,7 @@ const TaskSubtasks = ({
                   value={s.title}
                   onChange={(e) => handleTitleChange(index, e.target.value)}
                   placeholder="Add Subtask"
-                  className="w-full text-sm placeholder:text-faintWhite w-full bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
+                  className="w-full text-sm placeholder:text-faintWhite bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
                 />
               </div>
             </div>

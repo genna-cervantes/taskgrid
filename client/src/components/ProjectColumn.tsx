@@ -1,14 +1,13 @@
 import React from "react";
-import { ColumnKey, Columns, Task } from "../../../server/src/shared/types";
-import { Ellipsis } from "lucide-react";
+import { ColumnKey, Columns } from "../../../server/src/shared/types";
 import AddTask from "./AddTask";
 import TaskBlock, { DropIndicator } from "./TaskBlock";
 import Xarrow from "react-xarrows";
-import AddTaskForm from "./AddTaskForm";
 
 const ProjectColumn = ({
   col,
   columns,
+  columnKey,
   setAddModal,
   projectId,
   username,
@@ -19,6 +18,7 @@ const ProjectColumn = ({
 }: {
   col: ColumnKey;
   columns: Columns;
+  columnKey: string;
   setAddModal: React.Dispatch<React.SetStateAction<string>>;
   projectId: string;
   username: string | undefined;
@@ -32,7 +32,7 @@ const ProjectColumn = ({
     | undefined;
   persistTaskMove: (payload: {
     taskId: string;
-    progress: "backlog" | "in progress" | "for checking" | "done";
+    progress: string;
     index: number;
 }[]) => Promise<void>
 }) => {
@@ -143,7 +143,7 @@ const ProjectColumn = ({
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-x-2 pt-1">
           <h2 className="font-semibold text-sm capitalize text-center font-noto">
-            {col}
+            {col === "undefined" ? `No ${columnKey.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}` : col}
           </h2>
           <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
             {columns[col].length}
