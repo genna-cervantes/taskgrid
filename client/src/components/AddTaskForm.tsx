@@ -106,7 +106,7 @@ const AddTaskForm = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/[8%]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
       onClick={(e) => {
         if (insertTask.isLoading) {
           e.stopPropagation();
@@ -116,7 +116,7 @@ const AddTaskForm = ({
       }} // Close when clicking backdrop
     >
       <div
-        className="dark:bg-backgroundDark bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-1/2"
+        className="dark:bg-[#1a1a1a] bg-lmLightBackground rounded-lg shadow-xl p-4 md:p-6 w-1/2"
         onClick={(e) => e.stopPropagation()} // Prevent close on modal click
       >
         <form

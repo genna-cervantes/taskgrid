@@ -70,3 +70,8 @@ export const toBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+export const dedupeById = <T extends { id: string }>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
+};

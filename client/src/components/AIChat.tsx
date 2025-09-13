@@ -172,10 +172,6 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
               })}
             </div>
             <div className="flex flex-col gap-y-1 w-full">
-              <span className="flex items-center text-midWhite">
-                <Info className="h-3" />
-                <p className="text-xxs italic">press enter to send prompt</p>
-              </span>
               <Textarea
                 ref={chatBoxInputRef}
                 onKeyDown={(e) => {
@@ -193,7 +189,7 @@ const AIChat = ({ toggleAIChat }: { toggleAIChat: boolean }) => {
                 disabled={!isInProjects}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Type your message here."
+                placeholder="Press enter to send prompt."
                 className="super-thin-scrollbar w-full focus:ring-0 active:border-none active:ring-0 active:outline-none focus:border-none focus:outline-none bg-faintBlack !border-none text-sm text-fadedWhite placeholder:text-sm placeholder:text-faintWhite"
               />
             </div>

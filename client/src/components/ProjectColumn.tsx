@@ -145,7 +145,7 @@ const ProjectColumn = ({
           <h2 className="font-semibold text-sm capitalize text-center font-noto">
             {col === "undefined" ? `No ${columnKey.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}` : col}
           </h2>
-          <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
+          <div className="bg-faintWhite/10 px-2 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
             {columns[col].length}
           </div>
         </div>

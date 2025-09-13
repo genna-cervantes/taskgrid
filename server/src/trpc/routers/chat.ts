@@ -39,7 +39,7 @@ import { pool } from "../../db/db.js";
 import { getUsersInProject } from "../../db/queries/users.js";
 import { tryCatch } from "../../lib/utils.js";
 import { AddTask } from "../../shared/types.js";
-import { OpenAi } from "../../lib/ai.js";
+import { OpenAi } from "../../ai/functions.js";
 import { randomUUID } from "crypto";
 import pLimit from "p-limit"
 

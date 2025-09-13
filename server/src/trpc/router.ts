@@ -7,6 +7,7 @@ import { projectsRouter } from "./routers/projects.js";
 import { usersRouter } from "./routers/users.js";
 import { tasksRouter } from "./routers/tasks.js";
 import { notificationsRouter } from "./routers/notifications.js";
+import { triageRouter } from "./routers/triage.js";
 
 config();
 
@@ -15,6 +16,7 @@ export const appRouter = router({
   projects: projectsRouter,
   users: usersRouter,
   tasks: tasksRouter,
+  triage: triageRouter,
   notifications: notificationsRouter,
   health: publicProcedure.use(rateLimitMiddleware).query(() => {
     return {

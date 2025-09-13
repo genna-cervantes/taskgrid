@@ -6,7 +6,7 @@ import {
   Task,
 } from "../../shared/types.js";
 import { getDataIdFromComment, handleSyncNotification, toSnakeCase } from "../../lib/utils.js";
-import { OpenAi } from "../../lib/ai.js";
+import { OpenAi } from "../../ai/functions.js";
 import { insertAsyncNotification } from "./notifications.js";
 
 export const getTasksFromProjectId = async (pool: Pool, id: string) => {

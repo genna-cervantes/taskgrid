@@ -57,7 +57,7 @@ const Inbox = () => {
         <div className="flex items-center gap-x-2">
           <div className="flex gap-x-2 items-center">
             <p className="text-sm font-semibold">Unread Messages</p>
-            <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
+            <div className="bg-faintWhite/10 px-2 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
               {mentions.length + (unreadNotifications?.length ?? 0)}
             </div>
           </div>

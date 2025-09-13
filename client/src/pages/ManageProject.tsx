@@ -37,9 +37,11 @@ const ManageProject = () => {
   // Local state for editable fields
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
-  const [projectPrivacy, setProjectPrivacy] = useState<"public" | "private">("private");
+  const [projectPrivacy, setProjectPrivacy] = useState<"public" | "private">(
+    "private"
+  );
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Edit mode state for project name
   const [editMode, setEditMode] = useState(false);
   const [editedProjectName, setEditedProjectName] = useState("");
@@ -54,14 +56,18 @@ const ManageProject = () => {
       setProjectName(projectDetails.name || "");
       setEditedProjectName(projectDetails.name || "");
       setProjectDescription(projectDetails.description || "");
-      setProjectPrivacy(projectDetails.privacy as "public" | "private" || "private");
+      setProjectPrivacy(
+        (projectDetails.privacy as "public" | "private") || "private"
+      );
     }
   }, [projectDetails]);
 
   // Mutations
   const editProjectName = trpc.projects.editProjectName.useMutation({
     onSuccess: () => {
-      utils.projects.getProjectDetails.invalidate({ projectId: projectId ?? "" });
+      utils.projects.getProjectDetails.invalidate({
+        projectId: projectId ?? "",
+      });
       utils.projects.getUserWorkspaceProjects.invalidate();
       setIsSaving(false);
     },
@@ -71,20 +77,25 @@ const ManageProject = () => {
     },
   });
 
-  const editProjectDescription = trpc.projects.editProjectDescription.useMutation({
-    onSuccess: () => {
-      utils.projects.getProjectDetails.invalidate({ projectId: projectId ?? "" });
-      setIsSaving(false);
-    },
-    onError: (error) => {
-      console.error("Failed to update project description:", error.message);
-      setIsSaving(false);
-    },
-  });
+  const editProjectDescription =
+    trpc.projects.editProjectDescription.useMutation({
+      onSuccess: () => {
+        utils.projects.getProjectDetails.invalidate({
+          projectId: projectId ?? "",
+        });
+        setIsSaving(false);
+      },
+      onError: (error) => {
+        console.error("Failed to update project description:", error.message);
+        setIsSaving(false);
+      },
+    });
 
   const editProjectPrivacy = trpc.projects.editProjectPrivacy.useMutation({
     onSuccess: () => {
-      utils.projects.getProjectDetails.invalidate({ projectId: projectId ?? "" });
+      utils.projects.getProjectDetails.invalidate({
+        projectId: projectId ?? "",
+      });
       setIsSaving(false);
     },
     onError: (error) => {
@@ -105,16 +116,24 @@ const ManageProject = () => {
     }
   };
 
-  const saveProjectDescription = useCallback((description: string) => {
-    if (description !== projectDetails?.description && userContext.username) {
-      setIsSaving(true);
-      editProjectDescription.mutate({
-        id: projectId ?? "",
-        description,
-        guestId: userContext.username,
-      });
-    }
-  }, [projectDetails?.description, userContext.username, projectId, editProjectDescription]);
+  const saveProjectDescription = useCallback(
+    (description: string) => {
+      if (description !== projectDetails?.description && userContext.username) {
+        setIsSaving(true);
+        editProjectDescription.mutate({
+          id: projectId ?? "",
+          description,
+          guestId: userContext.username,
+        });
+      }
+    },
+    [
+      projectDetails?.description,
+      userContext.username,
+      projectId,
+      editProjectDescription,
+    ]
+  );
 
   const saveProjectPrivacy = (privacy: "public" | "private") => {
     if (privacy !== projectDetails?.privacy && userContext.username) {
@@ -164,7 +183,10 @@ const ManageProject = () => {
   // Debounced description save
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (projectDescription && projectDescription !== projectDetails?.description) {
+      if (
+        projectDescription &&
+        projectDescription !== projectDetails?.description
+      ) {
         saveProjectDescription(projectDescription);
       }
     }, 2000);
@@ -173,13 +195,17 @@ const ManageProject = () => {
   }, [projectDescription, saveProjectDescription, projectDetails?.description]);
 
   // Users in project - React Query will use cached data
-  const { data: usersInProject = [] } = trpc.users.getUsernamesInProject.useQuery({
-    id: projectId ?? "",
-  }, {
-    enabled: !!projectId,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
-  });
+  const { data: usersInProject = [] } =
+    trpc.users.getUsernamesInProject.useQuery(
+      {
+        id: projectId ?? "",
+      },
+      {
+        enabled: !!projectId,
+        staleTime: 5 * 60 * 1000,
+        cacheTime: 15 * 60 * 1000,
+      }
+    );
 
   // Handle missing parameters after all hooks
   if (!projectId || !workspaceId) {
@@ -224,19 +250,22 @@ const ManageProject = () => {
                 {projectName || "Untitled Project"}
               </h1>
             )}
-            {!editMode && <div className="text-xxs px-2 flex items-center justify-center rounded-xl bg-yellow-300/30 border">
-              {projectDetails?.plan &&
-                projectDetails?.plan.charAt(0).toUpperCase() + projectDetails?.plan.slice(1)}{" "}
-              Plan
-            </div>}
+            {!editMode && (
+              <div className="text-xxs px-2 flex items-center justify-center rounded-xl bg-yellow-300/30 border">
+                {projectDetails?.plan &&
+                  projectDetails?.plan.charAt(0).toUpperCase() +
+                    projectDetails?.plan.slice(1)}{" "}
+                Plan
+              </div>
+            )}
           </div>
         </div>
         <div className="text-sm mt-3 min-h-24">
-          <QuillEditor 
+          <QuillEditor
             isPage={true}
-            description={projectDescription} 
+            description={projectDescription}
             setDescription={(description) => {
-              if (typeof description === 'function') {
+              if (typeof description === "function") {
                 const newDesc = description(projectDescription);
                 const desc = newDesc || "";
                 setProjectDescription(desc);
@@ -244,11 +273,13 @@ const ManageProject = () => {
                 const desc = description || "";
                 setProjectDescription(desc);
               }
-            }} 
+            }}
           />
         </div>
 
-        <p className="text-xs text-faintWhite mt-2 italic">{isSaving ? 'Saving...' : 'Autosaved'}</p>
+        <p className="text-xs text-faintWhite mt-2 italic">
+          {isSaving ? "Saving..." : "Autosaved"}
+        </p>
 
         {/* privacy */}
         <div className="w-full mt-4">
@@ -283,7 +314,7 @@ const ManageProject = () => {
           <div className="flex gap-x-4">
             <div className="flex items-center gap-x-2">
               <h2 className="text-sm">Users</h2>
-              <div className="bg-faintWhite/10 w-5 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
+              <div className="bg-faintWhite/10 px-2 h-5 flex justify-center items-center font-semibold text-xs capitalize text-center font-noto rounded-full">
                 {usersInProject?.length ?? 0}
               </div>
             </div>
@@ -294,10 +325,15 @@ const ManageProject = () => {
           </div>
           <div className="mt-2 w-full flex flex-col gap-y-2 max-h-44 overflow-auto super-thin-scrollbar">
             {usersInProject.map((username, index) => (
-              <div key={index} className="w-full border border-faintWhite flex justify-between gap-x-8 rounded-md px-2 py-1 items-center">
+              <div
+                key={index}
+                className="w-full border border-faintWhite flex justify-between gap-x-8 rounded-md px-2 py-1 items-center"
+              >
                 <div className="flex items-center gap-x-2">
                   <h1 className="text-sm">{username}</h1>
-                  <div className="bg-purple-300/20 text-xxs rounded-md px-2">Owner</div>
+                  <div className="bg-purple-300/20 text-xxs rounded-md px-2">
+                    Owner
+                  </div>
                 </div>
                 <div className="flex gap-x-2">
                   <button className="border border-faintWhite text-xxs px-2 rounded-md py-1">
@@ -323,12 +359,24 @@ const ManageProject = () => {
                   <h1 className="text-sm font-bold">Github</h1>
                 </span>
                 <p className="text-xs mt-2">
-                  Track issues, pull requests, and more from your GitHub repositories.
+                  Track issues, pull requests, and more from your GitHub
+                  repositories.
                 </p>
               </div>
-              <Link target="_blank" to='https://github.com/apps/taskan-app/installations/new' className="border border-faintWhite text-xs px-2 rounded-md py-1">
-                Connect
-              </Link>
+              {projectId && userContext.username && (
+                <Link
+                  target="_blank"
+                  to={`https://github.com/apps/taskan-app/installations/new?state=${encodeURIComponent(
+                    JSON.stringify({
+                      projectId,
+                      username: userContext.username,
+                    })
+                  )}`}
+                  className="border border-faintWhite text-xs px-2 rounded-md py-1"
+                >
+                  Connect
+                </Link>
+              )}
             </div>
           </div>
         </div>

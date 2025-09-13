@@ -85,3 +85,45 @@ export interface GitHubInstallation {
   access_token_expires_at: Date | null;
   installed_at: Date;
 }
+
+export const TriageTaskSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  priority: z.enum(["low", "medium", "high"]),
+  assignTo: z.array(z.string()),
+  category: z.string().optional(),
+  dependsOn: z.array(z.object({id: z.string(), title: z.string()})),
+  subtasks: z.array(z.object({title: z.string(), isDone: z.boolean()})),
+  enhancedDescription: z.string(),
+  enhancedPriority: z.enum(["low", "medium", "high"]),
+  enhancedAssignTo: z.array(z.string()),
+  enhancedCategory: z.string().optional(),
+  enhancedDependsOn: z.array(z.object({id: z.string(), title: z.string()})),
+  enhancedSubtasks: z.array(z.object({title: z.string(), isDone: z.boolean()})),
+  enhanceStatus: z.enum(["accepted", "rejected", "proposed", "not_proposed", 'enhancing']),
+})
+
+export type TriageTask = z.infer<typeof TriageTaskSchema>;
+
+export const InsertableTriageTaskSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  priority: z.enum(["low", "medium", "high"]),
+  assignTo: z.array(z.string()),
+  category: z.string().optional(),
+})
+
+export type InsertableTriageTask = z.infer<typeof InsertableTriageTaskSchema>;
+
+export const GithubInstallationSchema = z.object({
+  installation_id: z.number(),
+  project_id: z.string(),
+  account_type: z.enum(["User", "Organization"]),
+  account_login: z.string(),
+  repository_ids: z.object({repositoryIds: z.array(z.number())}),
+  access_token_url: z.string(),
+  installed_at: z.date(),
+})
+
+export type GithubInstallation = z.infer<typeof GithubInstallationSchema>;

@@ -89,7 +89,7 @@ const ProjectQuickActions = ({
     <div className="mb-2 flex gap-x-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+          <button className="text-xxs active:border-fadedWhite transition-colors duration-100 border border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
             <KanbanSquare className="h-3" />
             <p>View: Kanban</p>
           </button>
@@ -119,7 +119,7 @@ const ProjectQuickActions = ({
       {/* GROUP BY */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+          <button className="text-xxs active:border-fadedWhite transition-colors duration-100 border border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
             <KanbanSquare className="h-3" />
             <p>Group: {selectedGroupBy.split("_").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}</p>
           </button>
@@ -161,7 +161,7 @@ const ProjectQuickActions = ({
       {/* FILTER */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="text-xxs !border !border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
+          <button className="text-xxs active:border-fadedWhite transition-colors duration-100 border border-faintWhite rounded-md flex gap-x-1 pl-1 pr-2 py-1 items-center">
             <Funnel className="h-3" />
             <p>Filter</p>
           </button>

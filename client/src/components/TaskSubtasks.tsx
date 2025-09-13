@@ -56,7 +56,7 @@ const TaskSubtasks = ({
   const displaySubtasks = [...taskSubtasks, { title: "", isDone: false }];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 pt-1">
       {/* <h3 className="text-xs text-midWhite !font-rubik tracking-wider transition-all duration-100">
         Sub Tasks:
       </h3> */}
@@ -81,7 +81,7 @@ const TaskSubtasks = ({
                   value={s.title}
                   onChange={(e) => handleTitleChange(index, e.target.value)}
                   placeholder="Add Subtask"
-                  className="w-full text-sm placeholder:text-faintWhite bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
+                  className="truncate w-full text-sm placeholder:text-faintWhite bg-transparent text-white focus:outline-none focus:ring-0 focus:border-transparent"
                 />
               </div>
             </div>

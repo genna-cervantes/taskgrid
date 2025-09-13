@@ -16,6 +16,9 @@ import { getUserMiddleware } from "../lib/middleware.js";
 import { getInstallationDetails } from "../integrations/github.js";
 import { tryCatch } from "../lib/utils.js";
 import { webhookMiddleware, webhooks } from "../webhooks/webhooks.js";
+import { aiWorkflowsRouter } from "../ai/router.js";
+import { initializeGithubInstallation } from "../db/queries/github.js";
+import { pool } from "../db/db.js";
 
 dotenv.config();
 
@@ -45,15 +48,29 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // callbacks
-app.use("/github/callback", getUserMiddleware, async (req, res) => {
+app.get("/github/callback", async (req, res) => {
   console.log('CALLBACK CALLED')
 
-  const userId = (req as any).user.id;
-  console.log(userId)
+  let state = req.query.state;
+  if (Array.isArray(state)) {
+    state = state[0];
+  }
+
+  if (typeof state === 'string') {
+    const s = decodeURIComponent(state);
+    state = (s.startsWith('{') || s.startsWith('[')) ? JSON.parse(s) : s;
+  }
   
-  if (!userId) {
-    console.error("User ID not found")
-    return res.redirect('/login?next=github_connect');
+  const projectId = (state as any).projectId as string;
+  if (!projectId) {
+    console.error("Project ID not found in callback")
+    return res.redirect('/login?error=missing_project_id');
+  }
+
+  const username = (state as any).username as string;
+  if (!username) {
+    console.error("Username not found in callback")
+    return res.redirect('/login?error=missing_username');
   }
 
   const installationId = req.query.installation_id as string;
@@ -62,18 +79,15 @@ app.use("/github/callback", getUserMiddleware, async (req, res) => {
     return res.redirect('/login?error=missing_installation_id');
   }
 
-  const result = await tryCatch(getInstallationDetails(installationId))
+  const result = await tryCatch(initializeGithubInstallation(pool, installationId, projectId, username))
   if (result.error != null) {
-    console.error("Failed to get installation details:", result.error)
+    console.error("Failed to store github installation")
+    console.error(result.error)
     return res.redirect('/login?error=github_installation_failed');
   }
-  
-  const installationDetails = result.data;
-  console.log("GitHub installation details:", installationDetails)
-  
-  // TODO: Save installation details to database
-  // For now, redirect to success page
-  return res.redirect('/integrations?github=connected');
+
+  // get workspaces and project to return to the og
+  return res.redirect('http://localhost:5173/');
 });
 
 // set headers
@@ -92,8 +106,16 @@ app.use(
   })
 );
 
+// health
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 // needs auth
 app.use("/ai-chat", chatRouter)
+
+// ai workflows
+app.use("/ai-workflows", aiWorkflowsRouter)
 
 // websocket
 const httpServer = createServer(app)
